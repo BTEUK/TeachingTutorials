@@ -22,7 +22,8 @@ public class User
         this.player = player;
     }
 
-    public User() {
+    public User()
+    {
 
     }
 
@@ -40,10 +41,16 @@ public class User
 
             //Executes the update and returns the amount of records updated
             resultSet = SQL.executeQuery(sql);
-            resultSet.next();
-
-            this.bHasCompletedOnce = resultSet.getBoolean("CompletedCompulsory");
-            this.bInLesson = resultSet.getBoolean("InLesson");
+            if (resultSet.next())
+            {
+                this.bHasCompletedOnce = resultSet.getBoolean("CompletedCompulsory");
+                this.bInLesson = resultSet.getBoolean("InLesson");
+            }
+            else
+            {
+                sql = "INSERT INTO table_name (UUID) VALUES ("+ player.getUniqueId() +")";
+                SQL.executeUpdate(sql);
+            }
 
         }
         catch(SQLException se)

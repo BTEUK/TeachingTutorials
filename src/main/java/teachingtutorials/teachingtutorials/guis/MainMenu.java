@@ -3,7 +3,9 @@ package teachingtutorials.teachingtutorials.guis;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import teachingtutorials.teachingtutorials.utils.User;
 import teachingtutorials.teachingtutorials.utils.Utils;
 
@@ -19,6 +21,11 @@ public class MainMenu
 
         inv = Bukkit.createInventory(null, inv_rows);
 
+    }
+
+    public static String getInventoryName()
+    {
+        return inventory_name;
     }
 
     public static Inventory getGUI (User u)
@@ -40,5 +47,19 @@ public class MainMenu
         toReturn.setContents(inv.getContents());
 
         return toReturn;
+    }
+
+    public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv)
+    {
+        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
+        {
+            player.sendMessage("Continue learning innit");
+            player.closeInventory();
+        }
+        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GRAY +"Continue Learning"))
+        {
+            player.sendMessage("Ye canny do that for ye haven't finished ye compulsory tutorials");
+            player.closeInventory();
+        }
     }
 }

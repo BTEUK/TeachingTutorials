@@ -21,7 +21,7 @@ public class MainMenu
 
     }
 
-    public static Inventory GUI (User u)
+    public static Inventory getGUI (User u)
     {
         Inventory toReturn = Bukkit.createInventory(null, inv_rows, inventory_name);
 

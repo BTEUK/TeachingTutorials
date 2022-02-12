@@ -1,0 +1,4 @@
+name: TeachingTutorials
+version: '${project.version}'
+main: teachingtutorials.TeachingTutorials
+api-version: 1.17

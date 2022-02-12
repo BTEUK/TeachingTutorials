@@ -1,11 +1,11 @@
-package teachingtutorials.teachingtutorials.utils;
+package teachingtutorials.utils;
 
 import java.sql.*;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
-import teachingtutorials.teachingtutorials.TeachingTutorials;
+import teachingtutorials.TeachingTutorials;
 
 /**
  * @date 10 Aug 2020

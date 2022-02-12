@@ -1,4 +1,4 @@
-package teachingtutorials.teachingtutorials.guis;
+package teachingtutorials.guis;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -6,8 +6,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import teachingtutorials.teachingtutorials.utils.User;
-import teachingtutorials.teachingtutorials.utils.Utils;
+import teachingtutorials.utils.User;
+import teachingtutorials.utils.Utils;
 
 public class MainMenu
 {

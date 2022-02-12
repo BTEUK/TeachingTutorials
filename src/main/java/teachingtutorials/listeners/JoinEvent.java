@@ -1,4 +1,4 @@
-package teachingtutorials.teachingtutorials.listeners;
+package teachingtutorials.listeners;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -7,8 +7,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import teachingtutorials.teachingtutorials.TeachingTutorials;
-import teachingtutorials.teachingtutorials.utils.User;
+import teachingtutorials.TeachingTutorials;
+import teachingtutorials.utils.User;
 
 import java.util.ArrayList;
 

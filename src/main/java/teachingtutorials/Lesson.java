@@ -11,13 +11,15 @@ public class Lesson
 {
     Player student;
     int iStage;
+    TeachingTutorials plugin;
 
     // Tasks are divided into separate groups of tasks
     // Each group of tasks must be completed synchronously but tasks in the group can be done in any order
     ArrayList<ArrayList<Task>> synchronousTasks = new ArrayList<ArrayList<Task>>();
 
-    public Lesson(Player player)
+    public Lesson(Player player, TeachingTutorials plugin)
     {
+        this.plugin = plugin;
         this.student = player;
     }
 
@@ -42,7 +44,7 @@ public class Lesson
                     double longitude = 0;
                     float fMaxPoints = 0;
                     //Array: Lat, long, max points
-                    TpllListener tpll = new TpllListener(new TeachingTutorials(), latitude, longitude, this.student, fMaxPoints);
+                    TpllListener tpll = new TpllListener(plugin, latitude, longitude, this.student, fMaxPoints);
                     group.add(tpll);
                     break;
             }

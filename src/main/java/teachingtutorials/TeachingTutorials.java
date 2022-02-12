@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 
-public final class TeachingTutorials extends JavaPlugin
+public class TeachingTutorials extends JavaPlugin
 {
     static TeachingTutorials instance;
     static FileConfiguration config;

@@ -24,7 +24,7 @@ public class Step
     //Tasks in groups are completed synchronously
     private ArrayList<Group> groups = new ArrayList<>();
 
-    public Step(int iStepID, int iStepInStafe, Player player, TeachingTutorials plugin, Stage parentStage)
+    public Step(int iStepID, int iStepInStage, Player player, TeachingTutorials plugin, Stage parentStage)
     {
         this.player = player;
         this.plugin = plugin;

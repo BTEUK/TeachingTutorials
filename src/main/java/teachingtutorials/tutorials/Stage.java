@@ -1,14 +1,22 @@
 package teachingtutorials.tutorials;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.fundamentalTasks.TpllListener;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class Stage
 {
+    protected int iStageID;
+    private int iOrder;
+
     private Player player;
     private TeachingTutorials plugin;
     private int iCurrentStep;
@@ -24,34 +32,29 @@ public class Stage
 
     //Provision for score recording
 
-    public Stage(Player player, TeachingTutorials plugin, Lesson lesson)
+    public Stage(int iStageID, int iOrder, Player player, TeachingTutorials plugin, Lesson lesson)
     {
         this.plugin = plugin;
-        this.player = player;
         this.lesson = lesson;
+
+        this.iStageID = iStageID;
+        this.iOrder = iOrder;
         this.bStageFinished = false;
+
+        this.player = player;
     }
 
-    private void initialiseStage()
+    private void fetchAndInitialiseSteps()
     {
-        Step step = new Step(player, plugin, this);
+        //Gets a list of all of the steps of the specified stage and loads each with the relevant data.
+        //List is in order of step 1 1st
+        steps = Step.fetchStepsByStageID(player, plugin, this);
     }
 
     public void startStage()
     {
-        initialiseStage();
-
-        //loadTasks()
-
-        //Load the steps
-
-        iCurrentStep = 1;
-
-        //Assume that there is a 1st step
-
-
-        steps.get(0).startStep();
-
+        iCurrentStep = 0;
+        nextStep();
     }
 
     //Incomplete
@@ -75,33 +78,37 @@ public class Stage
         lesson.nextStage();
     }
 
-    //Completely redo
-    private void loadTasks()
+    public static ArrayList<Stage> fetchStagesByTutorialID(Player player, TeachingTutorials plugin, Lesson lesson)
     {
-        int i;
-        int iGroups = 10;
+        ArrayList<Stage> stages = new ArrayList<>();
 
-        for (i = 0 ; i < iGroups ; i++)
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
         {
-            ArrayList<Task> group = new ArrayList<Task>();
-            String[] data = {"0.2","51.3","f","2"};
+            //Compiles the command to fetch stages
+            sql = "Select * FROM Stages WHERE TutorialID = "+lesson.iTutorialID +" ORDER BY 'Order' ASC";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
-            switch (data[0].toLowerCase())
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            while (resultSet.next())
             {
-                case "tpll":
-                    //TODO: Get the tutorial ID and search for examples in the DB for this tutorial
-                    //Should always start of with like a 0.3 difficulty then if they do crap find a 0.1 etc
-
-
-                    double latitude = 0;
-                    double longitude = 0;
-                    float fMaxPoints = 0;
-                    //Array: Lat, long, max points
-                    TpllListener tpll = new TpllListener(plugin, latitude, longitude, this.player, fMaxPoints);
-                    group.add(tpll);
-                    break;
+                Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), player, plugin, lesson);
+                stages.add(stage);
             }
         }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Stages by TutorialID");
+            se.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return stages;
     }
-
 }

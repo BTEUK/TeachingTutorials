@@ -10,6 +10,8 @@ import java.util.ArrayList;
 public class Lesson
 {
     User student;
+    int iTutorialID;
+
     int iCurrentStage;
     TeachingTutorials plugin;
 
@@ -25,23 +27,23 @@ public class Lesson
 
     public void decideTutorial()
     {
-
+        this.iTutorialID = 1;//Something
     }
 
     public void fetchStages()
     {
-        Stage stage = new Stage(student.player, plugin, this);
+        //Gets a list of all of the stages of the specified tutorial and loads each with the relevant data.
+        //List is in order of stage 1 1st
+        this.Stages = Stage.fetchStagesByTutorialID(student.player, plugin, this);
+
         //Stages.add() etc.
         //Get IDs maybe? and other data
     }
 
     public void startLesson()
     {
-        iCurrentStage = 1;
-
-        //Assume that there is a 1st step
-
-        Stages.get(0).startStage(); //Or initialise?
+        iCurrentStage = 0;
+        nextStage();
     }
 
     //Incomplete
@@ -50,7 +52,7 @@ public class Lesson
         iCurrentStage++;
         if (iCurrentStage <= Stages.size())
         {
-            Stages.get(iCurrentStage-1).startStage(); //Or initialise?
+            Stages.get(iCurrentStage-1).startStage();
         }
         else
         {
@@ -61,6 +63,7 @@ public class Lesson
     public void endLesson()
     {
         //Calculate final scores
+
 
         //Then store in DB
     }

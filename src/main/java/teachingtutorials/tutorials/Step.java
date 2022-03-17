@@ -31,7 +31,7 @@ public class Step
         this.parentStage = parentStage;
         this.bStepFinished = false;
         this.iStepID = iStepID;
-        this.iStepInStage = iStepInStafe;
+        this.iStepInStage = iStepInStage;
     }
 
     private void fetchAndInitialiseGroups()

@@ -32,7 +32,7 @@ public class Task
 
     public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)
     {
-        ArrayList<Task> tasks = new ArrayList<Task>();
+        ArrayList<Task> tasks = new ArrayList<>();
 
         String sql;
         Statement SQL = null;

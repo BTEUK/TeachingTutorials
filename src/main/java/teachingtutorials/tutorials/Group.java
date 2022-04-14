@@ -20,7 +20,7 @@ public class Group
 
     private Player player;
     private TeachingTutorials plugin;
-    private Step parentStep;
+    protected Step parentStep;
 
     private ArrayList<Task> tasks = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class Group
 
     public void fetchAndInitialiseTasks()
     {
-        tasks = Task.fetchTasks(this, parentStep.parentStage.lesson.iLocationID);
+        tasks = Task.fetchTasks(plugin,this, parentStep.parentStage.lesson.iLocationID, parentStep.parentStage.lesson.student.player);
     }
 
     public void initialRegister()
@@ -61,7 +61,7 @@ public class Group
     protected void taskFinished()
     {
         //taskNo is that of the previous, so it is the correct index of the next
-        if (taskNo >= tasks.size()) //If the task was the last one
+        if (taskNo >= tasks.size()) //If the task was the last one in the group
         {
             //Signal that group is complete
             groupFinished = true;

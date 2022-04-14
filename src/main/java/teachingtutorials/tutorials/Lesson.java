@@ -6,7 +6,7 @@ import teachingtutorials.utils.User;
 
 import java.util.ArrayList;
 
-//Lesson stores all the information needed for a lesson and handles importing the tasks from
+//Lesson stores all the information needed for a lesson and handles the play of a tutorial
 public class Lesson
 {
     User student;

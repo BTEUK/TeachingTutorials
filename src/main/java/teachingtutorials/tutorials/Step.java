@@ -15,7 +15,7 @@ public class Step
 {
     private Player player;
     private TeachingTutorials plugin;
-    private Stage parentStage;
+    protected Stage parentStage;
     public boolean bStepFinished;
     protected int iStepID;
     protected int iStepInStage;
@@ -41,6 +41,8 @@ public class Step
 
     public void startStep()
     {
+        fetchAndInitialiseGroups();
+
         //Register the start of all groups
         int i;
         int iGroups = groups.size();

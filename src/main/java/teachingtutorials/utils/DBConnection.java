@@ -63,6 +63,8 @@ public class DBConnection
 
     public boolean connect()
     {
+        Bukkit.getConsoleSender().sendMessage("Username: "+this.USER);
+        Bukkit.getConsoleSender().sendMessage("Password: "+this.PASSWORD);
         try
         {
             //	System.out.println(this.getClass().getName() +" : Connecting la la la");
@@ -81,6 +83,7 @@ public class DBConnection
             if (e.toString().contains("Access denied"))
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL Error - Access denied");
+                e.printStackTrace();
             }
             else if (e.toString().contains("Communications link failure"))
             {

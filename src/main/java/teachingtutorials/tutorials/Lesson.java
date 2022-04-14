@@ -10,9 +10,10 @@ import java.util.ArrayList;
 public class Lesson
 {
     User student;
-    int iTutorialID;
+    protected int iTutorialID;
+    protected int iLocationID;
 
-    int iCurrentStage;
+    protected int iCurrentStage;
     TeachingTutorials plugin;
 
     ArrayList<Stage> Stages = new ArrayList<>();
@@ -42,6 +43,7 @@ public class Lesson
 
     public void startLesson()
     {
+        fetchStages();
         iCurrentStage = 0;
         nextStage();
     }

@@ -12,7 +12,7 @@
     <name>TeachingTutorials</name>
 
     <properties>
-        <java.version>1.16</java.version>
+        <java.version>16</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -61,6 +61,10 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -69,6 +73,11 @@
             <artifactId>spigot-api</artifactId>
             <version>1.17.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.SmylerMC</groupId>
+            <artifactId>terraminusminus</artifactId>
+            <version>master-ab645ef750-1</version>
         </dependency>
     </dependencies>
 </project>

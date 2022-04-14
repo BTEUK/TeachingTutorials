@@ -225,7 +225,6 @@ public class Lesson
         nextStage();
     }
 
-    //Incomplete
     public void nextStage()
     {
         iCurrentStage++;
@@ -245,6 +244,9 @@ public class Lesson
 
 
         //Then store in DB
+
+
+        //And trigger the scoreboard to refresh
     }
 
     public static void main(String[] args)

@@ -30,7 +30,7 @@ public class Task
 
     }
 
-    public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, Group parentGroup, int iLocationID, Player player)
+    public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)
     {
         ArrayList<Task> tasks = new ArrayList<Task>();
 
@@ -41,16 +41,16 @@ public class Task
         try
         {
             //Compiles the command to fetch groups
-            sql = "Select * FROM Tasks WHERE LocationID = "+iLocationID;
+            sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+iGroupID +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                String szType = resultSet.getString("TaskType");
-                String szAnswers = resultSet.getString("Answers");
-                String szDifficulty = resultSet.getString("Difficulty");
+                String szType = resultSet.getString("Tasks.TaskType");
+                String szAnswers = resultSet.getString("LocationTasks.Answers");
+                String szDifficulty = resultSet.getString("LocationTasks.Difficulty");
 
                 switch (szType)
                 {
@@ -63,7 +63,7 @@ public class Task
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Groups by StepID");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
             se.printStackTrace();
         }
         catch (Exception e)

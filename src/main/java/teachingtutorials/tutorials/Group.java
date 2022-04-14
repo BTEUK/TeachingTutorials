@@ -37,7 +37,7 @@ public class Group
 
     public void fetchAndInitialiseTasks()
     {
-        tasks = Task.fetchTasks(plugin,this, parentStep.parentStage.lesson.iLocationID, parentStep.parentStage.lesson.student.player);
+        tasks = Task.fetchTasks(plugin,this, parentStep.parentStage.lesson.iLocationID, groupID, parentStep.parentStage.lesson.student.player);
     }
 
     public void initialRegister()

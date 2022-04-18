@@ -92,10 +92,10 @@ public class User
         try
         {
             //Compiles the command to add the new user
-            sql = "Select Scores.Score FROM Players,Lessons,Scores WHERE UUID = "+player.getUniqueId() +" " +
+            sql = "Select * FROM Lessons,Scores WHERE Lessons.UUID = "+player.getUniqueId() +" " +
                     "AND Scores.Category = " + category.toString() + " "+
                     "AND Lessons.LessonID = Scores.LessonID " +
-                    "ORDER BY Lessons.LessonID DESC";
+                    "ORDER BY Scores.LessonID DESC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the update and returns the amount of records updated

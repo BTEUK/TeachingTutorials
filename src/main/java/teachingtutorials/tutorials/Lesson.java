@@ -3,7 +3,6 @@ package teachingtutorials.tutorials;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.utils.User;
 
 import java.sql.ResultSet;
@@ -34,7 +33,7 @@ public class Lesson
 
     public void decideTutorial()
     {
-        //Prevalance of each category in each tutorial needed
+        //Prevalence of each category in each tutorial needed
 
         //-----------------------------------------------------------------
         //-------Calculate what two skills a player needs to work on-------

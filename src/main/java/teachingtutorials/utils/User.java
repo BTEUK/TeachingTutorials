@@ -13,9 +13,10 @@ public class User
 {
     public Player player;
 
-    public boolean bHasCompletedOnce;
+    public boolean bHasCompletedCompulsory;
     public boolean bInLesson;
 
+    //Holds the information on the rating for a user
     public int iScoreTpll;
     public int iScoreWE;
     public int iScoreTerraforming;
@@ -49,7 +50,7 @@ public class User
             resultSet = SQL.executeQuery(sql);
             if (resultSet.next())
             {
-                this.bHasCompletedOnce = resultSet.getBoolean("CompletedCompulsory");
+                this.bHasCompletedCompulsory = resultSet.getBoolean("CompletedCompulsory");
                 this.bInLesson = resultSet.getBoolean("InLesson");
             }
             else
@@ -69,22 +70,52 @@ public class User
             e.printStackTrace();
         }
     }
+
     public void calculateScores()
     {
+        iScoreTpll = calculateScore(Category.tpll);
+        iScoreWE = calculateScore(Category.worldedit);
+        iScoreTerraforming = calculateScore(Category.terraforming);
+        iScoreColouring = calculateScore(Category.colouring);
+        iScoreDetailing = calculateScore(Category.detail);
     }
 
-    private void calculateScore(Category category)
+    private int calculateScore(Category category)
     {
-        //Get all lessons
-        //Get Scores.score from Players,Lessons,Scores,Tutorials,Category
-        //Where Players.UUID = Lessons.UUID
-        //And Lessons.LessonID = Scores.LessonID
-        //And Lessons.TutorialID = Tutorials.TutorialID
-        //And CategoryPoints.TutorialID = Tutorials.TutorialID
-        //And Category = CATEGORY
-        //ORDER BY Lessons.LessonID DESC
+        int iTotalScore = 0;
 
-        //Get first 5
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
 
+        try
+        {
+            //Compiles the command to add the new user
+            sql = "Select Scores.Score FROM Players,Lessons,Scores WHERE UUID = "+player.getUniqueId() +" " +
+                    "AND Scores.Category = " + category.toString() + " "+
+                    "AND Lessons.LessonID = Scores.LessonID " +
+                    "ORDER BY Lessons.LessonID DESC";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the update and returns the amount of records updated
+            resultSet = SQL.executeQuery(sql);
+
+            //Iterate over last 5 and add up score
+            for (int iCount = 5 ; resultSet.next() && iCount >= 1 ; iCount--)
+            {
+                iTotalScore = iTotalScore + iCount*resultSet.getInt("Score");
+            }
+        }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching lessons scores by UUID for category: "+category.toString());
+            se.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return iTotalScore;
     }
 }

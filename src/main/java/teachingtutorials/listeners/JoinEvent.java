@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scoreboard.*;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.User;
 
@@ -28,6 +29,7 @@ public class JoinEvent implements Listener
     {
         User user = new User(event.getPlayer());
         user.fetchDetailsByUUID();
+        user.refreshScoreboard();
     }
 
     @EventHandler

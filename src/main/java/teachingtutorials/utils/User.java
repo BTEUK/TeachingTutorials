@@ -3,6 +3,7 @@ package teachingtutorials.utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.*;
 import teachingtutorials.TeachingTutorials;
 
 import java.sql.ResultSet;
@@ -117,5 +118,35 @@ public class User
         }
 
         return iTotalScore;
+    }
+
+    public void refreshScoreboard()
+    {
+        //Get scoreboard
+        Scoreboard SB;
+
+        ScoreboardManager SBM = Bukkit.getScoreboardManager();
+        SB = SBM.getNewScoreboard();
+
+        Objective scores = SB.registerNewObjective("Scores", "dummy", ChatColor.AQUA +"Scores", RenderType.INTEGER);
+
+        Score tpllRating = scores.getScore("Tpll");
+        tpllRating.setScore(this.iScoreTpll);
+
+        Score WERating = scores.getScore("WorldEdit");
+        WERating.setScore(this.iScoreWE);
+
+        Score TerraRating = scores.getScore("Terraforming");
+        TerraRating.setScore(this.iScoreTerraforming);
+
+        Score ColouringRating = scores.getScore("Texturing");
+        ColouringRating.setScore(this.iScoreColouring);
+
+        Score DetailingRating = scores.getScore("Detailing");
+        DetailingRating.setScore(this.iScoreDetailing);
+
+        scores.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        this.player.setScoreboard(SB);
     }
 }

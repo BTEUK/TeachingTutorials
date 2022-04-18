@@ -34,7 +34,7 @@ public class MainMenu
 
         inv.clear();
 
-        if (u.bHasCompletedOnce)
+        if (u.bHasCompletedCompulsory)
         {
             Utils.createItem(inv, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
         }

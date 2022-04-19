@@ -140,26 +140,36 @@ public class TeachingTutorials extends JavaPlugin
 
         try
         {
-            File file = new File("TutorialsDDL.sql");
+            this.saveResource("TutorialsDDL.sql", false);
+
+            File file = new File("/home/container/plugins/TeachingTutorials/TutorialsDDL.sql");
 
             fileReader = new FileReader(file);
 
             bufferedReader = new BufferedReader(fileReader);
             sql = readAll(bufferedReader);
             sql.replace("TeachingTutorials", dbConnection.Database);
-            SQL = dbConnection.getConnection().createStatement();
 
-            //    Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] [SQL]: " + sql);
+            sql.replace("\n", "");
+            String[] statements = sql.split(";");
 
-            //Executes the update and returns how many rows were changed
-            iCount = SQL.executeUpdate(sql);
-
-            //If only 1 record was changed, success is set to true
-            if (iCount == 1)
+            for (int i = 0 ; i < statements.length ; i++)
             {
-                //  Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]" +ChatColor.AQUA + "Created tables");
-                bSuccess = true;
+                SQL = dbConnection.getConnection().createStatement();
+
+                //    Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] [SQL]: " + sql);
+
+                //Executes the update and returns how many rows were changed
+                iCount = SQL.executeUpdate(statements[i]);
+
+                //If only 1 record was changed, success is set to true
+                if (iCount != 1)
+                {
+                    //  Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]" +ChatColor.AQUA + "Created tables");
+                    bSuccess = false;
+                }
             }
+
         }
         catch (IOException e)
         {

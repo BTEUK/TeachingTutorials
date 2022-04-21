@@ -30,6 +30,9 @@ public class JoinEvent implements Listener
         User user = new User(event.getPlayer());
         user.fetchDetailsByUUID();
         user.refreshScoreboard();
+
+        //Adds player to the main list of players
+        plugin.players.add(user);
     }
 
     @EventHandler

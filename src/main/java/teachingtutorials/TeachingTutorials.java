@@ -30,7 +30,6 @@ public class TeachingTutorials extends JavaPlugin
     String sql;
 
     Statement SQL = null;
-    ResultSet resultSet = null;
 
     private DBConnection dbConnection;
 
@@ -46,6 +45,8 @@ public class TeachingTutorials extends JavaPlugin
         TeachingTutorials.instance = this;
         TeachingTutorials.config = this.getConfig();
         saveDefaultConfig();
+
+        players = new ArrayList<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------

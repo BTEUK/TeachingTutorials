@@ -128,7 +128,7 @@ public class User
         ScoreboardManager SBM = Bukkit.getScoreboardManager();
         SB = SBM.getNewScoreboard();
 
-        Objective scores = SB.registerNewObjective("Scores", "dummy", ChatColor.AQUA +"Scores", RenderType.INTEGER);
+        Objective scores = SB.registerNewObjective("Ratings", "dummy", ChatColor.AQUA +"Skills", RenderType.INTEGER);
 
         Score tpllRating = scores.getScore("Tpll");
         tpllRating.setScore(this.iScoreTpll);

@@ -11,8 +11,11 @@ import teachingtutorials.guis.MainMenu;
 
 public class InventoryClicked implements Listener
 {
+    private TeachingTutorials plugin;
+
     public InventoryClicked(TeachingTutorials plugin)
     {
+        this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
         Bukkit.getConsoleSender().sendMessage("[InventoryClicked]" + ChatColor.GREEN + " InventoryClicked loaded");
     }
@@ -32,6 +35,8 @@ public class InventoryClicked implements Listener
 
         String title = e.getView().getTitle();
 
+        //Determine what menu they are in
+
         //If in the Menu GUI
         if (title.equals(MainMenu.getInventoryName()))
         {
@@ -40,7 +45,9 @@ public class InventoryClicked implements Listener
             {
                 return;
             }
-            MainMenu.clicked((Player) e.getWhoClicked(), e.getSlot(), e.getCurrentItem(), e.getInventory());
+            //Refer back to the MainMenu class
+            MainMenu.clicked((Player) e.getWhoClicked(), e.getSlot(), e.getCurrentItem(), e.getInventory(), plugin);
+            e.getWhoClicked().sendMessage(e.getSlot() +"");
         }
     }
 }

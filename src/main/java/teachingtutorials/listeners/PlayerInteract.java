@@ -32,7 +32,7 @@ public class PlayerInteract implements Listener
         player = e.getPlayer();
 
         //Get the user
-        User user = new User();
+        User user;
 
         ArrayList<User> users = plugin.players;
         int iLength = users.size();
@@ -43,18 +43,20 @@ public class PlayerInteract implements Listener
             if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
             {
                 user = users.get(i);
+
+                if (player.getOpenInventory().getType() != InventoryType.CRAFTING && e.getPlayer().getOpenInventory().getType() != InventoryType.CREATIVE)
+                {
+                    return;
+                }
+
+                if (player.getInventory().getItemInMainHand().equals(TeachingTutorials.menu))
+                {
+                    e.setCancelled(true);
+                    player.openInventory(MainMenu.getGUI(user));
+                }
             }
-        }
 
-        if (player.getOpenInventory().getType() != InventoryType.CRAFTING && e.getPlayer().getOpenInventory().getType() != InventoryType.CREATIVE)
-        {
-            return;
-        }
-
-        if (player.getInventory().getItemInMainHand().equals(TeachingTutorials.menu))
-        {
-            e.setCancelled(true);
-            player.openInventory(MainMenu.getGUI(user));
-        }
+            break;
+        } //End for
     }
 }

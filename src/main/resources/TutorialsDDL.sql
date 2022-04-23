@@ -51,8 +51,6 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Lessons` (
   `StepAt` INT NOT NULL,
   `LocationID` INT NOT NULL,
   PRIMARY KEY (`LessonID`),
-  INDEX `User_idx` (`UUID` ASC) VISIBLE,
-  INDEX `Location_idx` (`LocationID` ASC) VISIBLE,
   CONSTRAINT `User`
     FOREIGN KEY (`UUID`)
     REFERENCES `TeachingTutorials`.`Players` (`UUID`)
@@ -106,8 +104,7 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Stages` (
   `TutorialID` INT NOT NULL,
   `Order` INT NOT NULL,
   PRIMARY KEY (`StageID`),
-  INDEX `Tutorial_idx` (`TutorialID` ASC) VISIBLE,
-  CONSTRAINT `Tutorial`
+  CONSTRAINT `TutorialStage`
     FOREIGN KEY (`TutorialID`)
     REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`)
     ON DELETE NO ACTION
@@ -125,7 +122,6 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Steps` (
   `StageID` INT NOT NULL,
   `StepInStage` INT NOT NULL,
   PRIMARY KEY (`StepID`),
-  INDEX `Stage_idx` (`StageID` ASC) VISIBLE,
   CONSTRAINT `Stage`
     FOREIGN KEY (`StageID`)
     REFERENCES `TeachingTutorials`.`Stages` (`StageID`)
@@ -148,7 +144,6 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Groups` (
   `ColouringDifficulty` FLOAT NOT NULL,
   `TexturingDifficulty` FLOAT NOT NULL,
   PRIMARY KEY (`GroupID`),
-  INDEX `StepID_idx` (`StepID` ASC) VISIBLE,
   CONSTRAINT `StepID`
     FOREIGN KEY (`StepID`)
     REFERENCES `TeachingTutorials`.`Steps` (`StepID`)
@@ -168,8 +163,7 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Tasks` (
   `TaskType` VARCHAR(32) NULL,
   `Order` INT NOT NULL,
   PRIMARY KEY (`TaskID`),
-  INDEX `Group_idx` (`GroupID` ASC) VISIBLE,
-  CONSTRAINT `Group`
+  CONSTRAINT `GroupID`
     FOREIGN KEY (`GroupID`)
     REFERENCES `TeachingTutorials`.`Groups` (`GroupID`)
     ON DELETE NO ACTION
@@ -205,9 +199,7 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`LocationTasks` (
   `TaskID` INT NOT NULL,
   `Answers` MEDIUMTEXT NULL,
   `Difficulty` FLOAT NULL,
-  INDEX `Location_idx` (`LocationID` ASC) VISIBLE,
-  INDEX `Task_idx` (`TaskID` ASC) VISIBLE,
-  CONSTRAINT `Location0`
+  CONSTRAINT `LocationTask`
     FOREIGN KEY (`LocationID`)
     REFERENCES `TeachingTutorials`.`Locations` (`LocationID`)
     ON DELETE NO ACTION

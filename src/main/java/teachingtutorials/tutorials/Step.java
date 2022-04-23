@@ -47,7 +47,8 @@ public class Step
         int i;
         int iGroups = groups.size();
 
-        for (i = 0; i < iGroups; i++) {
+        for (i = 0; i < iGroups; i++)
+        {
             groups.get(i).initialRegister();
         }
     }
@@ -72,7 +73,7 @@ public class Step
         if (bAllGroupsFinished == true)
         {
             this.bStepFinished = true;
-            parentStage.nextStep();
+          //  parentStage.nextStep();
         }
     }
 

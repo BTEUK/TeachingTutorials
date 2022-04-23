@@ -14,6 +14,8 @@ import java.util.ArrayList;
 public class Lesson
 {
     User student;
+    private boolean bCompulsory;
+
     private int iTutorialIndex;
     protected int iTutorialID;
     protected int iLocationID;
@@ -25,13 +27,73 @@ public class Lesson
 
     //Scores in each of the categories
 
-    public Lesson(User player, TeachingTutorials plugin)
+    public Lesson(User player, TeachingTutorials plugin, boolean bCompulsory)
     {
         this.plugin = plugin;
         this.student = player;
+        this.bCompulsory = bCompulsory;
     }
 
-    public void decideTutorial()
+    public void startLesson()
+    {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson started for "+student.player.getName());
+        if (bCompulsory)
+        { //Finds the compulsory tutorial and sets the ID to that
+            fetchCompulsoryID();
+        }
+        else //Find an appropriate tutorial and sets the ID to that
+        {
+            decideTutorial();
+        }
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Fetching stages");
+        fetchStages();
+
+        iCurrentStage = 0;
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Signal next stage");
+        nextStage();
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson ended");
+    }
+
+    private void fetchCompulsoryID()
+    {
+        int iTutorialID = -1;
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch tutorials
+            sql = "Select * FROM Tutorials WHERE Tutorials.Compulsory = 1";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            if (resultSet.next())
+            {
+                iTutorialID = resultSet.getInt("TutorialID");
+            }
+        }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching all in use tutorials");
+            se.printStackTrace();
+            iTutorialID = -1;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            iTutorialID = -1;
+        }
+
+        this.iTutorialID = iTutorialID;
+    }
+
+    private void decideTutorial()
     {
         //Prevalence of each category in each tutorial needed
 
@@ -197,7 +259,8 @@ public class Lesson
         int iIndexBiggestRelevance = 0;
 
         //Go through each tutorial, and score each with relevance, and keep track of the most relevant tutorial
-        for (int i = 0 ; i < iCount ; i++) {
+        for (int i = 0 ; i < iCount ; i++)
+        {
             float fRelevance = 2 * tutorials[i].categoryDifficulties[iIndexLowestRating - 1];
             fRelevance = fRelevance + tutorials[i].categoryDifficulties[iIndexSecondLowestRating - 1];
             if (fRelevance > fBiggestRelevance) {
@@ -210,34 +273,31 @@ public class Lesson
         iTutorialID = tutorials[iTutorialIndex].iTutorialID;
     }
 
-    public void fetchStages()
+    private void fetchStages()
     {
         //Gets a list of all of the stages of the specified tutorial and loads each with the relevant data.
         //List is in order of stage 1 1st
         this.Stages = Stage.fetchStagesByTutorialID(student.player, plugin, this);
     }
 
-    public void startLesson()
+    protected void nextStage()
     {
-        fetchStages();
-        iCurrentStage = 0;
-        nextStage();
-    }
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Next stage");
 
-    public void nextStage()
-    {
         iCurrentStage++;
-        if (iCurrentStage <= Stages.size())
+        Stage stage;
+        while (iCurrentStage <= Stages.size())
         {
-            Stages.get(iCurrentStage-1).startStage();
+            stage = Stages.get(iCurrentStage-1);
+            stage.startStage();
         }
-        else
-        {
-            endLesson();
-        }
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All stages complete");
+
+        endLesson();
     }
 
-    public void endLesson()
+    private void endLesson()
     {
         //Calculate final scores
 

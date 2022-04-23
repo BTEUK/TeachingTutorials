@@ -53,6 +53,9 @@ public class Stage
 
     public void startStage()
     {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Stage "+iOrder +" starting");
+
+        fetchAndInitialiseSteps();
         iCurrentStep = 0;
         nextStep();
     }
@@ -61,13 +64,21 @@ public class Stage
     protected void nextStep()
     {
         iCurrentStep++;
+        Step step;
+
         if (iCurrentStep <= steps.size())
         {
-            steps.get(iCurrentStep-1).startStep();
+            step = steps.get(iCurrentStep-1);
+            step.startStep();
         }
         else
         {
-            endStage();
+            bStageFinished = true;
+            return;
+            //   endStage();
+        }
+        while(!step.bStepFinished)
+        {
         }
     }
 

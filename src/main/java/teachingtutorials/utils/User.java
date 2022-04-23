@@ -29,12 +29,6 @@ public class User
         this.player = player;
     }
 
-
-    public User()
-    {
-
-    }
-
     public void fetchDetailsByUUID()
     {
         String sql;
@@ -44,7 +38,8 @@ public class User
         try
         {
             //Compiles the command to add the new user
-            sql = "Select * FROM Players WHERE UUID = "+player.getUniqueId();
+            sql = "SELECT * FROM Players WHERE `UUID` = '"+player.getUniqueId()+"'";
+            System.out.println(sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the update and returns the amount of records updated
@@ -56,7 +51,7 @@ public class User
             }
             else
             {
-                sql = "INSERT INTO Players (UUID) VALUES ("+ player.getUniqueId() +")";
+                sql = "INSERT INTO Players (UUID) VALUES ('"+ player.getUniqueId() +"')";
                 SQL.executeUpdate(sql);
             }
 
@@ -72,7 +67,7 @@ public class User
         }
     }
 
-    public void calculateScores()
+    public void calculateRatings()
     {
         iScoreTpll = calculateScore(Category.tpll);
         iScoreWE = calculateScore(Category.worldedit);
@@ -92,10 +87,10 @@ public class User
         try
         {
             //Compiles the command to add the new user
-            sql = "Select * FROM Lessons,Scores WHERE Lessons.UUID = "+player.getUniqueId() +" " +
-                    "AND Scores.Category = " + category.toString() + " "+
-                    "AND Lessons.LessonID = Scores.LessonID " +
-                    "ORDER BY Scores.LessonID DESC";
+            sql = "SELECT * FROM Lessons, Scores WHERE `Lessons`.`UUID` = '"+player.getUniqueId() +"' " +
+                    "AND `Scores`.`Category` = '" + category.toString() + "' "+
+                    "AND `Lessons`.`LessonID` = `Scores`.`LessonID` " +
+                    "ORDER BY `Scores`.`LessonID` DESC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the update and returns the amount of records updated
@@ -106,6 +101,7 @@ public class User
             {
                 iTotalScore = iTotalScore + iCount*resultSet.getInt("Score");
             }
+            iTotalScore = iTotalScore/15;
         }
         catch(SQLException se)
         {

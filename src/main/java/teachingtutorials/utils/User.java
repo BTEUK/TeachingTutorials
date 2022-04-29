@@ -145,4 +145,22 @@ public class User
 
         this.player.setScoreboard(SB);
     }
+
+    public void triggerCompulsory()
+    {
+        this.bHasCompletedCompulsory = true;
+
+        String szSql;
+        Statement SQL;
+        ResultSet resultSet;
+
+        try
+        {
+            szSql = "UPDATE Users SET CompletedCompulsory = 1 WHERE UUID = '"+ this.player.getUniqueId()+"'";
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 }

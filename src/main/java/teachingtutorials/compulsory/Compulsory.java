@@ -35,5 +35,6 @@ public class Compulsory
         Lesson lesson = new Lesson(user, this.plugin, true);
         lesson.startLesson();
         user.player.sendMessage("Congrats");
+        user.triggerCompulsory();
     }
 }

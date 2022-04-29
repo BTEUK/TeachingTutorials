@@ -4,8 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.Task;
-import teachingtutorials.fundamentalTasks.TpllListener;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +14,7 @@ public class Stage
 {
     protected int iStageID;
     private int iOrder;
+    private String szName;
 
     private Player player;
     private TeachingTutorials plugin;
@@ -28,7 +27,7 @@ public class Stage
 
     // Not true Now ^^^^^^^^^
 
-    private ArrayList<Step> steps = new ArrayList<>();
+    public ArrayList<Step> steps = new ArrayList<>();
 
     //Provision for score recording
 
@@ -42,6 +41,11 @@ public class Stage
         this.bStageFinished = false;
 
         this.player = player;
+    }
+
+    public Stage(String szName)
+    {
+        this.szName = szName;
     }
 
     private void fetchAndInitialiseSteps()

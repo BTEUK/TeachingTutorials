@@ -13,6 +13,8 @@ import java.util.ArrayList;
 
 public class Task
 {
+    public String type;
+
     float fDifficulty;
     float fFinalScore;
 
@@ -22,7 +24,11 @@ public class Task
 
     public void register()
     {
+    }
 
+    public Task(String type)
+    {
+        this.type = type;
     }
 
     protected void taskComplete()

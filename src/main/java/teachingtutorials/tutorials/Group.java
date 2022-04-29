@@ -13,7 +13,8 @@ import java.util.ArrayList;
 
 public class Group
 {
-    private final int groupID;
+    private String szName;
+    private int groupID;
     private int taskNo;
 
     public boolean groupFinished;
@@ -21,6 +22,13 @@ public class Group
     private Player player;
     private TeachingTutorials plugin;
     protected Step parentStep;
+
+    private int iTpllDif;
+    private int iWEDif;
+    private int iColourDif;
+    private int iDetailDif;
+    private int iTerraDif;
+
 
     private ArrayList<Task> tasks = new ArrayList<>();
 
@@ -31,6 +39,21 @@ public class Group
         this.parentStep = parentStep;
         this.groupID = groupID;
         this.groupFinished = false;
+    }
+
+    public Group(String szName, int iTpll, int iWE, int iColour, int iDetail, int iTerra)
+    {
+        this.szName = szName;
+        this.iTpllDif = iTpll;
+        this.iWEDif = iWE;
+        this.iColourDif = iColour;
+        this.iDetailDif = iDetail;
+        this.iTerraDif = iTerra;
+    }
+
+    public void addTaskCreation(Task task)
+    {
+        tasks.add(task);
     }
 
     //Where to fetch tasks, where to initialise them etc

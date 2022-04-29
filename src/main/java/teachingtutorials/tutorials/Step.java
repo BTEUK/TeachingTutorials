@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 public class Step
 {
+    private String szName;
     private Player player;
     private TeachingTutorials plugin;
     protected Stage parentStage;
@@ -22,7 +23,7 @@ public class Step
 
     //Groups are completed asynchronously.
     //Tasks in groups are completed synchronously
-    private ArrayList<Group> groups = new ArrayList<>();
+    public ArrayList<Group> groups = new ArrayList<>();
 
     public Step(int iStepID, int iStepInStage, Player player, TeachingTutorials plugin, Stage parentStage)
     {
@@ -32,6 +33,11 @@ public class Step
         this.bStepFinished = false;
         this.iStepID = iStepID;
         this.iStepInStage = iStepInStage;
+    }
+
+    public Step(String szName)
+    {
+        this.szName = szName;
     }
 
     private void fetchAndInitialiseGroups()

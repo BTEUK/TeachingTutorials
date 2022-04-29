@@ -1,7 +1,12 @@
 package teachingtutorials.tutorials;
 
+import java.util.ArrayList;
+
 public class Tutorial
 {
+    public String szTutorialName;
+    public String szAuthor;
+
     int iTutorialID;
 
 
@@ -13,4 +18,11 @@ public class Tutorial
     int iTerraDifficulty;
     int iColouringDifficulty;
     int iDetailingDifficulty;
+
+    public ArrayList<Stage> stages;
+
+    public Tutorial()
+    {
+        stages = new ArrayList<>();
+    }
 }

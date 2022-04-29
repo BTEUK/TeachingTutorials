@@ -8,10 +8,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import teachingtutorials.fundamentalTasks.Chat;
+import teachingtutorials.fundamentalTasks.Task;
+import teachingtutorials.fundamentalTasks.TpllListener;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.listeners.InventoryClicked;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinEvent;
+import teachingtutorials.tutorials.Group;
+import teachingtutorials.tutorials.Stage;
+import teachingtutorials.tutorials.Step;
+import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.User;
 
@@ -21,6 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class TeachingTutorials extends JavaPlugin
 {
@@ -69,6 +77,33 @@ public class TeachingTutorials extends JavaPlugin
             createTables();
         }
 
+        //----------------------------------------
+        //-----------Load New Tutorials-----------
+        //----------------------------------------
+
+        //Makes the new tutorials folder if it doesn't already exist
+        String szFolder = getDataFolder().getAbsolutePath()+"/NewTutorials";
+        File folder = new File(szFolder);
+        if (!folder.exists())
+        {
+            folder.mkdir();
+        }
+
+        String szArchiveFolder = getDataFolder().getAbsolutePath()+"/TutorialArchives";
+        File archiveFolder = new File(szArchiveFolder);
+        if (!archiveFolder.exists())
+        {
+            archiveFolder.mkdir();
+        }
+
+        //Goes through the folder and if files are found, interpret it
+        //Folder is sent as it is needed
+        while (folder.list().length != 0)
+        {
+            File file = folder.listFiles()[0];
+            interpretNewTutorial(file);
+        }
+
         //---------------------------------------
         //--------------Create GUIs--------------
         //---------------------------------------
@@ -113,6 +148,149 @@ public class TeachingTutorials extends JavaPlugin
 
     }
 
+    private void interpretNewTutorial(File file)
+    {
+        String[] szLines;
+        Tutorial tutorial = new Tutorial();
+        int i;
+        int iLines = 0;
+
+        try
+        {
+            Scanner szFile = new Scanner(file);
+            while (szFile.hasNextLine())
+            {
+                szFile.nextLine();
+                iLines++;
+            }
+
+            //Reset scanner
+            szFile.close();
+            szFile = new Scanner(file);
+            szLines = new String[iLines];
+
+            for (i = 0 ; i < iLines ; i++)
+            {
+                szLines[0] = szFile.nextLine();
+            }
+        }
+        catch (Exception e)
+        {
+            return;
+        }
+
+        i = 0;
+
+        //Gets the tutorial name and author name
+        String[] szFields = szLines[i].split(",");
+        if (szFields.length < 1 || szFields.length > 2)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name and author line is incorrectly formatted");
+            return;
+        }
+        tutorial.szTutorialName = szFields[0];
+        if (szFields.length == 2)
+        {
+            tutorial.szAuthor = szFields[1];
+        }
+
+        //Holds type of the last line interpreted
+        String szType = "";
+
+        //References the stage, step, group that we are currently creating
+        Stage lastStage = null;
+        Step lastStep = null;
+        Group lastGroup = null;
+
+        //Goes through each line and interprets the instructions
+        for (i = 1 ; i < iLines ; i++)
+        {
+            //Stage
+            if (szLines[i].startsWith("["))
+            {
+                szType = "Stage";
+                Stage stage = new Stage(szLines[i].replace("[",""));
+                tutorial.stages.add(stage);
+                lastStage = stage;
+            }
+            //Step
+            else if(szLines[i].startsWith("("))
+            {
+                if (!(szType.equals("Stage")||szType.equals("Task")))
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    return;
+                }
+                szType = "Step";
+                Step step = new Step(szLines[i].replace("(",""));
+                lastStage.steps.add(step);
+                lastStep = step;
+            }
+            //Group
+            else if(szLines[i].startsWith("{"))
+            {
+                if (!(szType.equals("Step")||szType.equals("Task")))
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    return;
+                }
+                szFields = szLines[i].split(",");
+                if (szFields.length != 6)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    return;
+                }
+                for (int j = 1 ; j < 6 ; j++)
+                {
+                    if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
+                    {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
+                                "Difficulty ratings must be between 0 and 100. Line: "+(i+1));
+                        return;
+                    }
+                }
+                szType = "Group";
+                Group group = new Group(szFields[0].replace("(",""), Integer.parseInt(szFields[1]), Integer.parseInt(szFields[2]), Integer.parseInt(szFields[3]), Integer.parseInt(szFields[4]), Integer.parseInt(szFields[5]));
+                lastStep.groups.add(group);
+                lastGroup = group;
+            }
+            //Task
+            else if(szLines[i].startsWith("~"))
+            {
+                if (!(szType.equals("Group")||szType.equals("Task")))
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    return;
+                }
+                Task task;
+                String szTaskType = szLines[i];
+                switch (szTaskType)
+                {
+                    case "tpll":
+                    case "selection":
+                    case "command":
+                    case "place":
+                    case "chat":
+                        task = new Task(szTaskType);
+                        lastGroup.addTaskCreation(task);
+                        break;
+                    default:
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid task type, line: "+(i+1));
+                }
+            }
+        } //End iteration through lines
+
+        //If it has got to this stage, then the details are all sorted and stored in the tutorial object
+        addNewTutorialToDB(tutorial);
+
+        //Moves file to the archive folder
+        file.renameTo(new File(getDataFolder().getAbsolutePath()+"/TutorialArchives"));
+    }
+
+    public void addNewTutorialToDB(Tutorial tutorial)
+    {
+
+    }
     @Override
     public void onDisable()
     {

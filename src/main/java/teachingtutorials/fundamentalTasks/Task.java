@@ -25,9 +25,9 @@ public class Task
 
     }
 
-    private void taskComplete()
+    protected void taskComplete()
     {
-
+        parentGroup.taskFinished();
     }
 
     public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)

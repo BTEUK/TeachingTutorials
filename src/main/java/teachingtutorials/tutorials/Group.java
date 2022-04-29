@@ -58,7 +58,7 @@ public class Group
         }
     }
 
-    protected void taskFinished()
+    public void taskFinished()
     {
         //taskNo is that of the previous, so it is the correct index of the next
         if (taskNo >= tasks.size()) //If the task was the last one in the group

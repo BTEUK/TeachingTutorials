@@ -71,5 +71,6 @@ public class TpllListener extends Task implements Listener
     {
         fFinalScore = fScore * fDifficulty;
         HandlerList.unregisterAll(this);
+        taskComplete();
     }
 }

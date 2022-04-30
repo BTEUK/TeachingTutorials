@@ -56,6 +56,37 @@ public class Group
         tasks.add(task);
     }
 
+    //Getters
+    public int getTpllDif()
+    {
+        return this.iTpllDif;
+    }
+
+    public int getWEDiff()
+    {
+        return this.iWEDif;
+    }
+
+    public int getColourDif()
+    {
+        return this.iColourDif;
+    }
+
+    public int getDetailDif()
+    {
+        return this.iDetailDif;
+    }
+
+    public int getTerraDif()
+    {
+        return this.iTerraDif;
+    }
+
+    public ArrayList<Task> getTasks()
+    {
+        return tasks;
+    }
+
     //Where to fetch tasks, where to initialise them etc
 
     public void fetchAndInitialiseTasks()

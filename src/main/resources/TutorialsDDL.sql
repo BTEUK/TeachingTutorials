@@ -70,8 +70,9 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `TeachingTutorials`.`Tutorials` ;
 
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Tutorials` (
-  `TutorialID` INT NOT NULL,
+  `TutorialID` INT NOT NULL AUTO_INCREMENT,
   `InUse` TINYINT NOT NULL DEFAULT 0,
+  `TutorialName` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`TutorialID`))
 ENGINE = InnoDB;
 
@@ -100,9 +101,10 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `TeachingTutorials`.`Stages` ;
 
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Stages` (
-  `StageID` INT NOT NULL,
+  `StageID` INT NOT NULL AUTO_INCREMENT,
   `TutorialID` INT NOT NULL,
   `Order` INT NOT NULL,
+  `StageName` VARCHAR(45) NULL,
   PRIMARY KEY (`StageID`),
   CONSTRAINT `TutorialStage`
     FOREIGN KEY (`TutorialID`)
@@ -121,6 +123,7 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Steps` (
   `StepID` INT NOT NULL AUTO_INCREMENT,
   `StageID` INT NOT NULL,
   `StepInStage` INT NOT NULL,
+  `StepName` VARCHAR(45) NULL,
   PRIMARY KEY (`StepID`),
   CONSTRAINT `Stage`
     FOREIGN KEY (`StageID`)
@@ -136,13 +139,13 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `TeachingTutorials`.`Groups` ;
 
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Groups` (
-  `GroupID` INT NOT NULL,
+  `GroupID` INT NOT NULL AUTO_INCREMENT,
   `StepID` INT NOT NULL,
-  `TpllDifficulty` FLOAT NOT NULL DEFAULT 0,
+  `TpllDifficulty` FLOAT NOT NULL,
   `WEDifficulty` FLOAT NOT NULL,
-  `TerraDifficulty` FLOAT NOT NULL,
   `ColouringDifficulty` FLOAT NOT NULL,
-  `TexturingDifficulty` FLOAT NOT NULL,
+  `DetailingDifficulty` FLOAT NOT NULL,
+  `TerraDiifficulty` FLOAT NOT NULL,
   PRIMARY KEY (`GroupID`),
   CONSTRAINT `StepID`
     FOREIGN KEY (`StepID`)
@@ -158,7 +161,7 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `TeachingTutorials`.`Tasks` ;
 
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Tasks` (
-  `TaskID` INT NOT NULL,
+  `TaskID` INT NOT NULL AUTO_INCREMENT,
   `GroupID` INT NOT NULL,
   `TaskType` VARCHAR(32) NULL,
   `Order` INT NOT NULL,

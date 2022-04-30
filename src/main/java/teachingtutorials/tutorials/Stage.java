@@ -48,6 +48,12 @@ public class Stage
         this.szName = szName;
     }
 
+    //Getters
+    public String getName()
+    {
+        return szName;
+    }
+
     private void fetchAndInitialiseSteps()
     {
         //Gets a list of all of the steps of the specified stage and loads each with the relevant data.

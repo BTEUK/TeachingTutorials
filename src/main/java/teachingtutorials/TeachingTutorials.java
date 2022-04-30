@@ -89,6 +89,7 @@ public class TeachingTutorials extends JavaPlugin
             folder.mkdir();
         }
 
+        //Makes the tutorial archive folder if it doesn't already exist
         String szArchiveFolder = getDataFolder().getAbsolutePath()+"/TutorialArchives";
         File archiveFolder = new File(szArchiveFolder);
         if (!archiveFolder.exists())
@@ -154,10 +155,11 @@ public class TeachingTutorials extends JavaPlugin
         Tutorial tutorial = new Tutorial();
         int i;
         int iLines = 0;
-
+        Scanner szFile;
         try
         {
-            Scanner szFile = new Scanner(file);
+            //Create scanner
+            szFile = new Scanner(file);
             while (szFile.hasNextLine())
             {
                 szFile.nextLine();
@@ -173,6 +175,7 @@ public class TeachingTutorials extends JavaPlugin
             {
                 szLines[0] = szFile.nextLine();
             }
+            szFile.close();
         }
         catch (Exception e)
         {
@@ -281,16 +284,155 @@ public class TeachingTutorials extends JavaPlugin
         } //End iteration through lines
 
         //If it has got to this stage, then the details are all sorted and stored in the tutorial object
-        addNewTutorialToDB(tutorial);
 
-        //Moves file to the archive folder
-        file.renameTo(new File(getDataFolder().getAbsolutePath()+"/TutorialArchives"));
+        if (addNewTutorialToDB(tutorial))
+        {
+            //Moves file to the archive folder
+            file.renameTo(new File(getDataFolder().getAbsolutePath()+"/TutorialArchives"));
+        }
     }
 
-    public void addNewTutorialToDB(Tutorial tutorial)
+    public boolean addNewTutorialToDB(Tutorial tutorial)
     {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Inserting new tutorial into DB. Tutorial: "+tutorial.szTutorialName);
+        int i, j, k, l;
 
+        int iStages;
+        int iSteps;
+        int iGroups;
+        int iTasks;
+
+        int iTutorialID;
+        int iStageID;
+        int iStepID;
+        int iGroupID;
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet;
+
+        //Insert the new tutorial into the tutorials table
+        try
+        {
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            sql = "INSERT INTO Tutorials (TutorialName) VALUES ('"+tutorial.szTutorialName+"')";
+            SQL.executeUpdate(sql);
+
+            sql = "Select LAST_INSERT_ID()";
+            resultSet = SQL.executeQuery(sql);
+            resultSet.next();
+            iTutorialID = resultSet.getInt(1);
+        }
+        catch (Exception e)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new tutorial into DB. Name: "+tutorial.szTutorialName);
+            e.printStackTrace();
+            return false;
+        }
+
+        ArrayList<Stage> stages = tutorial.stages;
+        iStages = stages.size();
+
+        //Go through stages
+        for (i = 0 ; i < iStages ; i++)
+        {
+            //Insert the new stage into the stages table
+            Stage stage = stages.get(i);
+            try
+            {
+                sql = "INSERT INTO Stages (StageName, TutorialID, Order) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
+                SQL.executeUpdate(sql);
+
+                sql = "Select LAST_INSERT_ID()";
+                resultSet = SQL.executeQuery(sql);
+                resultSet.next();
+                iStageID = resultSet.getInt(1);
+            }
+            catch (Exception e)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new stage into DB. Tutorial: "+tutorial.szTutorialName);
+                e.printStackTrace();
+                continue;
+            }
+
+            ArrayList<Step> steps = stage.steps;
+            iSteps = steps.size();
+
+            //Go through steps
+            for (j = 0 ; j < iSteps ; j++)
+            {
+                //Insert the new step into the steps table
+                Step step = steps.get(j);
+                try
+                {
+                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+")";
+                    SQL.executeUpdate(sql);
+
+                    sql = "Select LAST_INSERT_ID()";
+                    resultSet = SQL.executeQuery(sql);
+                    resultSet.next();
+                    iStepID = resultSet.getInt(1);
+                }
+                catch (Exception e)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new step into DB. Tutorial: "+tutorial.szTutorialName);
+                    e.printStackTrace();
+                    continue;
+                }
+
+                ArrayList<Group> groups = step.groups;
+                iGroups = steps.size();
+                //Go through groups
+                for (k = 0 ; k < iGroups ; k++)
+                {
+                    //Insert the new group into the groups table
+                    Group group = groups.get(k);
+                    try
+                    {
+                        sql = "INSERT INTO Groups (StepID, TpllDifficulty, WEDifficulty, ColouringDifficulty, DetailingDifficulty, TerraDifficulty)" +
+                                " VALUES (" +iStepID+", "+group.getTpllDif()+", "+group.getWEDiff()+", "+group.getColourDif()+", "+group.getDetailDif()+", "+group.getTerraDif()+", "+(j+1)+")";
+                        SQL.executeUpdate(sql);
+
+                        sql = "Select LAST_INSERT_ID()";
+                        resultSet = SQL.executeQuery(sql);
+                        resultSet.next();
+                        iGroupID = resultSet.getInt(1);
+                    }
+                    catch (Exception e)
+                    {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new group into DB. Tutorial: "+tutorial.szTutorialName);
+                        e.printStackTrace();
+                        continue;
+                    }
+
+                    ArrayList<Task> tasks = group.getTasks();
+                    iTasks = tasks.size();
+                    //Go through tasks
+                    for (l = 0 ; l < iTasks ; l++)
+                    {
+                        //Insert the new group into the groups table
+                        Task task = tasks.get(l);
+                        try
+                        {
+                            sql = "INSERT INTO Tasks (GroupID, TaskType, Order)" +
+                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(j+1)+")";
+                            SQL.executeUpdate(sql);
+                        }
+                        catch (Exception e)
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new task into DB. Tutorial: "+tutorial.szTutorialName);
+                            e.printStackTrace();
+                            continue;
+                        }
+                    }
+
+                }
+            }
+
+        }
+        return true;
     }
+
     @Override
     public void onDisable()
     {

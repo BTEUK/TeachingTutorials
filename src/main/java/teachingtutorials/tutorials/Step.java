@@ -40,6 +40,13 @@ public class Step
         this.szName = szName;
     }
 
+    //Getters
+    public String getName()
+    {
+        return szName;
+    }
+
+
     private void fetchAndInitialiseGroups()
     {
         groups = Group.fetchGroupsByStepID(player, plugin, this);

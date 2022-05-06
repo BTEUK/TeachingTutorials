@@ -157,7 +157,7 @@ public class User
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            szSql = "UPDATE Users SET CompletedCompulsory = 1 WHERE UUID = '"+ this.player.getUniqueId()+"'";
+            szSql = "UPDATE Players SET CompletedCompulsory = 1 WHERE UUID = '"+ this.player.getUniqueId()+"'";
             SQL.executeUpdate(szSql);
         }
         catch (Exception e)

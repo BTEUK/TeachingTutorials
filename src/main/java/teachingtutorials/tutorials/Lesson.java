@@ -2,6 +2,7 @@ package teachingtutorials.tutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.User;
 
@@ -17,10 +18,14 @@ public class Lesson
     private boolean bCompulsory;
 
     private int iTutorialIndex;
-    protected int iTutorialID;
-    protected int iLocationID;
+    protected Tutorial tutorial;
 
-    protected int iCurrentStage;
+    int iTutorialID;
+    public User user;
+    public int iStage;
+    public int iStep;
+    public int iLocationID;
+
     TeachingTutorials plugin;
 
     ArrayList<Stage> Stages = new ArrayList<>();
@@ -32,14 +37,29 @@ public class Lesson
         this.plugin = plugin;
         this.student = player;
         this.bCompulsory = bCompulsory;
+        this.tutorial = new Tutorial();
     }
 
-    public void startLesson()
+    public void resumeLesson()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson started for "+student.player.getName());
+        setUpLesson();
+
+        fetchCurrentFromUUID();
+
+        continueStage();
+    }
+
+    private void setUpLesson()
+    {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting up lesson for "+student.player.getName());
         if (bCompulsory)
         { //Finds the compulsory tutorial and sets the ID to that
-            fetchCompulsoryID();
+            boolean bCompulsoryExists = fetchCompulsoryID();
+            if (!bCompulsoryExists)
+            {
+                student.player.sendMessage(ChatColor.AQUA +"No compulsory tutorial was available");
+                return;
+            }
         }
         else //Find an appropriate tutorial and sets the ID to that
         {
@@ -48,8 +68,13 @@ public class Lesson
 
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Fetching stages");
         fetchStages();
+    }
 
-        iCurrentStage = 0;
+    public void startLesson()
+    {
+        setUpLesson();
+
+        this.iStage = 0;
 
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Signal next stage");
         nextStage();
@@ -57,7 +82,7 @@ public class Lesson
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson ended");
     }
 
-    private void fetchCompulsoryID()
+    private boolean fetchCompulsoryID()
     {
         int iTutorialID = -1;
 
@@ -90,7 +115,12 @@ public class Lesson
             iTutorialID = -1;
         }
 
-        this.iTutorialID = iTutorialID;
+        this.tutorial.iTutorialID = iTutorialID;
+
+        if (iTutorialID == -1)
+            return false;
+        else
+            return true;
     }
 
     private void decideTutorial()
@@ -284,11 +314,27 @@ public class Lesson
     {
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Next stage");
 
-        iCurrentStage++;
+        this.iStage++;
         Stage stage;
-        while (iCurrentStage <= Stages.size())
+        while (this.iStage <= Stages.size())
         {
-            stage = Stages.get(iCurrentStage-1);
+            stage = Stages.get(this.iStage-1);
+            stage.startStage();
+        }
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All stages complete");
+
+        endLesson();
+    }
+
+    protected void continueStage()
+    {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Next stage");
+
+        Stage stage;
+        while (this.iStage <= Stages.size())
+        {
+            stage = Stages.get(this.iStage-1);
             stage.startStage();
         }
 
@@ -311,5 +357,36 @@ public class Lesson
     public static void main(String[] args)
     {
      //   Lesson lesson = new Lesson()
+    }
+
+    public void fetchCurrentFromUUID()
+    {
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch the lesson in progress
+            sql = "Select * FROM Lessons WHERE UUID = '" +user.player.getUniqueId() +"' AND Finished = 0";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            if (resultSet.next())
+            {
+                this.iTutorialID = resultSet.getInt("TutorialID");
+                this.iStage = resultSet.getInt("StageAt");
+                this.iStep = resultSet.getInt("StepAt");
+                this.iLocationID = resultSet.getInt("StepAt");
+            }
+        }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching current lesson for "+user.player.getName() +": "+user.player.getUniqueId());
+            se.printStackTrace();
+            this.iTutorialID = -1;
+        }
+
     }
 }

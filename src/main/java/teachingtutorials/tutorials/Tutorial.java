@@ -1,5 +1,13 @@
 package teachingtutorials.tutorials;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import teachingtutorials.TeachingTutorials;
+import teachingtutorials.utils.User;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class Tutorial
@@ -8,7 +16,6 @@ public class Tutorial
     public String szAuthor;
 
     int iTutorialID;
-
 
     int[] categoryDifficulties;
 
@@ -25,4 +32,5 @@ public class Tutorial
     {
         stages = new ArrayList<>();
     }
+
 }

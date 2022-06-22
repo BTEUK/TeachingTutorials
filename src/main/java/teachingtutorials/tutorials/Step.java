@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.Task;
+import teachingtutorials.utils.Display;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,9 +14,10 @@ import java.util.ArrayList;
 public class Step
 {
     private String szName;
+    private String szStepInstructions;
     private Player player;
     private TeachingTutorials plugin;
-    protected Stage parentStage;
+    public Stage parentStage;
     public boolean bStepFinished;
     protected int iStepID;
     protected int iStepInStage;
@@ -25,7 +26,7 @@ public class Step
     //Tasks in groups are completed synchronously
     public ArrayList<Group> groups = new ArrayList<>();
 
-    public Step(int iStepID, int iStepInStage, Player player, TeachingTutorials plugin, Stage parentStage)
+    public Step(int iStepID, int iStepInStage, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions)
     {
         this.player = player;
         this.plugin = plugin;
@@ -33,11 +34,13 @@ public class Step
         this.bStepFinished = false;
         this.iStepID = iStepID;
         this.iStepInStage = iStepInStage;
+        this.szStepInstructions = szStepInstructions;
     }
 
-    public Step(String szName)
+    public Step(String szName, String szInstructions)
     {
         this.szName = szName;
+        this.szStepInstructions = szInstructions;
     }
 
     //Getters
@@ -45,7 +48,10 @@ public class Step
     {
         return szName;
     }
-
+    public String getInstructions()
+    {
+        return szStepInstructions;
+    }
 
     private void fetchAndInitialiseGroups()
     {
@@ -54,6 +60,11 @@ public class Step
 
     public void startStep()
     {
+        //TP to location?
+
+        Display display = new Display(player, szStepInstructions);
+        display.Message();
+
         fetchAndInitialiseGroups();
 
         //Register the start of all groups
@@ -108,7 +119,7 @@ public class Step
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), player, plugin, stage);
+                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), player, plugin, stage, resultSet.getString("StepInstructions"));
                 steps.add(step);
             }
         }

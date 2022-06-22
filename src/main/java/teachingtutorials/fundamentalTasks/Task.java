@@ -40,6 +40,11 @@ public class Task
     protected void taskComplete()
     {
         fFinalScore = fDifficulty*fPerformance;
+
+        //Add to the totals
+        parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal = parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal + fFinalScore;
+        parentGroup.parentStep.parentStage.lesson. fTpllDifTotal = parentGroup.parentStep.parentStage.lesson.fTpllDifTotal + fDifficulty;
+
         parentGroup.taskFinished();
     }
 
@@ -63,13 +68,17 @@ public class Task
             {
                 String szType = resultSet.getString("Tasks.TaskType");
                 String szAnswers = resultSet.getString("LocationTasks.Answers");
-                String szDifficulty = resultSet.getString("LocationTasks.Difficulty");
+                float fTpllDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TpllDifficulty"));
+                float fWEDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.WEDifficulty"));
+                float fColouringDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.ColouringDifficulty"));
+                float fDetailingDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.DetailingDifficulty"));
+                float fTerraDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TerraDifficulty"));
 
                 switch (szType)
                 {
                     case "tpll":
                         String[] cords = szAnswers.split(",");
-                        TpllListener tpllListener = new TpllListener(plugin, Double.parseDouble(cords[0]), Double.parseDouble(cords[1]), player, Float.parseFloat(szDifficulty));
+                        TpllListener tpllListener = new TpllListener(plugin, Double.parseDouble(cords[0]), Double.parseDouble(cords[1]), player, fTpllDifficulty);
                         tasks.add(tpllListener);
                 }
             }

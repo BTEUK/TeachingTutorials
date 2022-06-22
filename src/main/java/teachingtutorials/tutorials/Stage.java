@@ -19,13 +19,8 @@ public class Stage
     private Player player;
     private TeachingTutorials plugin;
     private int iCurrentStep;
-    protected Lesson lesson; //Still want component objects to be able to access it. Or do I?
+    public Lesson lesson; //Still want component objects to be able to access it. Or do I? yep, and all the children of that
     public boolean bStageFinished;
-
-    // Tasks are divided into separate groups of tasks (steps)
-    // Each step must be completed synchronously but tasks in the step can be done in any order
-
-    // Not true Now ^^^^^^^^^
 
     public ArrayList<Step> steps = new ArrayList<>();
 
@@ -94,8 +89,6 @@ public class Stage
 
     protected void endStage()
     {
-        //Calculate final scores for stage?
-
         lesson.nextStage();
     }
 

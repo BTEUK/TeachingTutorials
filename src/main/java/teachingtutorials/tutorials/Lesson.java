@@ -2,7 +2,6 @@ package teachingtutorials.tutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.User;
 
@@ -14,14 +13,13 @@ import java.util.ArrayList;
 //Lesson stores all the information needed for a lesson and handles the play of a tutorial
 public class Lesson
 {
-    User student;
+    protected User student;
     private boolean bCompulsory;
 
     private int iTutorialIndex;
     protected Tutorial tutorial;
 
     int iTutorialID;
-    public User user;
     public int iStage;
     public int iStep;
     public int iLocationID;
@@ -368,7 +366,7 @@ public class Lesson
         try
         {
             //Compiles the command to fetch the lesson in progress
-            sql = "Select * FROM Lessons WHERE UUID = '" +user.player.getUniqueId() +"' AND Finished = 0";
+            sql = "Select * FROM Lessons WHERE UUID = '" +student.player.getUniqueId() +"' AND Finished = 0";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -383,7 +381,7 @@ public class Lesson
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching current lesson for "+user.player.getName() +": "+user.player.getUniqueId());
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching current lesson for "+student.player.getName() +": "+student.player.getUniqueId());
             se.printStackTrace();
             this.iTutorialID = -1;
         }

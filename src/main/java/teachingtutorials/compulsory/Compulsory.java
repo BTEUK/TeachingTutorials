@@ -14,11 +14,11 @@ public class Compulsory extends Lesson
 
     public void startLesson()
     {
-        if (user.bInLesson)
+        if (student.bInLesson)
             resumeLesson();
         else
-            startLesson();
-        user.player.sendMessage("Congrats");
-        user.triggerCompulsory();
+            super.startLesson();
+        student.player.sendMessage("Congrats");
+        student.triggerCompulsory();
     }
 }

@@ -14,10 +14,8 @@ public class Compulsory extends Lesson
 
     public void startLesson()
     {
-        if (student.bInLesson)
-            resumeLesson();
-        else
-            super.startLesson();
+        super.startLesson();
+
         student.player.sendMessage("Congrats");
         student.triggerCompulsory();
     }

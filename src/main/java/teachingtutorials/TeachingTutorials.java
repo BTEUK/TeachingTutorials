@@ -150,7 +150,11 @@ public class TeachingTutorials extends JavaPlugin
     private void interpretNewTutorial(File file)
     {
         String[] szLines;
+
+        //Holds all of the information for the new tutorial
         Tutorial tutorial = new Tutorial();
+
+        //Read file into lines and fields
         int i;
         int iLines = 0;
         Scanner szFile;
@@ -184,15 +188,38 @@ public class TeachingTutorials extends JavaPlugin
 
         //Gets the tutorial name and author name
         String[] szFields = szLines[i].split(",");
-        if (szFields.length < 1 || szFields.length > 2)
+        if (szFields.length < 6 || szFields.length > 7)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name and author line is incorrectly formatted");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name, author and relevance line is incorrectly formatted");
             return;
         }
         tutorial.szTutorialName = szFields[0];
-        if (szFields.length == 2)
+        if (szFields.length == 7)
         {
             tutorial.szAuthor = szFields[1];
+            for (int j = 2; j < 7 ; j++)
+            {
+                if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
+                            "Relevances must be between 0 and 100. Line: "+(i+1));
+                    return;
+                }
+                tutorial.categoryUsage[j-2] = Integer.parseInt(szFields[i]);
+            }
+        }
+        else
+        {
+            for (int j = 1; j < 6 ; j++)
+            {
+                if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
+                            "Relevances must be between 0 and 100. Line: "+(i+1));
+                    return;
+                }
+                tutorial.categoryUsage[j-1] = Integer.parseInt(szFields[i]);
+            }
         }
 
         //Holds type of the last line interpreted
@@ -222,8 +249,14 @@ public class TeachingTutorials extends JavaPlugin
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
                     return;
                 }
+                szFields = szLines[i].split(",");
+                if (szFields.length != 2)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    return;
+                }
                 szType = "Step";
-                Step step = new Step(szLines[i].replace("(",""));
+                Step step = new Step(szFields[0].replace("(",""), szFields[1]);
                 lastStage.steps.add(step);
                 lastStep = step;
             }
@@ -236,22 +269,13 @@ public class TeachingTutorials extends JavaPlugin
                     return;
                 }
                 szFields = szLines[i].split(",");
-                if (szFields.length != 6)
+                if (szFields.length != 1)
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
                     return;
                 }
-                for (int j = 1 ; j < 6 ; j++)
-                {
-                    if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
-                    {
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
-                                "Difficulty ratings must be between 0 and 100. Line: "+(i+1));
-                        return;
-                    }
-                }
                 szType = "Group";
-                Group group = new Group(szFields[0].replace("(",""), Integer.parseInt(szFields[1]), Integer.parseInt(szFields[2]), Integer.parseInt(szFields[3]), Integer.parseInt(szFields[4]), Integer.parseInt(szFields[5]));
+                Group group = new Group(szFields[0].replace("(",""));
                 lastStep.groups.add(group);
                 lastGroup = group;
             }
@@ -328,6 +352,22 @@ public class TeachingTutorials extends JavaPlugin
             return false;
         }
 
+        //Add the relevances into the DB
+        for (i = 0 ; i < 5 ; i++)
+        {
+            try
+            {
+                sql = "INSERT INTO CategoryPoints (TutorialID, Category, Relevance) VALUES (" + iTutorialID + ", '" + tutorial.szCategoryEnumsInOrder[i] + "', " +((float) tutorial.categoryUsage[i])/100+ ")";
+                SQL.executeUpdate(sql);
+            }
+            catch (Exception e)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert relevance into DB. Tutorial: "+tutorial.szTutorialName);
+                e.printStackTrace();
+                continue;
+            }
+        }
+
         ArrayList<Stage> stages = tutorial.stages;
         iStages = stages.size();
 
@@ -363,7 +403,7 @@ public class TeachingTutorials extends JavaPlugin
                 Step step = steps.get(j);
                 try
                 {
-                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+")";
+                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, StepInstructions) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+", '"+step.getInstructions()+"')";
                     SQL.executeUpdate(sql);
 
                     sql = "Select LAST_INSERT_ID()";
@@ -387,8 +427,8 @@ public class TeachingTutorials extends JavaPlugin
                     Group group = groups.get(k);
                     try
                     {
-                        sql = "INSERT INTO Groups (StepID, TpllDifficulty, WEDifficulty, ColouringDifficulty, DetailingDifficulty, TerraDifficulty)" +
-                                " VALUES (" +iStepID+", "+group.getTpllDif()+", "+group.getWEDiff()+", "+group.getColourDif()+", "+group.getDetailDif()+", "+group.getTerraDif()+", "+(j+1)+")";
+                        sql = "INSERT INTO Groups (StepID)" +
+                                " VALUES (" +iStepID+")";
                         SQL.executeUpdate(sql);
 
                         sql = "Select LAST_INSERT_ID()";
@@ -413,7 +453,7 @@ public class TeachingTutorials extends JavaPlugin
                         try
                         {
                             sql = "INSERT INTO Tasks (GroupID, TaskType, Order)" +
-                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(j+1)+")";
+                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1)+")";
                             SQL.executeUpdate(sql);
                         }
                         catch (Exception e)

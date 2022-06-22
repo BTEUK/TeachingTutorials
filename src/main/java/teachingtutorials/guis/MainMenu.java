@@ -8,6 +8,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.compulsory.Compulsory;
+import teachingtutorials.tutorials.Lesson;
+import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
@@ -109,12 +111,16 @@ public class MainMenu
         {
             player.closeInventory();
             player.sendMessage(ChatColor.AQUA + "Welcome back");
+            //Creates a lesson with the user
+            Lesson lesson = new Lesson(user, plugin, false);
+            lesson.startLesson();
         }
         //Compulsory tutorials
         else if (slot == 1) //0 Indexed
         {
             player.closeInventory();
             Compulsory compulsory = new Compulsory(plugin, user);
+            //Starts, or resumes the compulsory tutorial.
             compulsory.startLesson();
         }
     }

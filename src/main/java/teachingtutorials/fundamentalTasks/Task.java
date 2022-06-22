@@ -31,6 +31,11 @@ public class Task
         this.type = type;
     }
 
+    public Task(TeachingTutorials plugin)
+    {
+        this.plugin = plugin;
+    }
+
     protected void taskComplete()
     {
         parentGroup.taskFinished();

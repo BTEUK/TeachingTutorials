@@ -1,6 +1,5 @@
 package teachingtutorials.fundamentalTasks;
 
-import net.buildtheearth.terraminusminus.projection.dymaxion.BTEDymaxionProjection;
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
@@ -21,7 +20,7 @@ public class TpllListener extends Task implements Listener
 
     public TpllListener(TeachingTutorials plugin, double lat, double lon, Player player, float fDifficulty)
     {
-        this.plugin = plugin;
+        super(plugin);
         this.fTargetCoords[0] = lat;
         this.fTargetCoords[1] = lon;
         this.player = player;

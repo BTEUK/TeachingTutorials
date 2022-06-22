@@ -36,8 +36,7 @@ public class TpllListener extends Task implements Listener
     @EventHandler
     public void interactEvent(PlayerCommandPreprocessEvent event)
     {
-        float fScore = 0F;
-        int iAdjustedScore = 0;
+        fPerformance = 0F;
 
         if (event.getPlayer().getUniqueId().equals(player.getUniqueId()))
         {
@@ -51,8 +50,8 @@ public class TpllListener extends Task implements Listener
 
             if (fDistance <= 0.25)
             {
-                fScore = 1;
-                spotHit(fScore);
+                fPerformance = 1;
+                spotHit();
             }
             else if (fDistance <= 1.0) //Make the acceptable value configurable
             {
@@ -60,16 +59,18 @@ public class TpllListener extends Task implements Listener
                 HandlerList.unregisterAll(this);
                 //Ranked from 0 to 1
                 //iScore = ....
-                fScore = (-4 / 3) * ((float) fDistance - 1);
-                spotHit(fScore);
+                fPerformance = (4 / 3) * (1 - (float) fDistance);
+                spotHit();
             }
         }
     }
 
-    private void spotHit(float fScore)
+    private void spotHit()
     {
-        fFinalScore = fScore * fDifficulty;
+        //Unregisters this task
         HandlerList.unregisterAll(this);
+
+        //Marks the task as complete
         taskComplete();
     }
 }

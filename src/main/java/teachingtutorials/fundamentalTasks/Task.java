@@ -16,6 +16,7 @@ public class Task
     public String type;
 
     float fDifficulty;
+    float fPerformance;
     float fFinalScore;
 
     Player player;
@@ -38,6 +39,7 @@ public class Task
 
     protected void taskComplete()
     {
+        fFinalScore = fDifficulty*fPerformance;
         parentGroup.taskFinished();
     }
 

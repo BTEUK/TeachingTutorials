@@ -57,6 +57,12 @@ public class MainMenu
             Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Start Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
 
+
+        if (u.player.hasPermission("TeachingTutorials.Admin"))
+        {
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 19,(ChatColor.GREEN +"Creator Menu"), ChatColor.DARK_GREEN+"");
+        }
+
         toReturn.setContents(inventory.getContents());
 
         return toReturn;
@@ -64,46 +70,52 @@ public class MainMenu
 
     public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
     {
-        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
+        //Finds the correct user for this player from the plugins list of users
+        boolean bUserFound = false;
+
+        ArrayList<User> users = plugin.players;
+        int iLength = users.size();
+        int i;
+        User user = new User(player);
+
+        for (i = 0 ; i < iLength ; i++)
         {
-            player.sendMessage(ChatColor.AQUA + "Welcome back");
-            player.closeInventory();
+            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
+            {
+                user = users.get(i);
+                bUserFound = true;
+                break;
+            }
         }
-        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GRAY +"Continue Learning"))
+
+        if (!bUserFound)
+        {
+            player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
+        }
+
+        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GRAY +"Continue Learning"))
         {
             player.sendMessage(ChatColor.RED +"You have not completed the compulsory tutorials yet");
+        }
+
+        //Check for whether they are in a tutorial
+        else if (user.bInLesson)
+        {
             player.closeInventory();
+            user.player.sendMessage("You must complete your current tutorial first");
+        }
+
+        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
+        {
+            player.closeInventory();
+            player.sendMessage(ChatColor.AQUA + "Welcome back");
         }
         //Compulsory tutorials
         else if (slot == 1) //0 Indexed
         {
-            //Finds the correct user for this player from the plugins list of users
-            boolean bUserFound = false;
-
-            ArrayList<User> users = plugin.players;
-            int iLength = users.size();
-            int i;
-            User user = new User(player);
-
-            for (i = 0 ; i < iLength ; i++)
-            {
-                if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-                {
-                    user = users.get(i);
-                    bUserFound = true;
-                }
-            }
-
-            if (bUserFound)
-            {
-                player.closeInventory();
-                Compulsory compulsory = new Compulsory(plugin, user);
-                compulsory.startLesson();
-            }
-            else
-            {
-                player.sendMessage(ChatColor.RED +"An error occurred. Please contact a dev.");
-            }
+            player.closeInventory();
+            Compulsory compulsory = new Compulsory(plugin, user);
+            compulsory.startLesson();
         }
     }
 }

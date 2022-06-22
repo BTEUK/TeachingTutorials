@@ -48,11 +48,14 @@ public class User
             {
                 this.bHasCompletedCompulsory = resultSet.getBoolean("CompletedCompulsory");
                 this.bInLesson = resultSet.getBoolean("InLesson");
+                player.sendMessage(this.bInLesson +"");
             }
             else
             {
                 sql = "INSERT INTO Players (UUID) VALUES ('"+ player.getUniqueId() +"')";
                 SQL.executeUpdate(sql);
+                this.bHasCompletedCompulsory = false;
+                this.bInLesson = false;
             }
 
         }

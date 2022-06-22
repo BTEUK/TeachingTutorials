@@ -21,14 +21,7 @@ public class Group
 
     private Player player;
     private TeachingTutorials plugin;
-    protected Step parentStep;
-
-    private int iTpllDif;
-    private int iWEDif;
-    private int iColourDif;
-    private int iDetailDif;
-    private int iTerraDif;
-
+    public Step parentStep;
 
     private ArrayList<Task> tasks = new ArrayList<>();
 
@@ -41,45 +34,14 @@ public class Group
         this.groupFinished = false;
     }
 
-    public Group(String szName, int iTpll, int iWE, int iColour, int iDetail, int iTerra)
+    public Group(String szName)
     {
         this.szName = szName;
-        this.iTpllDif = iTpll;
-        this.iWEDif = iWE;
-        this.iColourDif = iColour;
-        this.iDetailDif = iDetail;
-        this.iTerraDif = iTerra;
     }
 
     public void addTaskCreation(Task task)
     {
         tasks.add(task);
-    }
-
-    //Getters
-    public int getTpllDif()
-    {
-        return this.iTpllDif;
-    }
-
-    public int getWEDiff()
-    {
-        return this.iWEDif;
-    }
-
-    public int getColourDif()
-    {
-        return this.iColourDif;
-    }
-
-    public int getDetailDif()
-    {
-        return this.iDetailDif;
-    }
-
-    public int getTerraDif()
-    {
-        return this.iTerraDif;
     }
 
     public ArrayList<Task> getTasks()

@@ -17,20 +17,16 @@ public class Tutorial
 
     int iTutorialID;
 
-    int[] categoryDifficulties;
+    public int[] categoryUsage;
 
-    //Difficulties in categories
-    int iTpllDifficulty;
-    int iWEDifficulty;
-    int iTerraDifficulty;
-    int iColouringDifficulty;
-    int iDetailingDifficulty;
+    public final String[] szCategoryEnumsInOrder;
 
     public ArrayList<Stage> stages;
 
     public Tutorial()
     {
+        szCategoryEnumsInOrder = new String[]{"tpll", "worldedit", "colouring", "detail", "terraforming"};
         stages = new ArrayList<>();
+        categoryUsage = new int[5];
     }
-
 }

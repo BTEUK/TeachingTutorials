@@ -155,7 +155,6 @@ public class User
 
         String szSql;
         Statement SQL;
-        ResultSet resultSet;
 
         try
         {

@@ -9,7 +9,6 @@ import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.compulsory.Compulsory;
 import teachingtutorials.tutorials.Lesson;
-import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
@@ -27,7 +26,6 @@ public class MainMenu
         inventory_name = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Tutorial Menu";
 
         inventory = Bukkit.createInventory(null, inv_rows);
-
     }
 
     public static String getInventoryName()
@@ -60,7 +58,7 @@ public class MainMenu
         }
 
 
-        if (u.player.hasPermission("TeachingTutorials.Admin"))
+        if (u.player.hasPermission("TeachingTutorials.Admin") || u.player.hasPermission("TeachingTutorials.Creator"))
         {
             Utils.createItem(inventory, Material.BOOKSHELF, 1, 19,(ChatColor.GREEN +"Creator Menu"), ChatColor.DARK_GREEN+"");
         }
@@ -93,6 +91,8 @@ public class MainMenu
         if (!bUserFound)
         {
             player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
+            player.sendMessage(ChatColor.RED +"Try relogging");
+            return;
         }
 
         //When player tries to continue learning but hasn't completed the compulsory tutorial
@@ -115,9 +115,15 @@ public class MainMenu
         else if (slot == 1) //0 Indexed
         {
             player.closeInventory();
+            player.sendMessage(ChatColor.AQUA + "Welcome back");
             Compulsory compulsory = new Compulsory(plugin, user);
             //Starts, or resumes the compulsory tutorial.
             compulsory.startLesson();
+        }
+        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Creator Menu"))
+        {
+            player.closeInventory();
+            player.openInventory(AdminMenu.getGUI(user));
         }
     }
 }

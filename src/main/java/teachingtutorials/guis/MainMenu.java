@@ -95,16 +95,11 @@ public class MainMenu
             player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
         }
 
+        //When player tries to continue learning but hasn't completed the compulsory tutorial
         if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GRAY +"Continue Learning"))
         {
+            //Should we just make it go back into the compulsory tho?
             player.sendMessage(ChatColor.RED +"You have not completed the compulsory tutorials yet");
-        }
-
-        //Check for whether they are in a tutorial
-        else if (user.bInLesson)
-        {
-            player.closeInventory();
-            user.player.sendMessage("You must complete your current tutorial first");
         }
 
         else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
@@ -115,6 +110,7 @@ public class MainMenu
             Lesson lesson = new Lesson(user, plugin, false);
             lesson.startLesson();
         }
+
         //Compulsory tutorials
         else if (slot == 1) //0 Indexed
         {

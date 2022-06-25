@@ -42,7 +42,7 @@ public class MainMenu
         if (u.bHasCompletedCompulsory)
         {
             Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorials"), ChatColor.DARK_GREEN+"");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorials"));
         }
         else if (u.bInLesson)
         {
@@ -60,7 +60,7 @@ public class MainMenu
 
         if (u.player.hasPermission("TeachingTutorials.Admin") || u.player.hasPermission("TeachingTutorials.Creator"))
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 19,(ChatColor.GREEN +"Creator Menu"), ChatColor.DARK_GREEN+"");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 19,(ChatColor.GREEN +"Creator Menu"));
         }
 
         toReturn.setContents(inventory.getContents());
@@ -120,7 +120,7 @@ public class MainMenu
             //Starts, or resumes the compulsory tutorial.
             compulsory.startLesson();
         }
-        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Creator Menu"))
+        else if (slot == 18)
         {
             player.closeInventory();
             player.openInventory(AdminMenu.getGUI(user));

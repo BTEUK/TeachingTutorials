@@ -12,6 +12,7 @@ import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class CompulsoryTutorialMenu
 {
@@ -56,7 +57,7 @@ public class CompulsoryTutorialMenu
                 Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN+tutorials[i].szTutorialName), ChatColor.DARK_GREEN+tutorials[i].szAuthor);
             else
                 Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN+""+ChatColor.BOLD +tutorials[i].szTutorialName),
-                        ChatColor.DARK_GREEN+tutorials[i].szAuthor);
+                        ChatColor.DARK_GREEN+Bukkit.getPlayer(UUID.fromString(tutorials[i].szAuthor)).getName());
         }
 
         toReturn.setContents(inventory.getContents());
@@ -73,6 +74,8 @@ public class CompulsoryTutorialMenu
         {
             //Sets the current compulsory tutorial to not compulsory - ID is used to identify the tutorial
             tutorials[slot].triggerCompulsory();
+
+            //Refreshes the display
             player.closeInventory();
             player.openInventory(CompulsoryTutorialMenu.getGUI());
         }

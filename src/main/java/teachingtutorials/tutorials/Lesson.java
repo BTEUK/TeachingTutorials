@@ -3,6 +3,8 @@ package teachingtutorials.tutorials;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.utils.Display;
+import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 
 import java.sql.ResultSet;
@@ -68,10 +70,14 @@ public class Lesson
     {
         if (student.bInLesson)
             resumeLesson();
-        else if (bNewLocation)
+        else if (bNewLocation) //Checks whether it is in the new location mode
             createNewLocation();
         else
             createNewLesson();
+
+        student.currentMode = Mode.Doing_Tutorial;
+        student.bInLesson = true;
+        student.setInLesson(1);
     }
 
     //Resumes a previous lesson
@@ -98,22 +104,29 @@ public class Lesson
     }
 
     //Creates a new lesson
-    private void createNewLesson()
+    private boolean createNewLesson()
     {
         //Decide on the Tutorial ID
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting up lesson for "+student.player.getName());
         if (bCompulsory)
         { //Finds the compulsory tutorial and sets the ID to that
-            boolean bCompulsoryExists = fetchCompulsoryID();
-            if (!bCompulsoryExists)
+            if (!fetchCompulsoryID())
             {
-                student.player.sendMessage(ChatColor.AQUA +"No compulsory tutorial was available");
-                return;
+                student.player.closeInventory();
+                Display display = new Display(student.player, ChatColor.DARK_AQUA +"No compulsory tutorial was available");
+                display.Message();
+                return false;
             }
         }
         else //Find an appropriate tutorial and sets the ID to that
         {
-            decideTutorial();
+            if (!decideTutorial())
+            {
+                student.player.closeInventory();
+                Display display = new Display(student.player, ChatColor.DARK_AQUA +"No tutorial could be found");
+                display.Message();
+                return false;
+            }
         }
 
         //Import the stages of the tutorial selected
@@ -136,6 +149,7 @@ public class Lesson
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] No location found");
             student.player.sendMessage(ChatColor.AQUA +"No location has been created for this tutorial yet :(");
         }
+        return true;
     }
 
     private boolean fetchCompulsoryID()
@@ -149,7 +163,7 @@ public class Lesson
         try
         {
             //Compiles the command to fetch tutorials
-            sql = "Select * FROM Tutorials WHERE Tutorials.Compulsory = 1";
+            sql = "Select * FROM Tutorials WHERE `Compulsory` = 1";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -179,7 +193,7 @@ public class Lesson
             return true;
     }
 
-    private void decideTutorial()
+    private boolean decideTutorial()
     {
         //Prevalence of each category in each tutorial needed
 
@@ -255,84 +269,8 @@ public class Lesson
         //-----------------------------------------------------------------
         Tutorial[] tutorials;
 
-        int iCount = 0;
+        tutorials = Tutorial.fetchAll(true);
 
-        String sql;
-        Statement SQL = null;
-        ResultSet resultSet = null;
-
-        try
-        {
-            //Compiles the command to fetch tutorials
-            sql = "Select * FROM Tutorials WHERE Tutorials.InUse = 1";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-            while (resultSet.next())
-            {
-                iCount++;
-            }
-
-            tutorials = new Tutorial[iCount];
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-            for (int i = 0 ; i < iCount ; i++)
-            {
-                tutorials[i].iTutorialID = resultSet.getInt("TutorialID");
-            }
-
-
-            //Compiles the command to fetch category difficulties
-            sql = "Select * FROM Tutorials,CategoryPoints WHERE Tutorials.InUse = 1 AND Tutorials.TutorialID = CategoryPoints.TutorialsID";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-            while (resultSet.next())
-            {
-                int i;
-                //Goes through until it finds the linked tutorial
-                for (i = 0 ; i < iCount ; i++)
-                {
-                    if (tutorials[i].iTutorialID == resultSet.getInt("CategoryPoints.TutorialID"))
-                    {
-                        switch (resultSet.getString("Category"))
-                        {
-                            case "tpll":
-                                tutorials[i].categoryUsage[0] = resultSet.getInt("CategoryPoints.Relevance");
-                                break;
-                            case "we":
-                                tutorials[i].categoryUsage[1] = resultSet.getInt("CategoryPoints.Relevance");
-                                break;
-                            case "terraforming":
-                                tutorials[i].categoryUsage[2] = resultSet.getInt("CategoryPoints.Relevance");
-                                break;
-                            case "colouring":
-                                tutorials[i].categoryUsage[3] = resultSet.getInt("CategoryPoints.Relevance");
-                                break;
-                            case "detail":
-                                tutorials[i].categoryUsage[4] = resultSet.getInt("CategoryPoints.Relevance");
-                                break;
-                            default:
-
-                        }
-                    }
-                }
-            }
-        }
-        catch(SQLException se)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching all in use tutorials");
-            se.printStackTrace();
-            tutorials = new Tutorial[iCount];
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            tutorials = new Tutorial[iCount];
-        }
 
         //----------------------------------------------------------------
         //------------Decide the most relevant tutorial to use------------
@@ -342,19 +280,28 @@ public class Lesson
         float fBiggestRelevance = 0;
         int iIndexBiggestRelevance = 0;
 
-        //Go through each tutorial, and score each with relevance, and keep track of the most relevant tutorial
-        for (int i = 0 ; i < iCount ; i++)
-        {
-            float fRelevance = 2 * tutorials[i].categoryUsage[iIndexLowestRating - 1];
-            fRelevance = fRelevance + tutorials[i].categoryUsage[iIndexSecondLowestRating - 1];
-            if (fRelevance > fBiggestRelevance) {
-                fBiggestRelevance = fRelevance;
-                iIndexBiggestRelevance = i;
-            }
-        }
+        int iCount = tutorials.length;
 
-        iTutorialIndex = iIndexBiggestRelevance;
-        iTutorialID = tutorials[iTutorialIndex].iTutorialID;
+        if (iCount > 0)
+        {
+            //Go through each tutorial, and score each with relevance, and keep track of the most relevant tutorial
+            for (int i = 0 ; i < iCount ; i++)
+            {
+                float fRelevance = 2 * tutorials[i].categoryUsage[iIndexLowestRating - 1];
+                fRelevance = fRelevance + tutorials[i].categoryUsage[iIndexSecondLowestRating - 1];
+                if (fRelevance > fBiggestRelevance) {
+                    fBiggestRelevance = fRelevance;
+                    iIndexBiggestRelevance = i;
+                }
+            }
+            iTutorialIndex = iIndexBiggestRelevance;
+            iTutorialID = tutorials[iTutorialIndex].iTutorialID;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void fetchStages()
@@ -449,14 +396,36 @@ public class Lesson
 
     private void endLesson()
     {
+        //Declare variables
+        int i;
+
+        //Initialise arrays - used for for loop
+        float[] fFinalScores = new float[5];
+
+        float[] fScoreTotals = new float[5];
+        fScoreTotals[0] = fTpllScoreTotal;
+        fScoreTotals[1] = fWEScoreTotal;
+        fScoreTotals[2] = fColourScoreTotal;
+        fScoreTotals[3] = fDetailingScoreTotal;
+        fScoreTotals[4] = fTerraScoreTotal;
+
+        float[] fDifficultyTotals = new float[5];
+        fDifficultyTotals[0] = fTpllDifTotal;
+        fDifficultyTotals[1] = fWEDifTotal;
+        fDifficultyTotals[2] = fColourDifTotal;
+        fDifficultyTotals[3] = fDetailDifTotal;
+        fDifficultyTotals[4] = fTerraDifTotal;
+
         //Calculate final scores
-
-        float finalTpllScore = fTpllScoreTotal/fTpllDifTotal;
-        float finalWEScore = fWEScoreTotal/fWEDifTotal;
-        float finalColouringScore = fColourScoreTotal/fColourDifTotal;
-        float finalDetailingScore = fDetailingScoreTotal/fDetailDifTotal;
-        float finalTerraScore = fTerraScoreTotal/fTerraDifTotal;
-
+        for (i = 0 ; i < 5 ; i++)
+        {
+            if (fDifficultyTotals[i] == 0)
+            {
+                fFinalScores[i] = -1;
+            }
+            else
+                fFinalScores[i] = fScoreTotals[i]/fDifficultyTotals[i];
+        }
 
         //Then store in DB
 
@@ -464,6 +433,13 @@ public class Lesson
         //And trigger the scoreboard to refresh
         student.calculateRatings();
         student.refreshScoreboard();
+
+        //Change player mode
+        student.currentMode = Mode.Idle;
+
+        //Change player lesson status
+        student.bInLesson = false;
+        student.setInLesson(0);
     }
 
     public static void main(String[] args)

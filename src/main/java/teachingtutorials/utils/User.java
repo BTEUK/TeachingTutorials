@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorials.Tutorial;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,12 +18,17 @@ public class User
     public boolean bHasCompletedCompulsory;
     public boolean bInLesson;
 
+    public Mode currentMode;
+
     //Holds the information on the rating for a user
     public int iScoreTpll;
     public int iScoreWE;
     public int iScoreTerraforming;
     public int iScoreColouring;
     public int iScoreDetailing;
+
+    //Holds a list of all of a users tutorials
+    Tutorial[] allTutorials;
 
     public User(Player player)
     {
@@ -79,6 +85,11 @@ public class User
         iScoreDetailing = calculateScore(Category.detail);
     }
 
+    public void playerLeave()
+    {
+
+    }
+
     private int calculateScore(Category category)
     {
         int iTotalScore = 0;
@@ -129,19 +140,19 @@ public class User
 
         Objective scores = SB.registerNewObjective("Ratings", "dummy", ChatColor.AQUA +"Skills", RenderType.INTEGER);
 
-        Score tpllRating = scores.getScore("Tpll");
+        Score tpllRating = scores.getScore("1. Tpll");
         tpllRating.setScore(this.iScoreTpll);
 
-        Score WERating = scores.getScore("WorldEdit");
+        Score WERating = scores.getScore("2. WorldEdit");
         WERating.setScore(this.iScoreWE);
 
-        Score TerraRating = scores.getScore("Terraforming");
+        Score TerraRating = scores.getScore("5. Terraforming");
         TerraRating.setScore(this.iScoreTerraforming);
 
-        Score ColouringRating = scores.getScore("Texturing");
+        Score ColouringRating = scores.getScore("3. Colouring");
         ColouringRating.setScore(this.iScoreColouring);
 
-        Score DetailingRating = scores.getScore("Detailing");
+        Score DetailingRating = scores.getScore("4. Detailing");
         DetailingRating.setScore(this.iScoreDetailing);
 
         scores.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -166,5 +177,57 @@ public class User
         {
             e.printStackTrace();
         }
+    }
+
+    public void toogleInLesson()
+    {
+        //Changes the boolean value of whether a tutorial is compulsory or not
+        String szSql;
+        Statement SQL;
+
+        try
+        {
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            if (this.bInLesson)
+                szSql = "UPDATE Players SET InLesson = 0 WHERE `UUID` = '"+player.getUniqueId() +"' ";
+            else
+                szSql = "UPDATE Players SET InLesson = 1 WHERE `UUID` = '"+player.getUniqueId() +"' ";
+
+            SQL.executeUpdate(szSql);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void setInLesson(int i)
+    {
+        //Changes the boolean value of whether a tutorial is compulsory or not
+        String szSql;
+        Statement SQL;
+
+        try
+        {
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            szSql = "UPDATE Players SET InLesson = " +i +" WHERE `UUID` = '"+player.getUniqueId() +"' ";
+
+            SQL.executeUpdate(szSql);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void fetchAllTutorials()
+    {
+        this.allTutorials = Tutorial.fetchAllForUser(this.player.getUniqueId());
+    }
+
+    public Tutorial[] getAllTutorials()
+    {
+        return allTutorials;
     }
 }

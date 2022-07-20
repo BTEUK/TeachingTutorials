@@ -15,6 +15,8 @@ public class Task
 {
     public String type;
 
+    public float fDifficulties[] = new float[5];
+
     float fDifficulty;
     float fPerformance;
     float fFinalScore;

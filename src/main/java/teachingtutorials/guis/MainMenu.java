@@ -115,7 +115,6 @@ public class MainMenu
         else if (slot == 1) //0 Indexed
         {
             player.closeInventory();
-            player.sendMessage(ChatColor.AQUA + "Welcome back");
             Compulsory compulsory = new Compulsory(plugin, user);
             //Starts, or resumes the compulsory tutorial.
             compulsory.startLesson();

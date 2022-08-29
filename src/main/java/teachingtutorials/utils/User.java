@@ -15,89 +15,64 @@ public class User
 {
     public Player player;
 
+    //Stores whether a player has completed the compulsory tutorial or not
     public boolean bHasCompletedCompulsory;
+
+    //Determines whether a player has Lesson to finish
     public boolean bInLesson;
 
+    //Determines what the player is currently doing on the tutorials server
     public Mode currentMode;
 
-    //Holds the information on the rating for a user
+    //Holds the information on the ratings for a user
     public int iScoreTpll;
     public int iScoreWE;
     public int iScoreTerraforming;
     public int iScoreColouring;
     public int iScoreDetailing;
 
-    //Holds a list of all of a users tutorials
-    Tutorial[] allTutorials;
+    //Holds a list of all the tutorials a user has created
+    private Tutorial[] allTutorials;
 
+    //--------------------------------------------------
+    //-------------------Constructors-------------------
+    //--------------------------------------------------
     public User(Player player)
     {
         this.player = player;
     }
 
-    public void fetchDetailsByUUID()
+    //---------------------------------------------------
+    //----------------------Getters----------------------
+    //---------------------------------------------------
+
+    //Returns the list of tutorials created by the player
+    public Tutorial[] getAllTutorials()
     {
-        String sql;
-        Statement SQL = null;
-        ResultSet resultSet = null;
-
-        try
-        {
-            //Compiles the command to add the new user
-            sql = "SELECT * FROM Players WHERE `UUID` = '"+player.getUniqueId()+"'";
-            System.out.println(sql);
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-
-            //Executes the update and returns the amount of records updated
-            resultSet = SQL.executeQuery(sql);
-            if (resultSet.next())
-            {
-                this.bHasCompletedCompulsory = resultSet.getBoolean("CompletedCompulsory");
-                this.bInLesson = resultSet.getBoolean("InLesson");
-                player.sendMessage(this.bInLesson +"");
-            }
-            else
-            {
-                sql = "INSERT INTO Players (UUID) VALUES ('"+ player.getUniqueId() +"')";
-                SQL.executeUpdate(sql);
-                this.bHasCompletedCompulsory = false;
-                this.bInLesson = false;
-            }
-
-        }
-        catch(SQLException se)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching user info by UUID");
-            se.printStackTrace();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        return allTutorials;
     }
 
+    //Recalculates all ratings
     public void calculateRatings()
     {
-        iScoreTpll = calculateScore(Category.tpll);
-        iScoreWE = calculateScore(Category.worldedit);
-        iScoreTerraforming = calculateScore(Category.terraforming);
-        iScoreColouring = calculateScore(Category.colouring);
-        iScoreDetailing = calculateScore(Category.detail);
+        iScoreTpll = calculateRating(Category.tpll);
+        iScoreWE = calculateRating(Category.worldedit);
+        iScoreTerraforming = calculateRating(Category.terraforming);
+        iScoreColouring = calculateRating(Category.colouring);
+        iScoreDetailing = calculateRating(Category.detail);
     }
 
-    public void playerLeave()
+    //Uses scores from previous lessons to calculate a rating for a player in a category
+    private int calculateRating(Category category)
     {
-
-    }
-
-    private int calculateScore(Category category)
-    {
+        //Declare variables
         int iTotalScore = 0;
 
         String sql;
         Statement SQL = null;
         ResultSet resultSet = null;
 
+        //Attempts to fetch the data from the database
         try
         {
             //Compiles the command to add the new user
@@ -130,6 +105,14 @@ public class User
         return iTotalScore;
     }
 
+    //Does all the necessary thing when a player leaves the server
+    public void playerLeave()
+    {
+
+    }
+
+
+    //Updates the scoreboard with the current ratings stored in the User object
     public void refreshScoreboard()
     {
         //Get scoreboard
@@ -160,13 +143,74 @@ public class User
         this.player.setScoreboard(SB);
     }
 
+    //---------------------------------------------------
+    //--------------------SQL Fetches--------------------
+    //---------------------------------------------------
+
+    //Fetches all of the information about a user in the DB, and adds them to the DB if they are not in it
+    public void fetchDetailsByUUID()
+    {
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to select all data about the user
+            sql = "SELECT * FROM Players WHERE `UUID` = '"+player.getUniqueId()+"'";
+            System.out.println(sql);
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the update and returns the amount of records updated
+            resultSet = SQL.executeQuery(sql);
+            if (resultSet.next())
+            {
+                this.bHasCompletedCompulsory = resultSet.getBoolean("CompletedCompulsory");
+                this.bInLesson = resultSet.getBoolean("InLesson");
+                player.sendMessage(this.bInLesson +"");
+            }
+
+            //If no result is found for the user, insert a new user into the database
+            else
+            {
+                sql = "INSERT INTO Players (UUID) VALUES ('"+ player.getUniqueId() +"')";
+                SQL.executeUpdate(sql);
+                this.bHasCompletedCompulsory = false;
+                this.bInLesson = false;
+            }
+        }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching user info by UUID");
+            se.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    //Fetches all tutorials made by a user
+    public void fetchAllTutorials()
+    {
+        this.allTutorials = Tutorial.fetchAllForUser(this.player.getUniqueId());
+    }
+
+    //---------------------------------------------------
+    //--------------------SQL Updates--------------------
+    //---------------------------------------------------
+
+    //Updates the database to set completion of the compulsory tutorial to true
     public void triggerCompulsory()
     {
-        this.bHasCompletedCompulsory = true;
-
+        //Declare variables
         String szSql;
         Statement SQL;
 
+        //Updates the variable
+        this.bHasCompletedCompulsory = true;
+
+        //Updates the database
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
@@ -179,9 +223,10 @@ public class User
         }
     }
 
+    //Changes the boolean value of whether a player is in the lesson
     public void toogleInLesson()
     {
-        //Changes the boolean value of whether a tutorial is compulsory or not
+        //Declare variables
         String szSql;
         Statement SQL;
 
@@ -201,9 +246,10 @@ public class User
         }
     }
 
+    //Sets the value of in lesson to whatever is specified
     public void setInLesson(int i)
     {
-        //Changes the boolean value of whether a tutorial is compulsory or not
+        //Declare variables
         String szSql;
         Statement SQL;
 
@@ -219,15 +265,5 @@ public class User
         {
             e.printStackTrace();
         }
-    }
-
-    public void fetchAllTutorials()
-    {
-        this.allTutorials = Tutorial.fetchAllForUser(this.player.getUniqueId());
-    }
-
-    public Tutorial[] getAllTutorials()
-    {
-        return allTutorials;
     }
 }

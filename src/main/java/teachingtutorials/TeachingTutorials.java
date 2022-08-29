@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class TeachingTutorials extends JavaPlugin
 {
@@ -97,9 +98,9 @@ public class TeachingTutorials extends JavaPlugin
 
         //Goes through the folder and if files are found, interpret it
         //Folder is sent as it is needed
-        while (folder.list().length != 0)
+        for (int i = 0 ; i < folder.list().length ; i++)
         {
-            File file = folder.listFiles()[0];
+            File file = folder.listFiles()[i];
             interpretNewTutorial(file);
         }
 
@@ -188,15 +189,25 @@ public class TeachingTutorials extends JavaPlugin
 
         //Gets the tutorial name and author name
         String[] szFields = szLines[i].split(",");
-        if (szFields.length < 6 || szFields.length > 7)
+        if (szFields.length != 7)
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name, author and relevance line is incorrectly formatted");
             return;
         }
-        tutorial.szTutorialName = szFields[0];
-        if (szFields.length == 7)
+        else
         {
-            tutorial.szAuthor = szFields[1];
+            tutorial.szTutorialName = szFields[0];
+
+            try
+            {
+                tutorial.uuidAuthor = UUID.fromString(szFields[1]);
+            }
+            catch (IllegalArgumentException e)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Author UUID must be a real UUID");
+                return;
+            }
+
             for (int j = 2; j < 7 ; j++)
             {
                 if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
@@ -206,19 +217,6 @@ public class TeachingTutorials extends JavaPlugin
                     return;
                 }
                 tutorial.categoryUsage[j-2] = Integer.parseInt(szFields[i]);
-            }
-        }
-        else
-        {
-            for (int j = 1; j < 6 ; j++)
-            {
-                if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
-                {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
-                            "Relevances must be between 0 and 100. Line: "+(i+1));
-                    return;
-                }
-                tutorial.categoryUsage[j-1] = Integer.parseInt(szFields[i]);
             }
         }
 
@@ -287,6 +285,7 @@ public class TeachingTutorials extends JavaPlugin
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
                     return;
                 }
+                szType = "Task";
                 Task task;
                 String szTaskType = szLines[i];
                 switch (szTaskType)
@@ -522,10 +521,10 @@ public class TeachingTutorials extends JavaPlugin
                 iCount = SQL.executeUpdate(statements[i]);
 
                 //If only 1 record was changed, success is set to true
-                if (iCount != 1)
+                if (iCount == 1)
                 {
-                    //  Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]" +ChatColor.AQUA + "Created tables");
-                    bSuccess = false;
+                    Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]" +ChatColor.AQUA + "Created tables");
+                    bSuccess = true;
                 }
             }
 

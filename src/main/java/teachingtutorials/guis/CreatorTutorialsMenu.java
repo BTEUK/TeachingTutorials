@@ -9,7 +9,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Tutorial;
@@ -128,7 +127,7 @@ public class CreatorTutorialsMenu
     }
 
     //Right click is for creating a new location
-    public static void rightClicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
+    public static void rightClicked(Player player, int slot, TeachingTutorials plugin)
     {
         //Finds the correct user for this player from the plugins list of users
         boolean bUserFound = false;

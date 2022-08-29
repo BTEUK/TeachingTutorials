@@ -51,13 +51,13 @@ public class CompulsoryTutorialMenu
 
         //Inv slot 1 = the first one
         //Add the tutorials to the gui
-        for (i = 0 ; i < tutorials.length ; i++)
+        for (i = 1 ; i <= tutorials.length ; i++)
         {
-            if (tutorials[i].bCompulsory)
-                Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN+tutorials[i].szTutorialName), ChatColor.DARK_GREEN+tutorials[i].szAuthor);
+            if (tutorials[i-1].bCompulsory)
+                Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN+tutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
             else
-                Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN+""+ChatColor.BOLD +tutorials[i].szTutorialName),
-                        ChatColor.DARK_GREEN+Bukkit.getPlayer(UUID.fromString(tutorials[i].szAuthor)).getName());
+                Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN+""+ChatColor.BOLD +tutorials[i-1].szTutorialName),
+                        ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
         }
 
         toReturn.setContents(inventory.getContents());
@@ -73,7 +73,7 @@ public class CompulsoryTutorialMenu
         if (clicked.getType().equals(compulsoryBlock) || clicked.getType().equals(nonCompulsoryBlock))
         {
             //Sets the current compulsory tutorial to not compulsory - ID is used to identify the tutorial
-            tutorials[slot].triggerCompulsory();
+            tutorials[slot].toggleCompulsory();
 
             //Refreshes the display
             player.closeInventory();

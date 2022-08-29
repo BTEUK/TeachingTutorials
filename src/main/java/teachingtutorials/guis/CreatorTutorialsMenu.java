@@ -11,12 +11,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class CreatorTutorialsMenu
 {
@@ -42,14 +42,13 @@ public class CreatorTutorialsMenu
         int iDiv;
         int iMod;
 
-        //Get number of rows
-
-        //Fetches users tutorials
+        //Fetches user's tutorials
         u.fetchAllTutorials();
 
-        //Stores users tutorials locally
+        //Stores user's tutorials locally
         Tutorial[] allTutorials = u.getAllTutorials();
 
+        //Works out how many rows in the inventory are needed
         iTutorials = allTutorials.length;
         iDiv = iTutorials/9;
         iMod = iTutorials%9;
@@ -62,7 +61,6 @@ public class CreatorTutorialsMenu
         //------------------------------
 
         //Create inventories
-
         inventory = Bukkit.createInventory(null, iDiv * 9);
         inventory.clear();
 
@@ -75,9 +73,9 @@ public class CreatorTutorialsMenu
         {
             //Sets tutorial name bold for tutorials in use
             if (allTutorials[i-1].bInUse)
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+(Bukkit.getPlayer(UUID.fromString(allTutorials[i-1].szAuthor))).getName(), ChatColor.DARK_GREEN+"In Use");
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(), ChatColor.DARK_GREEN+"In Use");
             else
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN +"By "+(Bukkit.getPlayer(UUID.fromString(allTutorials[i-1].szAuthor))).getName(), ChatColor.DARK_GREEN+"Not In Use");
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN +"By "+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(), ChatColor.DARK_GREEN+"Not In Use");
         }
 
         toReturn.setContents(inventory.getContents());
@@ -113,17 +111,17 @@ public class CreatorTutorialsMenu
             return;
         }
 
+        //Stores the list of the creator's tutorials locally
         Tutorial[] tutorials = user.getAllTutorials();
 
         //Slot 0 indexed
-
         if (slot+1 > tutorials.length)
         {
             //Do nothing, they've clicked on a blank space
         }
         else
         {
-            tutorials[slot].triggerInUse();
+            tutorials[slot].toggleInUse();
             player.closeInventory();
             player.openInventory(CreatorTutorialsMenu.getGUI(user));
         }
@@ -168,7 +166,12 @@ public class CreatorTutorialsMenu
         else
         {
             player.closeInventory();
-            player.openInventory(LocationCreationMenu.getGUI(tutorials[slot]));
+
+            //Creates a NewLocation object
+            NewLocation newLocation = new NewLocation(user, tutorials[slot], plugin);
+
+            //Launches them into the new location adding process
+            newLocation.launchNewLocationAdding();
         }
     }
 }

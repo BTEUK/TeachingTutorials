@@ -25,6 +25,8 @@ public class Task
     TeachingTutorials plugin;
     protected Group parentGroup;
 
+    protected boolean bNewLocation;
+
     public void register()
     {
     }
@@ -50,7 +52,55 @@ public class Task
         parentGroup.taskFinished();
     }
 
+    //Fetches the tasks and the answers for a particular group and location
     public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)
+    {
+        ArrayList<Task> tasks = new ArrayList<>();
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch the tasks and answers
+            sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+iGroupID +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            while (resultSet.next())
+            {
+                String szType = resultSet.getString("Tasks.TaskType");
+                String szAnswers = resultSet.getString("LocationTasks.Answers");
+                float fTpllDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TpllDifficulty"));
+                float fWEDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.WEDifficulty"));
+                float fColouringDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.ColouringDifficulty"));
+                float fDetailingDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.DetailingDifficulty"));
+                float fTerraDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TerraDifficulty"));
+
+                //Creates the correct child class depending on the task type
+                switch (szType)
+                {
+                    case "tpll":
+                        TpllListener tpllListener = new TpllListener(plugin, player, szAnswers, fTpllDifficulty);
+                        tasks.add(tpllListener);
+                }
+            }
+        }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
+            se.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return tasks;
+    }
+
+    public static ArrayList<Task> fetchTasksWithoutAnswers(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)
     {
         ArrayList<Task> tasks = new ArrayList<>();
 
@@ -69,18 +119,11 @@ public class Task
             while (resultSet.next())
             {
                 String szType = resultSet.getString("Tasks.TaskType");
-                String szAnswers = resultSet.getString("LocationTasks.Answers");
-                float fTpllDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TpllDifficulty"));
-                float fWEDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.WEDifficulty"));
-                float fColouringDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.ColouringDifficulty"));
-                float fDetailingDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.DetailingDifficulty"));
-                float fTerraDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TerraDifficulty"));
 
                 switch (szType)
                 {
                     case "tpll":
-                        String[] cords = szAnswers.split(",");
-                        TpllListener tpllListener = new TpllListener(plugin, Double.parseDouble(cords[0]), Double.parseDouble(cords[1]), player, fTpllDifficulty);
+                        TpllListener tpllListener = new TpllListener(plugin, player);
                         tasks.add(tpllListener);
                 }
             }

@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.fundamentalTasks.Task;
+import teachingtutorials.guis.AdminMenu;
 import teachingtutorials.guis.CompulsoryTutorialMenu;
 import teachingtutorials.guis.CreatorTutorialsMenu;
 import teachingtutorials.guis.MainMenu;
@@ -111,6 +112,7 @@ public class TeachingTutorials extends JavaPlugin
         //---------------------------------------
 
         MainMenu.initialize();
+        AdminMenu.initialize();
         CompulsoryTutorialMenu.initialize();
         CreatorTutorialsMenu.initialize();
 

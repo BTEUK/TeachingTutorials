@@ -9,6 +9,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.newlocation.DifficultyListener;
+import teachingtutorials.tutorials.LocationTask;
+import teachingtutorials.utils.Display;
 
 //All tpll command config will be the real life lat and long cords
 //Having them as the block coords would be more work for the designer of a tutorial
@@ -16,15 +19,28 @@ import teachingtutorials.TeachingTutorials;
 public class TpllListener extends Task implements Listener
 {
     //Stores the target coords - the location a player should tpll to
-    final double fTargetCoords[] = new double[2];
+    final double dTargetCoords[] = new double[2];
 
-    public TpllListener(TeachingTutorials plugin, double lat, double lon, Player player, float fDifficulty)
+    public TpllListener(TeachingTutorials plugin, Player player, String szAnswers, float fDifficulty)
     {
         super(plugin);
-        this.fTargetCoords[0] = lat;
-        this.fTargetCoords[1] = lon;
         this.player = player;
+
+        //Extracts the answers
+        String[] cords = szAnswers.split(",");
+        this.dTargetCoords[0] = Double.parseDouble(cords[0]);
+        this.dTargetCoords[1] = Double.parseDouble(cords[1]);
+
         this.fDifficulty = fDifficulty;
+
+        this.bNewLocation = false;
+    }
+
+    public TpllListener(TeachingTutorials plugin, Player player)
+    {
+        super(plugin);
+        this.player = player;
+        this.bNewLocation = true;
     }
 
     @Override
@@ -38,29 +54,74 @@ public class TpllListener extends Task implements Listener
     {
         fPerformance = 0F;
 
+        //Checks that it is the correct player
         if (event.getPlayer().getUniqueId().equals(player.getUniqueId()))
         {
-            //Tpll coordinate extractor
+            //Checks that it is the correct command
             String command = event.getMessage();
-            LatLng latLong = CoordinateParseUtils.parseVerbatimCoordinates(command.replace(", ", " "));
-
-            //Tpll accuracy checker
-            double fDistance = Math.sqrt( Math.pow((latLong.getLat() - fTargetCoords[0]), 2) + Math.pow((latLong.getLng() - fTargetCoords[1]), 2) );
-            fDistance = fDistance * 111139;
-
-            if (fDistance <= 0.25)
+            if (command.startsWith("/tpll"))
             {
-                fPerformance = 1;
-                spotHit();
-            }
-            else if (fDistance <= 1.0) //Make the acceptable value configurable
-            {
-                //Pretty decent
-                HandlerList.unregisterAll(this);
-                //Ranked from 0 to 1
-                //iScore = ....
-                fPerformance = (4 / 3) * (1 - (float) fDistance);
-                spotHit();
+                command = command.replace("/tpll ", "");
+                LatLng latLong = CoordinateParseUtils.parseVerbatimCoordinates(command.replace(", ", " "));
+
+                //Checks that the coordinates were established
+                if (latLong == null)
+                {
+                    event.setCancelled(true);
+                    Display display = new Display(player, "Incorrect tpll format");
+                    display.Message();
+                }
+                //Checks whether it is a new location
+                else if (bNewLocation)
+                {
+                    //Set the answers
+                    LocationTask locationTask = new LocationTask("tpll", this.parentGroup.parentStep.parentStage.iNewLocationID);
+                    locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
+
+                    //Listen out for difficulty
+                    DifficultyListener difficultyListener = new DifficultyListener(this.plugin, this.player, locationTask, this);
+                    difficultyListener.register();
+
+                    //SpotHit is then called from inside the difficulty listener once the difficulty has been established
+                    //This is what moves it onto the next task
+                }
+                else
+                {
+                    //Tpll accuracy checker
+                    double dLatitude1 = latLong.getLat();
+                    double dLatitude2 = dTargetCoords[0];
+
+                    double dLongitude1 = latLong.getLng();
+                    double dLongitude2 = dTargetCoords[1];
+
+                    int iRadius = 6371000; // metres
+                    double φ1 = dLatitude1 * Math.PI/180; // φ, λ in radians
+                    double φ2 = dLatitude2 * Math.PI/180;
+                    double Δφ = (dLatitude2-dLatitude1) * Math.PI/180;
+                    double Δλ = (dLongitude2-dLongitude1) * Math.PI/180;
+
+                    double a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+                    float fDistance = (float) (iRadius * c); // in metres
+
+                    if (fDistance <= 0.25)
+                    {
+                        fPerformance = 1;
+                        spotHit();
+                    }
+                    else if (fDistance <= 1.0) //Make the acceptable value configurable
+                    {
+                        //Pretty decent
+                        HandlerList.unregisterAll(this);
+                        //Ranked from 0 to 1
+                        //iScore = ....
+                        fPerformance = (4 / 3) * (1 - (float) fDistance);
+                        spotHit();
+                    }
+                }
             }
         }
     }
@@ -72,5 +133,12 @@ public class TpllListener extends Task implements Listener
 
         //Marks the task as complete
         taskComplete();
+    }
+
+    //A public version is required for when spotHit is called from the difficulty listener
+    //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
+    public void newLocationSpotHit()
+    {
+        spotHit();
     }
 }

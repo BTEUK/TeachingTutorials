@@ -15,8 +15,5 @@ public class Compulsory extends Lesson
     public void startLesson()
     {
         super.startLesson();
-
-        student.player.sendMessage("Congrats");
-        student.triggerCompulsory();
     }
 }

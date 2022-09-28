@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 public class Task
 {
+    public int iTaskID;
     public String type;
 
     public float fDifficulties[] = new float[5];
@@ -29,6 +30,11 @@ public class Task
 
     public void register()
     {
+    }
+
+    public Task(int iTaskID)
+    {
+        this.iTaskID = iTaskID;
     }
 
     public Task(String type)
@@ -119,11 +125,12 @@ public class Task
             while (resultSet.next())
             {
                 String szType = resultSet.getString("Tasks.TaskType");
+                int iTaskID = resultSet.getInt("Tasks.TaskID");
 
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player);
+                        TpllListener tpllListener = new TpllListener(plugin, player, iTaskID);
                         tasks.add(tpllListener);
                 }
             }

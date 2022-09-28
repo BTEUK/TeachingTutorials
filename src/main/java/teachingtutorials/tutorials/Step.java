@@ -97,7 +97,7 @@ public class Step
         if (bAllGroupsFinished == true)
         {
             this.bStepFinished = true;
-          //  parentStage.nextStep();
+            parentStage.nextStep();
         }
     }
 

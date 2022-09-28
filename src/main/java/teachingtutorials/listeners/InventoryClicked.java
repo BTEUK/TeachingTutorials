@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.AdminMenu;
 import teachingtutorials.guis.CompulsoryTutorialMenu;
+import teachingtutorials.guis.CreatorTutorialsMenu;
 import teachingtutorials.guis.MainMenu;
 
 public class InventoryClicked implements Listener
@@ -59,5 +60,27 @@ public class InventoryClicked implements Listener
             }
             CompulsoryTutorialMenu.clicked((Player) e.getWhoClicked(), e.getSlot(), e.getCurrentItem(), e.getInventory(), plugin);
         }
+        else if (title.equals(CreatorTutorialsMenu.getInventoryName()))
+        {
+            e.setCancelled(true);
+            if (e.getCurrentItem() == null)
+            {
+                return;
+            }
+            if (e.isRightClick())
+                CreatorTutorialsMenu.rightClicked((Player) e.getWhoClicked(), e.getSlot(), plugin);
+            else if (e.isLeftClick())
+                CreatorTutorialsMenu.leftClicked((Player) e.getWhoClicked(), e.getSlot(), plugin);
+        }
+        else if (title.equals(AdminMenu.getInventoryName()))
+        {
+            e.setCancelled(true);
+            if (e.getCurrentItem() == null)
+            {
+                return;
+            }
+            AdminMenu.clicked((Player) e.getWhoClicked(), e.getSlot(), e.getCurrentItem(), e.getInventory(), plugin);
+        }
+
     }
 }

@@ -36,11 +36,12 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = false;
     }
 
-    public TpllListener(TeachingTutorials plugin, Player player)
+    public TpllListener(TeachingTutorials plugin, Player player, int iTaskID)
     {
         super(plugin);
         this.player = player;
         this.bNewLocation = true;
+        this.iTaskID = iTaskID;
     }
 
     @Override
@@ -75,7 +76,7 @@ public class TpllListener extends Task implements Listener
                 else if (bNewLocation)
                 {
                     //Set the answers
-                    LocationTask locationTask = new LocationTask("tpll", this.parentGroup.parentStep.parentStage.iNewLocationID);
+                    LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.iNewLocationID, iTaskID);
                     locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
 
                     //Listen out for difficulty

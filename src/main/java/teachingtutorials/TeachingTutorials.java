@@ -104,6 +104,7 @@ public class TeachingTutorials extends JavaPlugin
         for (int i = 0 ; i < folder.list().length ; i++)
         {
             File file = folder.listFiles()[i];
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Loading new tutorial file: "+file.getName());
             interpretNewTutorial(file);
         }
 
@@ -162,8 +163,8 @@ public class TeachingTutorials extends JavaPlugin
         Tutorial tutorial = new Tutorial();
 
         //Read file into lines and fields
-        int i;
-        int iLines = 0;
+        int iLine;
+        int iNumLines = 0;
         Scanner szFile;
         try
         {
@@ -172,17 +173,17 @@ public class TeachingTutorials extends JavaPlugin
             while (szFile.hasNextLine())
             {
                 szFile.nextLine();
-                iLines++;
+                iNumLines++;
             }
 
             //Reset scanner
             szFile.close();
             szFile = new Scanner(file);
-            szLines = new String[iLines];
+            szLines = new String[iNumLines];
 
-            for (i = 0 ; i < iLines ; i++)
+            for (iLine = 0 ; iLine < iNumLines ; iLine++)
             {
-                szLines[0] = szFile.nextLine();
+                szLines[iLine] = szFile.nextLine();
             }
             szFile.close();
         }
@@ -191,38 +192,41 @@ public class TeachingTutorials extends JavaPlugin
             return;
         }
 
-        i = 0;
+        iLine = 0;
 
         //Gets the tutorial name and author name
-        String[] szFields = szLines[i].split(",");
+        String[] szFields = szLines[iLine].split(",");
+
         if (szFields.length != 7)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name, author and relevance line is incorrectly formatted");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name, author and relevance line does not have 7 fields");
             return;
         }
         else
         {
             tutorial.szTutorialName = szFields[0];
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Tutorial name: "+tutorial.szTutorialName);
 
             try
             {
                 tutorial.uuidAuthor = UUID.fromString(szFields[1]);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Tutorial author: "+tutorial.uuidAuthor.toString());
             }
             catch (IllegalArgumentException e)
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Author UUID must be a real UUID");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Author UUID is not a real UUID: "+szFields[1]);
                 return;
             }
 
             for (int j = 2; j < 7 ; j++)
             {
-                if (!szFields[i].matches("([0-9]|[1-9][0-9]|100)"))
+                if (!szFields[j].matches("([0-9]|[1-9][0-9]|100)"))
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
-                            "Relevances must be between 0 and 100. Line: "+(i+1));
+                            "Relevances must be between 0 and 100. Line: "+(iLine+1));
                     return;
                 }
-                tutorial.categoryUsage[j-2] = Integer.parseInt(szFields[i]);
+                tutorial.categoryUsage[j-2] = Integer.parseInt(szFields[j]);
             }
         }
 
@@ -235,47 +239,55 @@ public class TeachingTutorials extends JavaPlugin
         Group lastGroup = null;
 
         //Goes through each line and interprets the instructions
-        for (i = 1 ; i < iLines ; i++)
+        for (iLine = 1 ; iLine < iNumLines ; iLine++)
         {
             //Stage
-            if (szLines[i].startsWith("["))
+            if (szLines[iLine].startsWith("["))
             {
                 szType = "Stage";
-                Stage stage = new Stage(szLines[i].replace("[",""));
+                Stage stage = new Stage(szLines[iLine].replace("[",""));
                 tutorial.stages.add(stage);
                 lastStage = stage;
             }
             //Step
-            else if(szLines[i].startsWith("("))
+            else if(szLines[iLine].startsWith("("))
             {
                 if (!(szType.equals("Stage")||szType.equals("Task")))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
-                szFields = szLines[i].split(",");
-                if (szFields.length != 2)
+                szFields = szLines[iLine].split(",");
+                if (!(szFields.length > 1))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 szType = "Step";
+
+                //Compiles instructions if commas were part of the instruction and split
+                String szInstructions = szFields[1];
+                for (int k = 2 ; k < szFields.length ; k++)
+                {
+                    szInstructions = szInstructions + szFields[k];
+                }
+
                 Step step = new Step(szFields[0].replace("(",""), szFields[1]);
                 lastStage.steps.add(step);
                 lastStep = step;
             }
             //Group
-            else if(szLines[i].startsWith("{"))
+            else if(szLines[iLine].startsWith("{"))
             {
                 if (!(szType.equals("Step")||szType.equals("Task")))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
-                szFields = szLines[i].split(",");
+                szFields = szLines[iLine].split(",");
                 if (szFields.length != 1)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 szType = "Group";
@@ -284,16 +296,19 @@ public class TeachingTutorials extends JavaPlugin
                 lastGroup = group;
             }
             //Task
-            else if(szLines[i].startsWith("~"))
+            else if(szLines[iLine].startsWith("~"))
             {
                 if (!(szType.equals("Group")||szType.equals("Task")))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(i+1));
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 szType = "Task";
                 Task task;
-                String szTaskType = szLines[i];
+
+                szFields = szLines[iLine].split(",");
+
+                String szTaskType = szFields[0].replace("~", "");
                 switch (szTaskType)
                 {
                     case "tpll":
@@ -305,7 +320,7 @@ public class TeachingTutorials extends JavaPlugin
                         lastGroup.addTaskCreation(task);
                         break;
                     default:
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid task type, line: "+(i+1));
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid task type, line: "+(iLine+1));
                 }
             }
         } //End iteration through lines
@@ -342,7 +357,7 @@ public class TeachingTutorials extends JavaPlugin
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO Tutorials (TutorialName) VALUES ('"+tutorial.szTutorialName+"')";
+            sql = "INSERT INTO Tutorials (TutorialName, Author) VALUES ('"+tutorial.szTutorialName+"', '"+tutorial.uuidAuthor +"')";
             SQL.executeUpdate(sql);
 
             sql = "Select LAST_INSERT_ID()";
@@ -383,7 +398,7 @@ public class TeachingTutorials extends JavaPlugin
             Stage stage = stages.get(i);
             try
             {
-                sql = "INSERT INTO Stages (StageName, TutorialID, Order) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
+                sql = "INSERT INTO Stages (StageName, TutorialID, `Order`) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
                 SQL.executeUpdate(sql);
 
                 sql = "Select LAST_INSERT_ID()";
@@ -457,7 +472,7 @@ public class TeachingTutorials extends JavaPlugin
                         Task task = tasks.get(l);
                         try
                         {
-                            sql = "INSERT INTO Tasks (GroupID, TaskType, Order)" +
+                            sql = "INSERT INTO Tasks (GroupID, TaskType, `Order`)" +
                                     " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1)+")";
                             SQL.executeUpdate(sql);
                         }

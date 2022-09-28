@@ -24,8 +24,15 @@ public class Stage
 
     public ArrayList<Step> steps = new ArrayList<>();
 
+    public int iNewLocationID;
+
+    public boolean bLocationCreation;
+
     //Provision for score recording
 
+    //--------------------------------------------------
+    //-------------------Constructors-------------------
+    //--------------------------------------------------
     public Stage(int iStageID, int iOrder, Player player, TeachingTutorials plugin, Lesson lesson)
     {
         this.plugin = plugin;
@@ -36,6 +43,8 @@ public class Stage
         this.bStageFinished = false;
 
         this.player = player;
+
+        bLocationCreation = false;
     }
 
     public Stage(String szName)
@@ -43,7 +52,24 @@ public class Stage
         this.szName = szName;
     }
 
-    //Getters
+    public Stage(int iStageID, int iOrder, Player player, TeachingTutorials plugin, int iLocationID)
+    {
+        this.plugin = plugin;
+
+        this.iStageID = iStageID;
+        this.iOrder = iOrder;
+        this.bStageFinished = false;
+
+        this.player = player;
+
+        this.iNewLocationID = iLocationID;
+
+        bLocationCreation = true;
+    }
+
+    //---------------------------------------------------
+    //----------------------Getters----------------------
+    //---------------------------------------------------
     public String getName()
     {
         return szName;
@@ -56,12 +82,14 @@ public class Stage
         steps = Step.fetchStepsByStageID(player, plugin, this);
     }
 
-    public void startStage()
+    public void startStage(int iStep)
     {
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Stage "+iOrder +" starting");
 
         fetchAndInitialiseSteps();
-        iCurrentStep = 0;
+
+        //Takes the stage back, for it to be increased in the next stage
+        iCurrentStep = iStep - 1;
         nextStep();
     }
 
@@ -79,11 +107,7 @@ public class Stage
         else
         {
             bStageFinished = true;
-            return;
-            //   endStage();
-        }
-        while(!step.bStepFinished)
-        {
+            endStage();
         }
     }
 
@@ -111,6 +135,40 @@ public class Stage
             while (resultSet.next())
             {
                 Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), player, plugin, lesson);
+                stages.add(stage);
+            }
+        }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Stages by TutorialID");
+            se.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return stages;
+    }
+
+    public static ArrayList<Stage> fetchStagesByTutorialIDWithoutLocationInformation(Player player, TeachingTutorials plugin, int iTutorialID, int iLocationID)
+    {
+        ArrayList<Stage> stages = new ArrayList<>();
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch stages
+            sql = "Select * FROM Stages WHERE TutorialID = "+iTutorialID +" ORDER BY 'Order' ASC";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            while (resultSet.next())
+            {
+                Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), player, plugin, iLocationID);
                 stages.add(stage);
             }
         }

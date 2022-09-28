@@ -13,8 +13,12 @@ import java.util.ArrayList;
 
 public class Group
 {
+    //What exactly is this szName variable for?
     private String szName;
+
     private int groupID;
+
+    //What stage of the group the player is at
     private int taskNo;
 
     public boolean groupFinished;
@@ -53,7 +57,10 @@ public class Group
 
     public void fetchAndInitialiseTasks()
     {
-        tasks = Task.fetchTasks(plugin,this, parentStep.parentStage.lesson.iLocationID, groupID, parentStep.parentStage.lesson.student.player);
+        if (this.parentStep.parentStage.bLocationCreation)
+            tasks = Task.fetchTasksWithoutAnswers(plugin,this, parentStep.parentStage.lesson.location.getLocationID(), groupID, parentStep.parentStage.lesson.student.player);
+        else
+            tasks = Task.fetchTasks(plugin, this, parentStep.parentStage.lesson.location.getLocationID(), groupID, parentStep.parentStage.lesson.student.player);
     }
 
     public void initialRegister()

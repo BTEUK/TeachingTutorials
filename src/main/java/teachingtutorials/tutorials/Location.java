@@ -91,31 +91,44 @@ public class Location
     //---------------------------------------------------
     //--------------------SQL Updates--------------------
     //---------------------------------------------------
-    public void insertNewLocation()
+    public boolean insertNewLocation()
     {
         String sql;
         Statement SQL = null;
         ResultSet resultSet = null;
 
+        int iCount;
+
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             sql = "INSERT INTO Locations (TutorialID, Latitude, Longitude) VALUES (" +iTutorialID +", " +startCoordinates.getLat() +", " +startCoordinates.getLng() +")";
-            SQL.executeUpdate(sql);
+            iCount = SQL.executeUpdate(sql);
 
+            if (iCount != 1)
+            {
+                return false;
+            }
+
+            //Gets the LocationID of the newly inserted location
             sql = "Select LAST_INSERT_ID()";
             resultSet = SQL.executeQuery(sql);
             resultSet.next();
             iLocationID = resultSet.getInt(1);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "LocationID of new location = "+iLocationID);
+            return true;
         }
         catch (SQLException se)
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error adding new location");
             se.printStackTrace();
+            return false;
         }
         catch (Exception e)
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Other error adding new location");
             e.printStackTrace();
+            return false;
         }
     }
 }

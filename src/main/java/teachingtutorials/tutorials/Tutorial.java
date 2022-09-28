@@ -13,7 +13,7 @@ import java.util.UUID;
 public class Tutorial
 {
     //Declare member variables
-    int iTutorialID;
+    private int iTutorialID;
     public String szTutorialName;
     public UUID uuidAuthor;
     public boolean bCompulsory;
@@ -42,6 +42,15 @@ public class Tutorial
     {
         return iTutorialID;
     }
+
+    //---------------------------------------------------
+    //----------------------Setters----------------------
+    //---------------------------------------------------
+    public void setTutorialID(int iTutorialID)
+    {
+        this.iTutorialID = iTutorialID;
+    }
+
 
     //---------------------------------------------------
     //--------------------SQL Fetches--------------------

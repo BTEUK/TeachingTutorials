@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.elevation.ElevationManager;
@@ -222,7 +223,7 @@ public class NewLocation
 
         double[] xz;
 
-        //Converts the tpll coordinates to
+        //Converts the tpll coordinates to minecraft coordinates
         try
         {
             xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
@@ -255,10 +256,10 @@ public class NewLocation
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Creator teleported to the start location, starting lesson to get answers");
 
         //Imports the stages of the tutorial, with no answers loaded
-        this.stages = Stage.fetchStagesByTutorialIDWithoutLocationInformation(Creator.player, plugin, tutorial.getTutorialID(), location.getLocationID());
+        this.stages = Stage.fetchStagesByTutorialIDWithoutLocationInformation(Creator.player, plugin, tutorial.getTutorialID(), location.getLocationID(), this);
         //Mode of each stage is automatically set to be Creating_New_Location
 
-        //Sets stage location to 0
+        //Sets stage number to 0
         this.iStageIndex = 0;
 
         //Starts the first stage
@@ -271,11 +272,12 @@ public class NewLocation
     {
         int iNumStages = stages.size();
 
+        //1 indexed
         iStageIndex++;
 
-        if (iStageIndex < iNumStages)
+        if (iStageIndex <= iNumStages)
         {
-            stages.get(iStageIndex).startStage(1);
+            stages.get(iStageIndex-1).startStage(1);
         }
         else
         {
@@ -285,7 +287,7 @@ public class NewLocation
 
     private void endLocation()
     {
-        Display display = new Display(Creator.player, "Location Created");
+        Display display = new Display(Creator.player, ChatColor.AQUA +"Location Created!");
         display.Message();
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Location Created with LocationID: "+this.location.getLocationID());
     }
@@ -325,6 +327,11 @@ public class NewLocation
         int izMinChunk = izMin >> 4;
         int izMaxChunk = izMax >> 4;
 
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Min X Chunk: "+ixMinChunk);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Max X Chunk: "+ixMaxChunk);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Min Z Chunk: "+izMinChunk);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Max Z Chunk: "+izMaxChunk);
+
         iHeights = new int[(1+ixMaxChunk-ixMinChunk)<<4][(1+izMaxChunk-izMinChunk)<<4];
 
         //Go through each chunk and generate
@@ -332,6 +339,7 @@ public class NewLocation
         {
             for (int izChunk = izMinChunk ; izChunk <= izMaxChunk ; izChunk++)
             {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Generating Chunk: "+ixChunk+","+izChunk);
                 try
                 {
                     terraData = loader.load(new ChunkPos(ixChunk, izChunk)).get();
@@ -340,14 +348,20 @@ public class NewLocation
                     {
                         for (int z = 0 ; z < 16 ; z++)
                         {
-                            iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z] = terraData.groundHeight((ixChunk << 4) + x, z);
-                            world.getBlockState(x, terraData.groundHeight((ixChunk << 4) + x, z), (izChunk << 4) + z).setType(Material.GRASS_BLOCK);
+                            iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z] = terraData.groundHeight(x, z);
+
+                            Block block = world.getBlockAt((ixChunk << 4) + x, iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z], (izChunk << 4) + z);
+                            block.setType(Material.GRASS_BLOCK);
+
+                            //world.getBlockState((ixChunk << 4) + x, iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z], (izChunk << 4) + z).setType(Material.GRASS_BLOCK);
+                            //This line no work
                         }
                     }
                 }
                 catch (Exception e)
                 {
-
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to generate block in the world: " +e.getMessage());
+                    return;
                 }
             }
         }

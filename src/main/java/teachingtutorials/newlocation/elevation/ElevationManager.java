@@ -1,6 +1,6 @@
 package teachingtutorials.newlocation.elevation;
 
-import flanagan.interpolation.BiCubicSpline;
+//import flanagan.interpolation.BiCubicSpline;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import org.bukkit.Bukkit;
@@ -213,7 +213,7 @@ public class ElevationManager {
             return new int[16][16];
         }
 
-        BiCubicSpline bcs = new BiCubicSpline(lons, lats, elevs);
+    //    BiCubicSpline bcs = new BiCubicSpline(lons, lats, elevs);
 
         //Calculate the stepsize to iterate over lon/lat at an angle.
         steplon = (coord3[0] - coord1[0]) / 15;
@@ -237,7 +237,7 @@ public class ElevationManager {
                 }
 
                 //UK121.LOGGER.info(bcs.interpolate(lon,lat));
-                heights[i][j] = (int) Math.round(bcs.interpolate(lon, lat));
+            //    heights[i][j] = (int) Math.round(bcs.interpolate(lon, lat));
             }
         }
 

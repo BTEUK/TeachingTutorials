@@ -60,12 +60,15 @@ public class Step
 
     public void startStep()
     {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Step "+iStepInStage +" starting");
+
         //TP to location?
 
         Display display = new Display(player, szStepInstructions);
         display.Message();
 
         fetchAndInitialiseGroups();
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +groups.size() +" groups fetched");
 
         //Register the start of all groups
         int i;
@@ -73,6 +76,7 @@ public class Step
 
         for (i = 0; i < iGroups; i++)
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registering group "+(i+1));
             groups.get(i).initialRegister();
         }
     }
@@ -97,6 +101,7 @@ public class Step
         if (bAllGroupsFinished == true)
         {
             this.bStepFinished = true;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Step "+iStepInStage +" finished");
             parentStage.nextStep();
         }
     }

@@ -2,6 +2,7 @@ package teachingtutorials.tutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.checkerframework.checker.units.qual.C;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
@@ -20,9 +21,8 @@ public class Lesson
     private boolean bNewLocation;
 
     private int iTutorialIndex;
-    protected Tutorial tutorial; // ----- This object is currently completely useless. The lesson class itself holds most of the tutorial class's data
+    protected Tutorial tutorial;
 
-    int iTutorialID;
     public int iStage;
     public int iStep;
     public Location location;
@@ -186,6 +186,7 @@ public class Lesson
             {
                 iTutorialID = resultSet.getInt("TutorialID");
             }
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "Compulsory Tutorial ID found as "+iTutorialID);
         }
         catch(SQLException se)
         {
@@ -309,7 +310,7 @@ public class Lesson
                 }
             }
             iTutorialIndex = iIndexBiggestRelevance;
-            iTutorialID = tutorials[iTutorialIndex].getTutorialID();
+            this.tutorial.setTutorialID(tutorials[iTutorialIndex].getTutorialID());
             return true;
         }
         else
@@ -337,7 +338,8 @@ public class Lesson
         try
         {
             //Compiles the command to fetch all the locations for the tutorial
-            sql = "Select * FROM Locations WHERE TutorialID = " +iTutorialID;
+            sql = "Select * FROM Locations WHERE TutorialID = " +this.tutorial.getTutorialID();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -359,7 +361,7 @@ public class Lesson
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching location IDs for tutorial with ID: "+iTutorialID);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching location IDs for tutorial with ID: "+this.tutorial.getTutorialID());
             se.printStackTrace();
             iLocationIDs = new int[0];
         }
@@ -471,7 +473,7 @@ public class Lesson
             resultSet = SQL.executeQuery(sql);
             if (resultSet.next())
             {
-                this.iTutorialID = resultSet.getInt("TutorialID");
+                this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
                 this.iStage = resultSet.getInt("StageAt");
                 this.iStep = resultSet.getInt("StepAt");
 
@@ -484,7 +486,7 @@ public class Lesson
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching current lesson for "+student.player.getName() +": "+student.player.getUniqueId());
             se.printStackTrace();
-            this.iTutorialID = -1;
+            this.tutorial.setTutorialID(-1);
             return false;
         }
     }

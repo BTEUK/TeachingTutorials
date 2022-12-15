@@ -3,6 +3,7 @@ package teachingtutorials.fundamentalTasks;
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -10,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.DifficultyListener;
+import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
@@ -21,10 +23,11 @@ public class TpllListener extends Task implements Listener
     //Stores the target coords - the location a player should tpll to
     final double dTargetCoords[] = new double[2];
 
-    public TpllListener(TeachingTutorials plugin, Player player, String szAnswers, float fDifficulty)
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fDifficulty)
     {
         super(plugin);
         this.player = player;
+        this.parentGroup = parentGroup;
 
         //Extracts the answers
         String[] cords = szAnswers.split(",");
@@ -36,11 +39,12 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = false;
     }
 
-    public TpllListener(TeachingTutorials plugin, Player player, int iTaskID)
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
     {
         super(plugin);
         this.player = player;
         this.bNewLocation = true;
+        this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
     }
 
@@ -69,7 +73,7 @@ public class TpllListener extends Task implements Listener
                 if (latLong == null)
                 {
                     event.setCancelled(true);
-                    Display display = new Display(player, "Incorrect tpll format");
+                    Display display = new Display(player, ChatColor.RED +"Incorrect tpll format");
                     display.Message();
                 }
                 //Checks whether it is a new location

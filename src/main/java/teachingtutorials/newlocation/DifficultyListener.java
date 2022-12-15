@@ -7,9 +7,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.checkerframework.checker.units.qual.C;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.TpllListener;
 import teachingtutorials.tutorials.LocationTask;
+import teachingtutorials.utils.Display;
 
 public class DifficultyListener implements Listener
 {
@@ -33,20 +35,28 @@ public class DifficultyListener implements Listener
     }
 
     @EventHandler
-    public void interactEvent(PlayerCommandPreprocessEvent event)
+    public void commandEvent(PlayerCommandPreprocessEvent event)
     {
         if (event.getPlayer().getUniqueId().equals(player.getUniqueId()))
         {
             String command = event.getMessage();
-            if (command.matches("(/tutorials 0.)[0-9]+") || command.equals("/tutorials 1"))
+            if (command.matches("(/tutorials 0).[0-9]+") || command.equals("/tutorials 1"))
             {
+                //Cancels the event
+                event.setCancelled(true);
+
                 //Extracts the difficulty of the task
-                command = command.replace("tutorials ", "");
+                command = command.replace("/tutorials ", "");
                 float fDifficulty = Float.parseFloat(command);
 
                 //Signals the tpll listener to store the details of the new LocationTask in the DB
                 locationTask.setDifficulties(fDifficulty, 0, 0, 0, 0);
                 locationTask.storeNewData();
+
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask stored in database");
+
+                Display display = new Display(player, ChatColor.AQUA +"Task stored in DB");
+                display.Message();
 
                 //Unregisters this listener
                 HandlerList.unregisterAll(this);

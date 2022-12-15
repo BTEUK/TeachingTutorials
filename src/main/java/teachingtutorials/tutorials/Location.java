@@ -35,6 +35,13 @@ public class Location
     //---------------------------------------------------
     //----------------------Getters----------------------
     //---------------------------------------------------
+
+    /**
+     * Care must be taken using this method, as this class may not always be initialised
+     *<p>
+     * Use Stage.getLocationID() to be safe
+     * @return The LocationID
+     */
     public int getLocationID()
     {
         return iLocationID;
@@ -103,6 +110,7 @@ public class Location
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             sql = "INSERT INTO Locations (TutorialID, Latitude, Longitude) VALUES (" +iTutorialID +", " +startCoordinates.getLat() +", " +startCoordinates.getLng() +")";
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             iCount = SQL.executeUpdate(sql);
 
             if (iCount != 1)

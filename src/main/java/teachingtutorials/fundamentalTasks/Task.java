@@ -49,17 +49,19 @@ public class Task
 
     protected void taskComplete()
     {
-        fFinalScore = fDifficulty*fPerformance;
+        if (!parentGroup.parentStep.parentStage.bLocationCreation)
+        {
+            fFinalScore = fDifficulty*fPerformance;
 
-        //Add to the totals
-        parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal = parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal + fFinalScore;
-        parentGroup.parentStep.parentStage.lesson. fTpllDifTotal = parentGroup.parentStep.parentStage.lesson.fTpllDifTotal + fDifficulty;
-
+            //Add to the totals
+            parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal = parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal + fFinalScore;
+            parentGroup.parentStep.parentStage.lesson.fTpllDifTotal = parentGroup.parentStep.parentStage.lesson.fTpllDifTotal + fDifficulty;
+        }
         parentGroup.taskFinished();
     }
 
     //Fetches the tasks and the answers for a particular group and location
-    public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)
+    public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player)
     {
         ArrayList<Task> tasks = new ArrayList<>();
 
@@ -70,7 +72,7 @@ public class Task
         try
         {
             //Compiles the command to fetch the tasks and answers
-            sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+iGroupID +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
+            sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+parentGroup.getGroupID() +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -89,7 +91,7 @@ public class Task
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, szAnswers, fTpllDifficulty);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, szAnswers, fTpllDifficulty);
                         tasks.add(tpllListener);
                 }
             }
@@ -106,7 +108,7 @@ public class Task
         return tasks;
     }
 
-    public static ArrayList<Task> fetchTasksWithoutAnswers(TeachingTutorials plugin, Group parentGroup, int iLocationID, int iGroupID, Player player)
+    public static ArrayList<Task> fetchTasksWithoutAnswers(TeachingTutorials plugin, Group parentGroup, Player player)
     {
         ArrayList<Task> tasks = new ArrayList<>();
 
@@ -117,7 +119,7 @@ public class Task
         try
         {
             //Compiles the command to fetch groups
-            sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+iGroupID +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
+            sql = "Select * FROM Tasks WHERE Tasks.GroupID = "+parentGroup.getGroupID() +" ORDER BY 'Order' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -130,7 +132,7 @@ public class Task
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, iTaskID);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID);
                         tasks.add(tpllListener);
                 }
             }

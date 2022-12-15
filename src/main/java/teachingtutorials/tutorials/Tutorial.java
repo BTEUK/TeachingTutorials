@@ -284,7 +284,7 @@ public class Tutorial
                 szSql = "UPDATE Tutorials SET Compulsory = 1 WHERE TutorialID = "+ this.iTutorialID;
             }
             SQL.executeUpdate(szSql);
-
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Set tutorial "+this.iTutorialID +" as compulsory");
             //Updates the value of the boolean stored in memory
             this.bCompulsory = !this.bCompulsory;
         }

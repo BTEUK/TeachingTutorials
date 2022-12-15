@@ -269,10 +269,10 @@ public class TeachingTutorials extends JavaPlugin
                 String szInstructions = szFields[1];
                 for (int k = 2 ; k < szFields.length ; k++)
                 {
-                    szInstructions = szInstructions + szFields[k];
+                    szInstructions = szInstructions +"," +szFields[k];
                 }
 
-                Step step = new Step(szFields[0].replace("(",""), szFields[1]);
+                Step step = new Step(szFields[0].replace("(",""), szInstructions);
                 lastStage.steps.add(step);
                 lastStep = step;
             }
@@ -439,7 +439,7 @@ public class TeachingTutorials extends JavaPlugin
                 }
 
                 ArrayList<Group> groups = step.groups;
-                iGroups = steps.size();
+                iGroups = groups.size();
                 //Go through groups
                 for (k = 0 ; k < iGroups ; k++)
                 {

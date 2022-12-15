@@ -69,6 +69,7 @@ public class AreaSelectionListener implements Listener
                 if (this.bounds.size() >= 3)
                 {
                     HandlerList.unregisterAll(this);
+                    event.setCancelled(true);
                     callingClass.AreaMade();
                 }
                 else

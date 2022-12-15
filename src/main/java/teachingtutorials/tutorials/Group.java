@@ -52,15 +52,25 @@ public class Group
     {
         return tasks;
     }
+    public int getGroupID()
+    {
+        return groupID;
+    }
 
     //Where to fetch tasks, where to initialise them etc
 
     public void fetchAndInitialiseTasks()
     {
         if (this.parentStep.parentStage.bLocationCreation)
-            tasks = Task.fetchTasksWithoutAnswers(plugin,this, parentStep.parentStage.lesson.location.getLocationID(), groupID, parentStep.parentStage.lesson.student.player);
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching tasks without answers");
+            tasks = Task.fetchTasksWithoutAnswers(plugin, this, parentStep.parentStage.getPlayer());
+        }
         else
-            tasks = Task.fetchTasks(plugin, this, parentStep.parentStage.lesson.location.getLocationID(), groupID, parentStep.parentStage.lesson.student.player);
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching tasks with answers");
+            tasks = Task.fetchTasks(plugin, parentStep.parentStage.getLocationID(), this, parentStep.parentStage.lesson.student.player);
+        }
     }
 
     public void initialRegister()
@@ -68,13 +78,19 @@ public class Group
         fetchAndInitialiseTasks();
 
         if (tasks.size() > 0)
-        { //Need to send this group object to each task so it can call task ended or whatever
-            tasks.get(0).register();
-            taskNo = 1;
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This group has "+tasks.size() +" tasks");
+
             //Tasks unregister themselves once complete
+            tasks.get(0).register();
+
+            //Sets the current task number to the first task
+            //1 indexed
+            taskNo = 1;
         }
         else
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This group had no tasks, group finished");
             //Signal that group is complete before it even started
             groupFinished = true;
             parentStep.groupFinished();
@@ -84,15 +100,18 @@ public class Group
     public void taskFinished()
     {
         //taskNo is that of the previous, so it is the correct index of the next
+        //taskNo is 1 indexed
         if (taskNo >= tasks.size()) //If the task was the last one in the group
         {
             //Signal that group is complete
             groupFinished = true;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Group finished");
             parentStep.groupFinished();
         }
         else //Registers the next task
         {
             tasks.get(taskNo).register();
+            taskNo++;
         }
     }
 

@@ -111,12 +111,5 @@
             <artifactId>guava</artifactId>
             <version>31.0.1-jre</version>
         </dependency>
-        <dependency>
-            <groupId>flanagan</groupId>
-            <artifactId>flanagan</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/flanagan.jar</systemPath>
-        </dependency>
     </dependencies>
 </project>

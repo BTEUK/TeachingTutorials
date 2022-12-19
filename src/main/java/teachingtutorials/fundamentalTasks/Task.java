@@ -60,6 +60,11 @@ public class Task
         parentGroup.taskFinished();
     }
 
+    private static void fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player, String sql)
+    {
+
+    }
+
     //Fetches the tasks and the answers for a particular group and location
     public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player)
     {
@@ -68,6 +73,7 @@ public class Task
         String sql;
         Statement SQL = null;
         ResultSet resultSet = null;
+        int iCount = 0;
 
         try
         {
@@ -79,6 +85,7 @@ public class Task
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
+                iCount++;
                 String szType = resultSet.getString("Tasks.TaskType");
                 String szAnswers = resultSet.getString("LocationTasks.Answers");
                 float fTpllDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TpllDifficulty"));
@@ -87,7 +94,7 @@ public class Task
                 float fDetailingDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.DetailingDifficulty"));
                 float fTerraDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TerraDifficulty"));
 
-                //Creates the correct child class depending on the task type
+                //Creates the correct child class depending on the task type, and add details in
                 switch (szType)
                 {
                     case "tpll":
@@ -95,6 +102,7 @@ public class Task
                         tasks.add(tpllListener);
                 }
             }
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
         }
         catch(SQLException se)
         {

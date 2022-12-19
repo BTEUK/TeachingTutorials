@@ -68,7 +68,7 @@ public class Group
         }
         else
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching tasks with answers");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching tasks with answers for location with locationID "+parentStep.parentStage.getLocationID() +" and groupID " +this.groupID);
             tasks = Task.fetchTasks(plugin, parentStep.parentStage.getLocationID(), this, parentStep.parentStage.lesson.student.player);
         }
     }

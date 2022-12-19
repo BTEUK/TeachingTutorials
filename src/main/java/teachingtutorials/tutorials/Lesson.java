@@ -1,7 +1,11 @@
 package teachingtutorials.tutorials;
 
+import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.checkerframework.checker.units.qual.C;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.Display;
@@ -154,6 +158,29 @@ public class Lesson
             //Signals for the next stage to begin
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Signal next stage");
             nextStage();
+
+            double[] xz;
+            World world = Bukkit.getWorld(location.getLocationID()+"");
+            final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
+            //Converts the longitude and latitude start coordinates of the location to minecraft coordinates
+            try
+            {
+                xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
+                //Declares location object
+                org.bukkit.Location tpLocation;
+
+                tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]), xz[1]);
+
+                //Teleports the student to the start location of the location
+                student.player.teleport(tpLocation);
+            }
+            catch (Exception e)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
+                student.player.sendMessage(ChatColor.AQUA +"Could not teleport you to the start location");
+                return false;
+            }
 
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson ended");
         }
@@ -359,7 +386,7 @@ public class Lesson
                 iLocationIDs[i] = resultSet.getInt("LocationID");
             }
         }
-        catch(SQLException se)
+        catch (SQLException se)
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching location IDs for tutorial with ID: "+this.tutorial.getTutorialID());
             se.printStackTrace();
@@ -375,6 +402,7 @@ public class Lesson
         int iRandomIndex = (int) Math.random()*(iLocationIDs.length-1);
 
         //Initialises location
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] LocationID selected: " +iLocationIDs[iRandomIndex]);
         this.location = new Location(iLocationIDs[iRandomIndex]);
 
         return true;

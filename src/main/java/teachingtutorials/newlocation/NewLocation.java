@@ -176,7 +176,7 @@ public class NewLocation
 
         //Adds the location to the database
         if (location.insertNewLocation())
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Inserted location into DB");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Inserted location into DB with LocationID "+location.getLocationID());
         else
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert location into DB");

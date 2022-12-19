@@ -66,6 +66,9 @@ public class TpllListener extends Task implements Listener
             String command = event.getMessage();
             if (command.startsWith("/tpll"))
             {
+                //Cancels the event
+                event.setCancelled(true);
+
                 command = command.replace("/tpll ", "");
                 LatLng latLong = CoordinateParseUtils.parseVerbatimCoordinates(command.replace(", ", " "));
 
@@ -82,6 +85,7 @@ public class TpllListener extends Task implements Listener
                     //Set the answers
                     LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.iNewLocationID, iTaskID);
                     locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
+                    //Data is added to database once difficulty is provided
 
                     //Listen out for difficulty
                     DifficultyListener difficultyListener = new DifficultyListener(this.plugin, this.player, locationTask, this);

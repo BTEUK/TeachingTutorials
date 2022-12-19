@@ -91,7 +91,7 @@ public class Location
         }
         catch (Exception e)
         {
-
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Error fetching location information of location ID " +this.iLocationID);
         }
     }
 

@@ -21,6 +21,7 @@ public class Step
     public boolean bStepFinished;
     protected int iStepID;
     protected int iStepInStage;
+    private int iGroupInStepLocationCreation;
 
     //Groups are completed asynchronously.
     //Tasks in groups are completed synchronously
@@ -67,17 +68,28 @@ public class Step
         Display display = new Display(player, szStepInstructions);
         display.Message();
 
+        //Fetches the details of groups and stores them in memory
         fetchAndInitialiseGroups();
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +groups.size() +" groups fetched");
 
-        //Register the start of all groups
-        int i;
-        int iGroups = groups.size();
-
-        for (i = 0; i < iGroups; i++)
+        //If a location is being created, groups are made synchronous rather than asynchronous
+        if (parentStage.bLocationCreation)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registering group "+(i+1));
-            groups.get(i).initialRegister();
+            //Register the start of the first group
+            groups.get(0).initialRegister();
+            iGroupInStepLocationCreation = 1;
+        }
+        else
+        {
+            //Register the start of all groups
+            int i;
+            int iGroups = groups.size();
+
+            for (i = 0; i < iGroups; i++)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registering group "+(i+1));
+                groups.get(i).initialRegister();
+            }
         }
     }
 
@@ -88,13 +100,25 @@ public class Step
 
         boolean bAllGroupsFinished = true;
 
-        //Goes through all groups and checks if one of them is not finished yet
-        for (i = 0 ; i < iGroups ; i++)
+        //Different logic needed as location creation groups are performed in sync
+        if (parentStage.bLocationCreation)
         {
-            if (!groups.get(i).groupFinished)
-            {
+            //iGroupInStepLocationCreation is 1 indexed
+            if (iGroupInStepLocationCreation == groups.size()) //If the current group is the last group
+                bAllGroupsFinished = true;
+            else
                 bAllGroupsFinished = false;
-                break;
+        }
+        else
+        {
+            //Goes through all groups and checks if one of them is not finished yet
+            for (i = 0 ; i < iGroups ; i++)
+            {
+                if (!groups.get(i).groupFinished)
+                {
+                    bAllGroupsFinished = false;
+                    break;
+                }
             }
         }
 

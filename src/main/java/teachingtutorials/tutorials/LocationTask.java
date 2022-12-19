@@ -1,7 +1,10 @@
 package teachingtutorials.tutorials;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import teachingtutorials.fundamentalTasks.Task;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 
 public class LocationTask extends Task
@@ -45,9 +48,15 @@ public class LocationTask extends Task
             sql = sql +")";
             SQL.executeUpdate(sql);
         }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error adding LocationTask");
+            se.printStackTrace();
+        }
         catch (Exception e)
         {
-
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] Non SQL Error adding LocationTask");
+            e.printStackTrace();
         }
     }
 }

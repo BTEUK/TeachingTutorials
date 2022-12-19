@@ -40,6 +40,7 @@ public class CreatorTutorialsMenu
         int iTutorials;
         int iDiv;
         int iMod;
+        int iRows;
 
         //Fetches user's tutorials
         u.fetchAllTutorials();
@@ -57,28 +58,43 @@ public class CreatorTutorialsMenu
             iDiv = iDiv + 1;
         }
 
+        //Enables an empty row and then a row for the back button
+        iRows = iDiv+2;
+
         //------------------------------
 
         //Create inventories
-        inventory = Bukkit.createInventory(null, iDiv * 9);
+        inventory = Bukkit.createInventory(null, iRows * 9);
         inventory.clear();
 
-        Inventory toReturn = Bukkit.createInventory(null, iDiv * 9, inventory_name);
+        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventory_name);
 
         //Inv slot 1 = the first one
+
+        //Indicates that the creator has no tutorials if they don't own any
+        if (allTutorials.length == 0)
+        {
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 5, ChatColor.BOLD +"" +ChatColor.GREEN +"You have no tutorials");
+        }
+
+        //Adds back button
+        Utils.createItem(inventory, Material.SPRUCE_DOOR, 1, iRows * 9, ChatColor.BOLD +"" +ChatColor.GREEN+"Back to creator menu");
 
         //Creates the menu options
         for (i = 1 ; i <= allTutorials.length ; i++)
         {
             //Sets tutorial name bold for tutorials in use
             if (allTutorials[i-1].bInUse)
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(), ChatColor.DARK_GREEN+"In Use");
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(),
+                        ChatColor.DARK_GREEN+"In Use - Left click to remove from use",
+                        ChatColor.DARK_GREEN+"Right click to add a new location");
             else
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN +"By "+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(), ChatColor.DARK_GREEN+"Not In Use");
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN +"By "+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(),
+                        ChatColor.DARK_GREEN+"Not In - Left click to set in use",
+                        ChatColor.DARK_GREEN+"Right click to add a new location");
         }
 
         toReturn.setContents(inventory.getContents());
-
         return toReturn;
     }
 

@@ -185,13 +185,30 @@ public class NewLocation
 
         String szWorldName = location.getLocationID()+"";
 
+        Display errorCreatingWorldMessage;
+
         //Creates the new world to store this location in
-        if (Multiverse.createVoidWorld(szWorldName))
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Created new world");
-        else
+        try
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Could not create new world");
-            return;
+            if (Multiverse.createVoidWorld(szWorldName))
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Created new world");
+            else
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create new world");
+                errorCreatingWorldMessage = new Display(Creator.player, ChatColor.RED +"Could not create the world");
+                errorCreatingWorldMessage.Message();
+                return;
+            }
+        }
+        catch (IllegalArgumentException e)
+        {
+            if (e.getMessage().equals("That world is already loaded!"))
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create new world. World already loaded");
+                errorCreatingWorldMessage = new Display(Creator.player, ChatColor.RED +"Could not create the world. World already loaded");
+                errorCreatingWorldMessage.Message();
+                return;
+            }
         }
 
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Attempting to get world from Bukkit with name: "+szWorldName);
@@ -201,15 +218,19 @@ public class NewLocation
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"World object created in plugin with name: "+world.getName());
         else
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"World object for world with name: "+world.getName() +" could not be created in plugin");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"World object for world with name: "+world.getName() +" could not be created in plugin");
             return;
         }
 
         //Generates the required area in the world
         try
         {
+            Display generatingArea = new Display(Creator.player, ChatColor.AQUA +"Generating the area");
+            generatingArea.Message();
             generateArea(world);
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Generated the area in the world");
+            generatingArea = new Display(Creator.player, ChatColor.AQUA +"Area generated");
+            generatingArea.Message();
         }
         catch (OutOfProjectionBoundsException ProjectionException)
         {

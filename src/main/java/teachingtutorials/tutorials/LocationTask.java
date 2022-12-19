@@ -2,6 +2,7 @@ package teachingtutorials.tutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.Task;
 
 import java.sql.SQLException;
@@ -39,6 +40,8 @@ public class LocationTask extends Task
         {
             sql = "INSERT INTO LocationTasks (LocationID, TaskID, Answers, TpllDifficulty, WEDifficulty, ColouringDifficulty, DetailingDifficulty, TerraDifficulty) " +
                     "VALUES (" +iLocationID+", " +iTaskID+", " +szAnswers;
+
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             for (int i = 0 ; i <=4 ; i++)
             {

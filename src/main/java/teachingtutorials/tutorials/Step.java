@@ -78,6 +78,7 @@ public class Step
             //Register the start of the first group
             groups.get(0).initialRegister();
             iGroupInStepLocationCreation = 1;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registering group "+iGroupInStepLocationCreation);
         }
         else
         {
@@ -107,7 +108,12 @@ public class Step
             if (iGroupInStepLocationCreation == groups.size()) //If the current group is the last group
                 bAllGroupsFinished = true;
             else
+            {
                 bAllGroupsFinished = false;
+                groups.get(iGroupInStepLocationCreation).initialRegister();
+                iGroupInStepLocationCreation++;
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registering group "+iGroupInStepLocationCreation);
+            }
         }
         else
         {

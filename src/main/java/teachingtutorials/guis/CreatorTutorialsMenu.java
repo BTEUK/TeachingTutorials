@@ -85,12 +85,12 @@ public class CreatorTutorialsMenu
         {
             //Sets tutorial name bold for tutorials in use
             if (allTutorials[i-1].bInUse)
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(),
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName),
                         ChatColor.DARK_GREEN+"In Use - Left click to remove from use",
                         ChatColor.DARK_GREEN+"Right click to add a new location");
             else
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName), ChatColor.DARK_GREEN +"By "+Bukkit.getPlayer(allTutorials[i-1].uuidAuthor).getName(),
-                        ChatColor.DARK_GREEN+"Not In - Left click to set in use",
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName),
+                        ChatColor.DARK_GREEN+"Not In Use - Left click to set in use",
                         ChatColor.DARK_GREEN+"Right click to add a new location");
         }
 

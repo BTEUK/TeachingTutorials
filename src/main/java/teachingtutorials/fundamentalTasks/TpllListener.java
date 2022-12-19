@@ -83,7 +83,7 @@ public class TpllListener extends Task implements Listener
                 else if (bNewLocation)
                 {
                     //Set the answers
-                    LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.iNewLocationID, iTaskID);
+                    LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
                     locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
                     //Data is added to database once difficulty is provided
 

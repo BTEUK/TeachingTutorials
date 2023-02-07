@@ -51,12 +51,18 @@ public class DifficultyListener implements Listener
 
                 //Signals the tpll listener to store the details of the new LocationTask in the DB
                 locationTask.setDifficulties(fDifficulty, 0, 0, 0, 0);
-                locationTask.storeNewData();
-
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask stored in database");
-
-                Display display = new Display(player, ChatColor.AQUA +"Task stored in DB");
-                display.Message();
+                if (locationTask.storeNewData())
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask stored in database");
+                    Display display = new Display(player, ChatColor.AQUA +"Task stored in DB");
+                    display.Message();
+                }
+                else
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask not stored in database");
+                    Display display = new Display(player, ChatColor.AQUA +"Task could not be stored in DB. Please report this");
+                    display.Message();
+                }
 
                 //Unregisters this listener
                 HandlerList.unregisterAll(this);

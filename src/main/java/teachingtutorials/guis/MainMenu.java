@@ -46,14 +46,10 @@ public class MainMenu
         }
         else if (u.bInLesson)
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GRAY +"Continue Learning"),
-                    ChatColor.GRAY+"You have not completed the\ncompulsory tutorials yet");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Continue Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
         else
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GRAY +"Continue Learning"),
-                    ChatColor.GRAY+"You have not completed the\ncompulsory tutorials yet");
             Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Start Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
 

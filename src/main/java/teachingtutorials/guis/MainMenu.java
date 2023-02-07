@@ -42,15 +42,15 @@ public class MainMenu
         if (u.bHasCompletedCompulsory)
         {
             Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorials"));
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
         }
         else if (u.bInLesson)
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
         else
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
 
 
@@ -91,13 +91,16 @@ public class MainMenu
             return;
         }
 
-        //When player tries to continue learning but hasn't completed the compulsory tutorial
-        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GRAY +"Continue Learning"))
+        //Compulsory tutorial
+        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Start Compulsory Tutorial"))
         {
-            //Should we just make it go back into the compulsory tho?
-            player.sendMessage(ChatColor.RED +"You have not completed the compulsory tutorials yet");
+            player.closeInventory();
+            Compulsory compulsory = new Compulsory(plugin, user);
+            //Starts the compulsory tutorial
+            compulsory.startLesson();
         }
 
+        //Continue learning
         else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
         {
             player.closeInventory();
@@ -107,15 +110,17 @@ public class MainMenu
             lesson.startLesson();
         }
 
-        //Compulsory tutorials
+        //Redo compulsory tutorial
         else if (slot == 1) //0 Indexed
         {
             player.closeInventory();
             Compulsory compulsory = new Compulsory(plugin, user);
-            //Starts, or resumes the compulsory tutorial.
+            //Starts the compulsory tutorial again
             compulsory.startLesson();
         }
-        else if (slot == 18)
+
+        //Admin/creator menu
+        else if (slot == 18 && (player.hasPermission("TeachingTutorials.Admin") || player.hasPermission("TeachingTutorials.Creator")))
         {
             player.closeInventory();
             player.openInventory(AdminMenu.getGUI(user));

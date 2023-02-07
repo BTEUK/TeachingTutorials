@@ -118,6 +118,8 @@ public class TpllListener extends Task implements Listener
 
                     if (fDistance <= 0.25)
                     {
+                        Display display = new Display(player, ChatColor.DARK_GREEN+"Perfect! Well done");
+                        display.Message();
                         fPerformance = 1;
                         spotHit();
                     }
@@ -127,7 +129,9 @@ public class TpllListener extends Task implements Listener
                         HandlerList.unregisterAll(this);
                         //Ranked from 0 to 1
                         //iScore = ....
-                        fPerformance = (4 / 3) * (1 - (float) fDistance);
+                        Display display = new Display(player, ChatColor.GREEN+"Point hit");
+                        display.Message();
+                        fPerformance = (4F / 3F) * (1 - (float) fDistance);
                         spotHit();
                     }
                 }

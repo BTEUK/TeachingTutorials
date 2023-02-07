@@ -3,6 +3,7 @@ package teachingtutorials.tutorials;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import teachingtutorials.TeachingTutorials;
 
 import java.sql.ResultSet;
@@ -15,6 +16,7 @@ public class Location
     private LatLng startCoordinates;
     private int iTutorialID;
     private float fDifficulty;
+    private World world;
 
     //--------------------------------------------------
     //-------------------Constructors-------------------
@@ -30,6 +32,7 @@ public class Location
     {
         this.iLocationID = iLocationID;
         fetchDetailsByLocationID();
+        this.world = Bukkit.getWorld(this.getLocationID()+"");
     }
 
     //---------------------------------------------------
@@ -45,6 +48,11 @@ public class Location
     public int getLocationID()
     {
         return iLocationID;
+    }
+
+    public World getWorld()
+    {
+        return world;
     }
 
     public int getTutorialID()
@@ -81,9 +89,9 @@ public class Location
             resultSet.next();
 
             //Stores the information
-            this.fDifficulty = resultSet.getInt("Difficulty");;
-            double dLatitude = resultSet.getInt("Latitude");
-            double dLongitude = resultSet.getInt("Longitude");
+            this.fDifficulty = resultSet.getFloat("Difficulty");;
+            double dLatitude = resultSet.getDouble("Latitude");
+            double dLongitude = resultSet.getDouble("Longitude");
             this.iTutorialID = resultSet.getInt("TutorialID");
 
             //Puts the start coordinates into the LatLng object

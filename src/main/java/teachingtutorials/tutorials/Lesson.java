@@ -181,8 +181,6 @@ public class Lesson
                 student.player.sendMessage(ChatColor.AQUA +"Could not teleport you to the start location");
                 return false;
             }
-
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson ended");
         }
         else
         {
@@ -478,6 +476,21 @@ public class Lesson
 
         //Updates the DB and user's boolean variable
         student.triggerCompulsory();
+
+        Display display;
+        if (bCompulsory)
+        {
+            display = new Display(student.player, ChatColor.AQUA + "You have successfully completed the tutorial");
+
+            //Promotes the player
+
+            Bukkit.broadcast(ChatColor.AQUA +student.player.getName() +"is now an applicant", "");
+        }
+        else
+        {
+            display = new Display(student.player, ChatColor.AQUA + "You have successfully completed the compulsory tutorial. You may now start building.");
+        }
+        display.Message();
     }
 
     public static void main(String[] args)

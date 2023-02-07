@@ -31,15 +31,17 @@ public class LocationTask extends Task
     }
 
     //Creates a new LocationTask in the database table
-    public void storeNewData()
+    public boolean storeNewData()
     {
+        boolean bSuccess = false;
+
         String sql;
         Statement SQL = null;
 
         try
         {
             sql = "INSERT INTO LocationTasks (LocationID, TaskID, Answers, TpllDifficulty, WEDifficulty, ColouringDifficulty, DetailingDifficulty, TerraDifficulty) " +
-                    "VALUES (" +iLocationID+", " +iTaskID+", " +szAnswers;
+                    "VALUES (" +iLocationID+", " +iTaskID+", '" +szAnswers+"'";
 
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -49,17 +51,22 @@ public class LocationTask extends Task
             }
 
             sql = sql +")";
+            Bukkit.getConsoleSender().sendMessage(sql);
             SQL.executeUpdate(sql);
+            bSuccess = true;
         }
         catch (SQLException se)
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error adding LocationTask");
             se.printStackTrace();
+            bSuccess = false;
         }
         catch (Exception e)
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] Non SQL Error adding LocationTask");
             e.printStackTrace();
+            bSuccess = false;
         }
+        return bSuccess;
     }
 }

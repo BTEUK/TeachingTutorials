@@ -50,7 +50,7 @@ public class MainMenu
         }
         else
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Start Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorials"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
 
 

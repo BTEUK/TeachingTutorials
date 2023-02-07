@@ -1,9 +1,13 @@
 package teachingtutorials.fundamentalTasks;
 
+import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -12,6 +16,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
+import teachingtutorials.tutorials.Location;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
@@ -115,6 +120,22 @@ public class TpllListener extends Task implements Listener
                     double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
                     float fDistance = (float) (iRadius * c); // in metres
+
+                    //Teleports the player
+                    Location location = parentGroup.parentStep.parentStage.lesson.location;
+                    World world = location.getWorld();
+                    final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+                    try
+                    {
+                        double[] xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
+                        Bukkit.getConsoleSender().sendMessage(location.getStartCoordinates().getLng() +", " +location.getStartCoordinates().getLat());
+                        org.bukkit.Location tpLocation;
+                        tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
+                        player.teleport(tpLocation);
+                    }
+                    catch (OutOfProjectionBoundsException e)
+                    {
+                    }
 
                     if (fDistance <= 0.25)
                     {

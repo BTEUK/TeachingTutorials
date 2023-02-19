@@ -54,9 +54,9 @@ public class CompulsoryTutorialMenu
         for (i = 1 ; i <= tutorials.length ; i++)
         {
             if (tutorials[i-1].bCompulsory)
-                Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN+tutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
+                Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN +""+ChatColor.BOLD +tutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
             else
-                Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN+""+ChatColor.BOLD +tutorials[i-1].szTutorialName),
+                Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN +tutorials[i-1].szTutorialName),
                         ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
         }
 

@@ -21,6 +21,7 @@ public class CreatorTutorialsMenu
 {
     public static Inventory inventory;
     public static String inventory_name;
+    public static int iRows;
     public static TeachingTutorials plugin;
 
     public static void initialize()
@@ -40,7 +41,6 @@ public class CreatorTutorialsMenu
         int iTutorials;
         int iDiv;
         int iMod;
-        int iRows;
 
         //Fetches user's tutorials
         u.fetchAllTutorials();
@@ -134,6 +134,12 @@ public class CreatorTutorialsMenu
         {
             //Do nothing, they've clicked on a blank space
         }
+        else if (slot+1 == iRows*9)
+        {
+            //Back button
+            player.closeInventory();
+            player.openInventory(AdminMenu.getGUI(user));
+        }
         else
         {
             tutorials[slot].toggleInUse();
@@ -177,6 +183,12 @@ public class CreatorTutorialsMenu
         if (slot+1 > tutorials.length)
         {
             //Do nothing, they've clicked on a blank space
+        }
+        else if (slot+1 == iRows*9)
+        {
+            //Back button
+            player.closeInventory();
+            player.openInventory(AdminMenu.getGUI(user));
         }
         else
         {

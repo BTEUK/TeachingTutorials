@@ -65,6 +65,11 @@ public class Task
 
     }
 
+    public void newLocationSpotHit()
+    {
+
+    }
+
     //Fetches the tasks and the answers for a particular group and location
     public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player)
     {
@@ -79,6 +84,7 @@ public class Task
         {
             //Compiles the command to fetch the tasks and answers
             sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+parentGroup.getGroupID() +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
+            Bukkit.getConsoleSender().sendMessage(sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -100,6 +106,9 @@ public class Task
                     case "tpll":
                         TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, szAnswers, fTpllDifficulty);
                         tasks.add(tpllListener);
+                    case "selection":
+                        Selection selection = new Selection(plugin, player, parentGroup, szAnswers, fWEDifficulty);
+                        tasks.add(selection);
                 }
             }
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
@@ -126,26 +135,33 @@ public class Task
 
         try
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Searching for tasks in group with group ID: "+parentGroup.getGroupID());
             //Compiles the command to fetch groups
-            sql = "Select * FROM Tasks WHERE Tasks.GroupID = "+parentGroup.getGroupID() +" ORDER BY 'Order' ASC";
+            sql = "Select * FROM Tasks WHERE GroupID = "+parentGroup.getGroupID() +" ORDER BY 'Order' ASC";
+            Bukkit.getConsoleSender().sendMessage(sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                String szType = resultSet.getString("Tasks.TaskType");
-                int iTaskID = resultSet.getInt("Tasks.TaskID");
+                String szType = resultSet.getString("TaskType");
+                int iTaskID = resultSet.getInt("TaskID");
 
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID, szType);
                         tasks.add(tpllListener);
+                        break;
+                    case "selection":
+                        Selection selection = new Selection(plugin, player, parentGroup, iTaskID, szType);
+                        tasks.add(selection);
+                        break;
                 }
             }
         }
-        catch(SQLException se)
+        catch (SQLException se)
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
             se.printStackTrace();

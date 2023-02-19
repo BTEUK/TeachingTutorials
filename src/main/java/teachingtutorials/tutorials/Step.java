@@ -56,6 +56,7 @@ public class Step
 
     private void fetchAndInitialiseGroups()
     {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching groups of step with ID: "+iStepID);
         groups = Group.fetchGroupsByStepID(player, plugin, this);
     }
 

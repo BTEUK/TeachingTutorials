@@ -5,9 +5,7 @@ import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -44,9 +42,10 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = false;
     }
 
-    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szType)
     {
         super(plugin);
+        this.type = szType;
         this.player = player;
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
@@ -60,7 +59,7 @@ public class TpllListener extends Task implements Listener
     }
 
     @EventHandler
-    public void interactEvent(PlayerCommandPreprocessEvent event)
+    public void commandEvent(PlayerCommandPreprocessEvent event)
     {
         fPerformance = 0F;
 
@@ -83,9 +82,30 @@ public class TpllListener extends Task implements Listener
                     event.setCancelled(true);
                     Display display = new Display(player, ChatColor.RED +"Incorrect tpll format");
                     display.Message();
+                    return;
                 }
+
+                //Teleports the player to where they tplled to
+                Location location = parentGroup.parentStep.parentStage.lesson.location;
+                World world = location.getWorld();
+                final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+                try
+                {
+                    double[] xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
+                    Bukkit.getConsoleSender().sendMessage(location.getStartCoordinates().getLng() +", " +location.getStartCoordinates().getLat());
+                    org.bukkit.Location tpLocation;
+                    tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
+                    player.teleport(tpLocation);
+                }
+                catch (OutOfProjectionBoundsException e)
+                {
+                    Display display = new Display(player, ChatColor.RED +"Coordinates not on the earth");
+                    display.Message();
+                    return;
+                }
+
                 //Checks whether it is a new location
-                else if (bNewLocation)
+                if (bNewLocation)
                 {
                     //Set the answers
                     LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
@@ -93,7 +113,7 @@ public class TpllListener extends Task implements Listener
                     //Data is added to database once difficulty is provided
 
                     //Listen out for difficulty
-                    DifficultyListener difficultyListener = new DifficultyListener(this.plugin, this.player, locationTask, this);
+                    DifficultyListener difficultyListener = new teachingtutorials.newlocation.DifficultyListener(this.plugin, this.player, locationTask, this, FundamentalTask.tpll);
                     difficultyListener.register();
 
                     //SpotHit is then called from inside the difficulty listener once the difficulty has been established
@@ -102,43 +122,11 @@ public class TpllListener extends Task implements Listener
                 else
                 {
                     //Tpll accuracy checker
-                    double dLatitude1 = latLong.getLat();
-                    double dLatitude2 = dTargetCoords[0];
-
-                    double dLongitude1 = latLong.getLng();
-                    double dLongitude2 = dTargetCoords[1];
-
-                    int iRadius = 6371000; // metres
-                    double φ1 = dLatitude1 * Math.PI/180; // φ, λ in radians
-                    double φ2 = dLatitude2 * Math.PI/180;
-                    double Δφ = (dLatitude2-dLatitude1) * Math.PI/180;
-                    double Δλ = (dLongitude2-dLongitude1) * Math.PI/180;
-
-                    double a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                        Math.cos(φ1) * Math.cos(φ2) *
-                                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-                    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-                    float fDistance = (float) (iRadius * c); // in metres
-
-                    //Teleports the player
-                    Location location = parentGroup.parentStep.parentStage.lesson.location;
-                    World world = location.getWorld();
-                    final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-                    try
-                    {
-                        double[] xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
-                        Bukkit.getConsoleSender().sendMessage(location.getStartCoordinates().getLng() +", " +location.getStartCoordinates().getLat());
-                        org.bukkit.Location tpLocation;
-                        tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
-                        player.teleport(tpLocation);
-                    }
-                    catch (OutOfProjectionBoundsException e)
-                    {
-                    }
+                    float fDistance = Utils.geometricDistance(latLong, dTargetCoords);
 
                     if (fDistance <= 0.25)
                     {
+                        //Very accurate
                         Display display = new Display(player, ChatColor.DARK_GREEN+"Perfect! Well done");
                         display.Message();
                         fPerformance = 1;
@@ -147,9 +135,6 @@ public class TpllListener extends Task implements Listener
                     else if (fDistance <= 1.0) //Make the acceptable value configurable
                     {
                         //Pretty decent
-                        HandlerList.unregisterAll(this);
-                        //Ranked from 0 to 1
-                        //iScore = ....
                         Display display = new Display(player, ChatColor.GREEN+"Point hit");
                         display.Message();
                         fPerformance = (4F / 3F) * (1 - (float) fDistance);

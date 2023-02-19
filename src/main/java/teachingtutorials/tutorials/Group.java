@@ -56,6 +56,10 @@ public class Group
     {
         return groupID;
     }
+    public String getName()
+    {
+        return this.szName;
+    }
 
     //Where to fetch tasks, where to initialise them etc
 
@@ -79,10 +83,12 @@ public class Group
 
         if (tasks.size() > 0)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This group has "+tasks.size() +" tasks");
+           // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This group has "+tasks.size() +" tasks");
 
+            Task newTask = tasks.get(0);
             //Tasks unregister themselves once complete
-            tasks.get(0).register();
+            newTask.register();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] First task registered: "+newTask.type);
 
             //Sets the current task number to the first task
             //1 indexed
@@ -110,7 +116,10 @@ public class Group
         }
         else //Registers the next task
         {
-            tasks.get(taskNo).register();
+            Task newTask = tasks.get(taskNo);
+            //Tasks unregister themselves once complete
+            newTask.register();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Next task registered: "+newTask.type);
             taskNo++;
         }
     }
@@ -127,6 +136,7 @@ public class Group
         {
             //Compiles the command to fetch groups
             sql = "Select * FROM Groups WHERE StepID = "+step.iStepID;
+            Bukkit.getConsoleSender().sendMessage(sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -135,6 +145,7 @@ public class Group
             {
                 Group group = new Group(resultSet.getInt("GroupID"), player, plugin, step);
                 groups.add(group);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Added group with group ID " +resultSet.getInt("GroupID") +" to step");
             }
         }
         catch(SQLException se)

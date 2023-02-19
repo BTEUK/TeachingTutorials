@@ -378,6 +378,7 @@ public class TeachingTutorials extends JavaPlugin
             try
             {
                 sql = "INSERT INTO CategoryPoints (TutorialID, Category, Relevance) VALUES (" + iTutorialID + ", '" + tutorial.szCategoryEnumsInOrder[i] + "', " +((float) tutorial.categoryUsage[i])/100+ ")";
+                Bukkit.getConsoleSender().sendMessage(sql);
                 SQL.executeUpdate(sql);
             }
             catch (Exception e)
@@ -399,6 +400,7 @@ public class TeachingTutorials extends JavaPlugin
             try
             {
                 sql = "INSERT INTO Stages (StageName, TutorialID, `Order`) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
+                Bukkit.getConsoleSender().sendMessage(sql);
                 SQL.executeUpdate(sql);
 
                 sql = "Select LAST_INSERT_ID()";
@@ -415,7 +417,7 @@ public class TeachingTutorials extends JavaPlugin
 
             ArrayList<Step> steps = stage.steps;
             iSteps = steps.size();
-
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iSteps+" steps in this stage");
             //Go through steps
             for (j = 0 ; j < iSteps ; j++)
             {
@@ -440,15 +442,19 @@ public class TeachingTutorials extends JavaPlugin
 
                 ArrayList<Group> groups = step.groups;
                 iGroups = groups.size();
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iGroups+" groups in this step");
                 //Go through groups
                 for (k = 0 ; k < iGroups ; k++)
                 {
                     //Insert the new group into the groups table
                     Group group = groups.get(k);
+
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Adding group "+k +". Name: "+group.getName());
                     try
                     {
                         sql = "INSERT INTO Groups (StepID)" +
                                 " VALUES (" +iStepID+")";
+                        Bukkit.getConsoleSender().sendMessage(sql);
                         SQL.executeUpdate(sql);
 
                         sql = "Select LAST_INSERT_ID()";
@@ -460,11 +466,12 @@ public class TeachingTutorials extends JavaPlugin
                     {
                         Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new group into DB. Tutorial: "+tutorial.szTutorialName);
                         e.printStackTrace();
-                        continue;
+                        continue; // Doesn't attempt to then store the tasks
                     }
 
                     ArrayList<Task> tasks = group.getTasks();
                     iTasks = tasks.size();
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iTasks+" tasks in this group");
                     //Go through tasks
                     for (l = 0 ; l < iTasks ; l++)
                     {
@@ -474,6 +481,7 @@ public class TeachingTutorials extends JavaPlugin
                         {
                             sql = "INSERT INTO Tasks (GroupID, TaskType, `Order`)" +
                                     " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1)+")";
+                            Bukkit.getConsoleSender().sendMessage(sql);
                             SQL.executeUpdate(sql);
                         }
                         catch (Exception e)

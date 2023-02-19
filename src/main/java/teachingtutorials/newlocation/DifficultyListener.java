@@ -7,9 +7,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.checkerframework.checker.units.qual.C;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.TpllListener;
+import teachingtutorials.fundamentalTasks.FundamentalTask;
+import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
@@ -18,14 +18,16 @@ public class DifficultyListener implements Listener
     TeachingTutorials plugin;
     Player player;
     LocationTask locationTask;
-    TpllListener tpllListener;
+    Task task;
+    FundamentalTask taskType;
 
-    public DifficultyListener(TeachingTutorials plugin, Player player, LocationTask locationTask, TpllListener tpllListener)
+    public DifficultyListener(TeachingTutorials plugin, Player player, LocationTask locationTask, Task task, FundamentalTask taskType)
     {
         this.plugin = plugin;
         this.player = player;
         this.locationTask = locationTask;
-        this.tpllListener = tpllListener;
+        this.task = task;
+        this.taskType = taskType;
     }
 
     public void register()
@@ -49,8 +51,14 @@ public class DifficultyListener implements Listener
                 command = command.replace("/tutorials ", "");
                 float fDifficulty = Float.parseFloat(command);
 
-                //Signals the tpll listener to store the details of the new LocationTask in the DB
-                locationTask.setDifficulties(fDifficulty, 0, 0, 0, 0);
+                //Signals the listener to store the details of the new LocationTask in the DB
+                switch (taskType)
+                {
+                    case tpll:
+                        locationTask.setDifficulties(fDifficulty, 0, 0, 0, 0);
+                    case selection:
+                        locationTask.setDifficulties(0, fDifficulty, 0, 0, 0);
+                }
                 if (locationTask.storeNewData())
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask stored in database");
@@ -67,7 +75,7 @@ public class DifficultyListener implements Listener
                 //Unregisters this listener
                 HandlerList.unregisterAll(this);
 
-                tpllListener.newLocationSpotHit();
+                task.newLocationSpotHit();
             }
         }
     }

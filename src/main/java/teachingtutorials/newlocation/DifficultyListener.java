@@ -7,11 +7,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.plugin.RegisteredListener;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.FundamentalTask;
 import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
+
+import java.util.ArrayList;
 
 public class DifficultyListener implements Listener
 {
@@ -20,20 +23,31 @@ public class DifficultyListener implements Listener
     LocationTask locationTask;
     Task task;
     FundamentalTask taskType;
+    boolean bReadyForDifficulty;
 
-    public DifficultyListener(TeachingTutorials plugin, Player player, LocationTask locationTask, Task task, FundamentalTask taskType)
+    public DifficultyListener(TeachingTutorials plugin, Player player, Task task, FundamentalTask taskType)
     {
         this.plugin = plugin;
         this.player = player;
-        this.locationTask = locationTask;
         this.task = task;
         this.taskType = taskType;
+        bReadyForDifficulty = false;
     }
 
     public void register()
     {
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
-        player.sendMessage(ChatColor.AQUA +"Enter the difficulty from 0 to 1 as a decimal. Use command /tutorials [difficulty]");
+    }
+
+    public void setLocationTask(LocationTask locationTask)
+    {
+        this.locationTask = locationTask;
+        bReadyForDifficulty = true;
+    }
+
+    public boolean getIsReady()
+    {
+        return bReadyForDifficulty;
     }
 
     @EventHandler
@@ -42,10 +56,17 @@ public class DifficultyListener implements Listener
         if (event.getPlayer().getUniqueId().equals(player.getUniqueId()))
         {
             String command = event.getMessage();
-            if (command.matches("(/tutorials 0).[0-9]+") || command.equals("/tutorials 1"))
+            if (command.matches("(/tutorials 0)\\.[0-9]+") || command.equals("/tutorials 1"))
             {
                 //Cancels the event
                 event.setCancelled(true);
+
+                if (!bReadyForDifficulty)
+                {
+                    Display display = new Display(event.getPlayer(), ChatColor.RED +"Complete the " +taskType.toString() +" task first");
+                    display.Message();
+                    return;
+                }
 
                 //Extracts the difficulty of the task
                 command = command.replace("/tutorials ", "");
@@ -56,23 +77,43 @@ public class DifficultyListener implements Listener
                 {
                     case tpll:
                         locationTask.setDifficulties(fDifficulty, 0, 0, 0, 0);
+                        break;
                     case selection:
+                    case command:
                         locationTask.setDifficulties(0, fDifficulty, 0, 0, 0);
+                        break;
                 }
                 if (locationTask.storeNewData())
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask stored in database");
-                    Display display = new Display(player, ChatColor.AQUA +"Task stored in DB");
+                    Display display = new Display(player, ChatColor.GREEN +"Task stored in DB");
                     display.Message();
                 }
                 else
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask not stored in database");
-                    Display display = new Display(player, ChatColor.AQUA +"Task could not be stored in DB. Please report this");
+                    Display display = new Display(player, ChatColor.RED +"Task could not be stored in DB. Please report this");
                     display.Message();
                 }
 
-                //Unregisters this listener
+//                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering difficulty listeners");
+
+//                //Unregisters all the difficulty listeners associated with the creator in question
+//                ArrayList<RegisteredListener> listeners = HandlerList.getRegisteredListeners(this.plugin);
+//                int iListeners = listeners.size();
+//                for (int i = 0 ; i < iListeners ; i++)
+//                {
+//                    RegisteredListener listener = listeners.get(i);
+//                    if (listener.getListener() instanceof DifficultyListener)
+//                    {
+//                        if (((DifficultyListener) listener.getListener()).player.getUniqueId().equals(event.getPlayer().getUniqueId()))
+//                        {
+//                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Found a difficulty listener, unregistering");
+//                            HandlerList.unregisterAll(listener.getListener());
+//                        }
+//                    }
+//                }
+
                 HandlerList.unregisterAll(this);
 
                 task.newLocationSpotHit();

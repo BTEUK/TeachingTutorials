@@ -12,6 +12,7 @@ import org.bukkit.inventory.Inventory;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Tutorial;
+import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
@@ -85,11 +86,11 @@ public class CreatorTutorialsMenu
         {
             //Sets tutorial name bold for tutorials in use
             if (allTutorials[i-1].bInUse)
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName),
+                Utils.createItem(inventory, Material.WRITTEN_BOOK, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName),
                         ChatColor.DARK_GREEN+"In Use - Left click to remove from use",
                         ChatColor.DARK_GREEN+"Right click to add a new location");
             else
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName),
+                Utils.createItem(inventory, Material.BOOK, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName),
                         ChatColor.DARK_GREEN+"Not In Use - Left click to set in use",
                         ChatColor.DARK_GREEN+"Right click to add a new location");
         }
@@ -130,21 +131,28 @@ public class CreatorTutorialsMenu
         Tutorial[] tutorials = user.getAllTutorials();
 
         //Slot 0 indexed
-        if (slot+1 > tutorials.length)
-        {
-            //Do nothing, they've clicked on a blank space
-        }
-        else if (slot+1 == iRows*9)
+        if (slot+1 == iRows*9)
         {
             //Back button
             player.closeInventory();
             player.openInventory(AdminMenu.getGUI(user));
         }
+        else if (slot+1 > tutorials.length)
+        {
+            //Do nothing, they've clicked on a blank space
+        }
         else
         {
-            tutorials[slot].toggleInUse();
-            player.closeInventory();
-            player.openInventory(CreatorTutorialsMenu.getGUI(user));
+            if (tutorials[slot].toggleInUse())
+            {
+                player.closeInventory();
+                player.openInventory(CreatorTutorialsMenu.getGUI(user));
+            }
+            else
+            {
+                Display display = new Display(player, ChatColor.RED +"There are no locations for this tutorial");
+                display.Message();
+            }
         }
     }
 
@@ -180,15 +188,15 @@ public class CreatorTutorialsMenu
 
         //Slot 0 indexed
 
-        if (slot+1 > tutorials.length)
-        {
-            //Do nothing, they've clicked on a blank space
-        }
-        else if (slot+1 == iRows*9)
+        if (slot+1 == iRows*9)
         {
             //Back button
             player.closeInventory();
             player.openInventory(AdminMenu.getGUI(user));
+        }
+        else if (slot+1 > tutorials.length)
+        {
+            //Do nothing, they've clicked on a blank space
         }
         else
         {

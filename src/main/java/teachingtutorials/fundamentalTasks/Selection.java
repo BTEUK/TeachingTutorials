@@ -34,9 +34,12 @@ public class Selection extends Task implements Listener
 
     float fWEDifficulty;
 
+    private DifficultyListener difficultyListener;
+
     public Selection(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fWEDifficulty)
     {
         super(plugin);
+        this.type = "selection";
         this.player = player;
         this.parentGroup = parentGroup;
 
@@ -55,10 +58,10 @@ public class Selection extends Task implements Listener
         this.bSelection2Made = false;
     }
 
-    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szType)
+    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
     {
         super(plugin);
-        this.type = szType;
+        this.type = "selection";
         this.player = player;
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
@@ -66,6 +69,10 @@ public class Selection extends Task implements Listener
 
         this.bSelection1Made = false;
         this.bSelection2Made = false;
+
+        //Listen out for difficulty - There will only be one difficulty listener per selection to avoid bugs
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.selection);
+        difficultyListener.register();
     }
 
     @Override
@@ -85,6 +92,10 @@ public class Selection extends Task implements Listener
             return;
         }
         //Checks that it is the correct tool
+        if (!event.hasItem())
+        {
+            return;
+        }
         if (!event.getItem().getType().equals(Material.WOODEN_AXE))
         {
             return;
@@ -104,7 +115,7 @@ public class Selection extends Task implements Listener
         final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
         try
         {
-            longLat = projection.toGeo(event.getClickedBlock().getX()+0.5F, event.getClickedBlock().getY()+0.5F);
+            longLat = projection.toGeo(event.getClickedBlock().getX()+0.5d, event.getClickedBlock().getY()+0.5d);
         }
         catch (OutOfProjectionBoundsException e)
         {
@@ -139,16 +150,20 @@ public class Selection extends Task implements Listener
             //Checks whether both selections have been made
             if ((bSelection1Made && bSelection2Made))
             {
-               // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player has now made both points of the selection");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player has now made both points of the selection");
+                Display display = new Display(player, ChatColor.DARK_GREEN+"Selection complete");
+                display.ActionBar();
+
                 //Set the answers - answers are stored in a format matching that of how they are decoded in the constructor of this class
                 LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
                 locationTask.setAnswers(dTargetCoords1[0] +"," +dTargetCoords1[1] +"," +dTargetCoords2[0] +"," +dTargetCoords2[1]);
+                difficultyListener.setLocationTask(locationTask);
 
-                //Listen out for difficulty
-                DifficultyListener difficultyListener = new DifficultyListener(this.plugin, this.player, locationTask, this, FundamentalTask.selection);
-                difficultyListener.register();
-                //Data is added to database once difficulty is provided. This is done inside of the difficulty listener
+                //Data is added to database once difficulty is provided
 
+                //Prompt difficulty
+                Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty from 0 to 1 as a decimal. Use command /tutorials [difficulty]");
+                difficultyPrompt.Message();
 
                 //SpotHit is then called from inside the difficulty listener once the difficulty has been established
                 //This is what moves it onto the next task
@@ -182,18 +197,18 @@ public class Selection extends Task implements Listener
             fDistance[0] = Utils.geometricDistance(selectionGeoCoords, dTargetCoords1);
             fDistance[1] = Utils.geometricDistance(selectionGeoCoords, dTargetCoords2);
 
-            for (int i = 0 ; i < 2; i++)
+            for (int i = 0 ; i < 2 ; i++)
             {
                 //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
                 if (fDistance[i] <= 1.5)
                 {
                     Display display = new Display(player, ChatColor.GREEN+"Correct position selected");
-                    display.Message();
+                    display.ActionBar();
                     bPointFound = true;
 
                     //Records which target was found
                     bWasTarget1 = (i == 0);
-                    break; //If they found a point, then good on them
+                    break; //If they found a point, then good on them, but they can't get both with just one click
                 }
             }
 
@@ -216,10 +231,12 @@ public class Selection extends Task implements Listener
                 //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
                 if (fOtherDistance <= 1.5)
                 {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player has now made both points of the selection");
                     Display display = new Display(player, ChatColor.DARK_GREEN+"Selection complete");
-                    display.Message();
+                    display.ActionBar();
 
                     //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
+                    //Especially since this is quantised into blocks, so it wouldn't be a precise measure of performance anyway
                     fPerformance = 1;
 
                     bothSelectionsMade();
@@ -230,6 +247,8 @@ public class Selection extends Task implements Listener
 
     private void bothSelectionsMade()
     {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering selection listener");
+
         //Unregisters this task
         HandlerList.unregisterAll(this);
 

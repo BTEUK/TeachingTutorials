@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.compulsory.Compulsory;
 import teachingtutorials.tutorials.Lesson;
+import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
@@ -41,32 +42,32 @@ public class MainMenu
 
         if (u.bHasCompletedCompulsory)
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
+            Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+            Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
         }
         else if (u.bInLesson)
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
         else
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
         }
 
 
         if (u.player.hasPermission("TeachingTutorials.Admin") || u.player.hasPermission("TeachingTutorials.Creator"))
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 19,(ChatColor.GREEN +"Creator Menu"));
+            Utils.createItem(inventory, Material.LECTERN, 1, 19,(ChatColor.GREEN +"Creator Menu"));
         }
 
         toReturn.setContents(inventory.getContents());
 
         return toReturn;
     }
+    //Finds the correct user for this player from the plugins list of users
 
     public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
     {
-        //Finds the correct user for this player from the plugins list of users
         boolean bUserFound = false;
 
         ArrayList<User> users = plugin.players;
@@ -86,8 +87,10 @@ public class MainMenu
 
         if (!bUserFound)
         {
-            player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-            player.sendMessage(ChatColor.RED +"Try relogging");
+            Display display = new Display(player, ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
+            display.Message();
+            display = new Display(player, ChatColor.RED +"Try relogging");
+            display.Message();
             return;
         }
 

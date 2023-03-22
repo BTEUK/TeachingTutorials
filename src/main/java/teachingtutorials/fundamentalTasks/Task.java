@@ -53,7 +53,7 @@ public class Task
         {
             fFinalScore = fDifficulty*fPerformance;
 
-            //Add to the totals
+            //Add scores to the totals
             parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal = parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal + fFinalScore;
             parentGroup.parentStep.parentStage.lesson.fTpllDifTotal = parentGroup.parentStep.parentStage.lesson.fTpllDifTotal + fDifficulty;
         }
@@ -106,16 +106,22 @@ public class Task
                     case "tpll":
                         TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, szAnswers, fTpllDifficulty);
                         tasks.add(tpllListener);
+                        break;
                     case "selection":
                         Selection selection = new Selection(plugin, player, parentGroup, szAnswers, fWEDifficulty);
                         tasks.add(selection);
+                        break;
+                    case "command":
+                        Command command = new Command(plugin, player, parentGroup, szAnswers, fWEDifficulty);
+                        tasks.add(command);
+                        break;
                 }
             }
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "      [TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "      [TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
             se.printStackTrace();
         }
         catch (Exception e)
@@ -135,7 +141,7 @@ public class Task
 
         try
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Searching for tasks in group with group ID: "+parentGroup.getGroupID());
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"      Searching for tasks in group with group ID: "+parentGroup.getGroupID());
             //Compiles the command to fetch groups
             sql = "Select * FROM Tasks WHERE GroupID = "+parentGroup.getGroupID() +" ORDER BY 'Order' ASC";
             Bukkit.getConsoleSender().sendMessage(sql);
@@ -151,19 +157,23 @@ public class Task
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID, szType);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID);
                         tasks.add(tpllListener);
                         break;
                     case "selection":
-                        Selection selection = new Selection(plugin, player, parentGroup, iTaskID, szType);
+                        Selection selection = new Selection(plugin, player, parentGroup, iTaskID);
                         tasks.add(selection);
+                        break;
+                    case "command":
+                        Command command = new Command(plugin, player, parentGroup, iTaskID);
+                        tasks.add(command);
                         break;
                 }
             }
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "      [TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
             se.printStackTrace();
         }
         catch (Exception e)

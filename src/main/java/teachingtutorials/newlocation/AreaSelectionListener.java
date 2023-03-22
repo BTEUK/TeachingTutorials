@@ -58,7 +58,6 @@ public class AreaSelectionListener implements Listener
                 }
                 else
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Incorrect tpll command format");
                     Display display = new Display(event.getPlayer(), ChatColor.RED +"Incorrect tpll command format, try again");
                     display.Message();
                 }

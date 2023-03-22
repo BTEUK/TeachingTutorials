@@ -67,12 +67,13 @@ public class Group
     {
         if (this.parentStep.parentStage.bLocationCreation)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching tasks without answers");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    Fetching tasks without answers");
             tasks = Task.fetchTasksWithoutAnswers(plugin, this, parentStep.parentStage.getPlayer());
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    Group.FetchAndInitialiseTasks: "+tasks.size() +" tasks found");
         }
         else
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Fetching tasks with answers for location with locationID "+parentStep.parentStage.getLocationID() +" and groupID " +this.groupID);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    Fetching tasks with answers for location with locationID "+parentStep.parentStage.getLocationID() +" and groupID " +this.groupID);
             tasks = Task.fetchTasks(plugin, parentStep.parentStage.getLocationID(), this, parentStep.parentStage.lesson.student.player);
         }
     }
@@ -83,12 +84,12 @@ public class Group
 
         if (tasks.size() > 0)
         {
-           // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This group has "+tasks.size() +" tasks");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] This group has "+tasks.size() +" tasks");
 
             Task newTask = tasks.get(0);
             //Tasks unregister themselves once complete
             newTask.register();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] First task registered: "+newTask.type);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] First task registered: "+newTask.type);
 
             //Sets the current task number to the first task
             //1 indexed
@@ -96,7 +97,7 @@ public class Group
         }
         else
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This group had no tasks, group finished");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] This group had no tasks, group finished");
             //Signal that group is complete before it even started
             groupFinished = true;
             parentStep.groupFinished();
@@ -111,7 +112,7 @@ public class Group
         {
             //Signal that group is complete
             groupFinished = true;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Group finished");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] GroupID "+groupID +" finished");
             parentStep.groupFinished();
         }
         else //Registers the next task
@@ -119,7 +120,7 @@ public class Group
             Task newTask = tasks.get(taskNo);
             //Tasks unregister themselves once complete
             newTask.register();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Next task registered: "+newTask.type);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] Next task registered: "+newTask.type);
             taskNo++;
         }
     }
@@ -145,12 +146,12 @@ public class Group
             {
                 Group group = new Group(resultSet.getInt("GroupID"), player, plugin, step);
                 groups.add(group);
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Added group with group ID " +resultSet.getInt("GroupID") +" to step");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    Added group with group ID " +resultSet.getInt("GroupID") +" to step");
             }
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Groups by StepID");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "    [TeachingTutorials] - SQL - SQL Error fetching Groups by StepID");
             se.printStackTrace();
         }
         catch (Exception e)

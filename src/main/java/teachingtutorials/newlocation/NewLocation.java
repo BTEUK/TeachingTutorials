@@ -75,7 +75,7 @@ public class NewLocation
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Registered area selection listener");
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Registered endarea listener");
 
-        this.Creator.player.sendMessage(ChatColor.AQUA +"Use /tpll to draw an area in a circular order to generate for the location");
+        this.Creator.player.sendMessage(ChatColor.AQUA +"Use /tpll to draw an area in a circular order to generate the terrain for the location");
         this.Creator.player.sendMessage(ChatColor.AQUA +"Run /tutorials endarea once you are done");
 
         //Stores the area bounds globally in this class
@@ -308,9 +308,9 @@ public class NewLocation
 
     private void endLocation()
     {
-        Display display = new Display(Creator.player, ChatColor.AQUA +"Location Created!");
+        Display display = new Display(Creator.player, ChatColor.UNDERLINE+""+ChatColor.DARK_GREEN +"Location Created!");
         display.Message();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Location Created with LocationID: "+this.location.getLocationID());
+        Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_GREEN +"Location Created with LocationID: "+this.location.getLocationID());
     }
 
     private void generateArea(World world) throws OutOfProjectionBoundsException

@@ -3,7 +3,6 @@ package teachingtutorials.tutorials;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import teachingtutorials.TeachingTutorials;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -190,9 +189,7 @@ public class Tutorial
 
             tutorials = new Tutorial[iCount];
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[TeachingTutorials] - Creator has " +iCount +" tutorials.");
-
-            //Executes the query
+            //Executes the query again (moves the cursor to the top)
             resultSet = SQL.executeQuery(sql);
             for (int i = 0 ; i < iCount ; i++)
             {
@@ -314,7 +311,7 @@ public class Tutorial
     }
 
     //Changes the boolean value of whether a tutorial is "in-use" or not
-    public void toggleInUse()
+    public boolean toggleInUse()
     {
         //Declare variables
         String szSql;
@@ -328,10 +325,16 @@ public class Tutorial
             {
                 szSql = "UPDATE Tutorials SET InUse = 0 WHERE TutorialID = "+ this.iTutorialID;
             }
-            else
+            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID).length > 0)
             {
                 szSql = "UPDATE Tutorials SET InUse = 1 WHERE TutorialID = "+ this.iTutorialID;
             }
+            else
+            {
+                return false;
+            }
+
+            //Updates the database
             SQL.executeUpdate(szSql);
 
             //Updates the value of the boolean stored in memory
@@ -341,5 +344,6 @@ public class Tutorial
         {
             e.printStackTrace();
         }
+        return true;
     }
 }

@@ -103,6 +103,48 @@ public class Location
         }
     }
 
+    public static int[] getAllLocationIDsForTutorial(int iTutorialID)
+    {
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+        int iLocations = 0;
+        int iLocationIDs[];
+        int i;
+
+        try
+        {
+            //Compiles the command to fetch all the locations for the tutorial
+            sql = "Select * FROM Locations WHERE TutorialID = " +iTutorialID;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            while (resultSet.next())
+            {
+                iLocations++;
+            }
+
+            iLocationIDs = new int[iLocations];
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            for (i = 0 ; i < iLocationIDs.length ; i++)
+            {
+                resultSet.next();
+                iLocationIDs[i] = resultSet.getInt("LocationID");
+            }
+        }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching location IDs for tutorial with ID: "+iTutorialID);
+            se.printStackTrace();
+            iLocationIDs = new int[0];
+        }
+        return iLocationIDs;
+    }
+
     //---------------------------------------------------
     //--------------------SQL Updates--------------------
     //---------------------------------------------------

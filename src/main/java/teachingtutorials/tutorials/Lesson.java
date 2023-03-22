@@ -355,57 +355,24 @@ public class Lesson
 
     private boolean selectLocation()
     {
-        String sql;
-        Statement SQL = null;
-        ResultSet resultSet = null;
-        int iLocations = 0;
-        int iLocationIDs[];
-        int i;
-
-        try
-        {
-            //Compiles the command to fetch all the locations for the tutorial
-            sql = "Select * FROM Locations WHERE TutorialID = " +this.tutorial.getTutorialID();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-            while (resultSet.next())
-            {
-                iLocations++;
-            }
-
-            iLocationIDs = new int[iLocations];
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-            for (i = 0 ; i < iLocationIDs.length ; i++)
-            {
-                resultSet.next();
-                iLocationIDs[i] = resultSet.getInt("LocationID");
-            }
-        }
-        catch (SQLException se)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching location IDs for tutorial with ID: "+this.tutorial.getTutorialID());
-            se.printStackTrace();
-            iLocationIDs = new int[0];
-        }
+        int[] iLocationIDs;
+        iLocationIDs = Location.getAllLocationIDsForTutorial(this.tutorial.getTutorialID());
 
         //Checks to see if any locations were found
         if (iLocationIDs.length == 0)
         {
             return false;
         }
-        //Else:
-        int iRandomIndex = (int) Math.random()*(iLocationIDs.length-1);
+        else
+        {
+            int iRandomIndex = (int) Math.random()*(iLocationIDs.length-1);
 
-        //Initialises location
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] LocationID selected: " +iLocationIDs[iRandomIndex]);
-        this.location = new Location(iLocationIDs[iRandomIndex]);
+            //Initialises location
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] LocationID selected: " +iLocationIDs[iRandomIndex]);
+            this.location = new Location(iLocationIDs[iRandomIndex]);
 
-        return true;
+            return true;
+        }
     }
 
     protected void nextStage()

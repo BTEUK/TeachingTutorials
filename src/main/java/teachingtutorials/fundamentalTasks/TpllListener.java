@@ -26,9 +26,12 @@ public class TpllListener extends Task implements Listener
     //Stores the target coords - the location a player should tpll to
     final double dTargetCoords[] = new double[2];
 
+    private DifficultyListener difficultyListener;
+
     public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fDifficulty)
     {
         super(plugin);
+        this.type = "tpll";
         this.player = player;
         this.parentGroup = parentGroup;
 
@@ -42,14 +45,18 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = false;
     }
 
-    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szType)
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
     {
         super(plugin);
-        this.type = szType;
+        this.type = "tpll";
         this.player = player;
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+
+        //Listen out for difficulty - There will only be one difficulty listener per tpll command to avoid bugs
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.tpll);
+        difficultyListener.register();
     }
 
     @Override
@@ -86,13 +93,18 @@ public class TpllListener extends Task implements Listener
                 }
 
                 //Teleports the player to where they tplled to
-                Location location = parentGroup.parentStep.parentStage.lesson.location;
-                World world = location.getWorld();
+                World world;
+                if (bNewLocation)
+                    world = player.getWorld();
+                else
+                {
+                    Location location = parentGroup.parentStep.parentStage.lesson.location;
+                    world = location.getWorld();
+                }
                 final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
                 try
                 {
-                    double[] xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
-                    Bukkit.getConsoleSender().sendMessage(location.getStartCoordinates().getLng() +", " +location.getStartCoordinates().getLat());
+                    double[] xz = projection.fromGeo(latLong.getLng(), latLong.getLat());
                     org.bukkit.Location tpLocation;
                     tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
                     player.teleport(tpLocation);
@@ -110,11 +122,13 @@ public class TpllListener extends Task implements Listener
                     //Set the answers
                     LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
                     locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
+                    difficultyListener.setLocationTask(locationTask);
+
                     //Data is added to database once difficulty is provided
 
-                    //Listen out for difficulty
-                    DifficultyListener difficultyListener = new teachingtutorials.newlocation.DifficultyListener(this.plugin, this.player, locationTask, this, FundamentalTask.tpll);
-                    difficultyListener.register();
+                    //Prompt difficulty
+                    Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty from 0 to 1 as a decimal. Use command /tutorials [difficulty]");
+                    difficultyPrompt.Message();
 
                     //SpotHit is then called from inside the difficulty listener once the difficulty has been established
                     //This is what moves it onto the next task
@@ -128,7 +142,7 @@ public class TpllListener extends Task implements Listener
                     {
                         //Very accurate
                         Display display = new Display(player, ChatColor.DARK_GREEN+"Perfect! Well done");
-                        display.Message();
+                        display.ActionBar();
                         fPerformance = 1;
                         spotHit();
                     }
@@ -136,8 +150,8 @@ public class TpllListener extends Task implements Listener
                     {
                         //Pretty decent
                         Display display = new Display(player, ChatColor.GREEN+"Point hit");
-                        display.Message();
-                        fPerformance = (4F / 3F) * (1 - (float) fDistance);
+                        display.ActionBar();
+                        fPerformance = (4F / 3F) * (1 - fDistance);
                         spotHit();
                     }
                 }
@@ -147,6 +161,8 @@ public class TpllListener extends Task implements Listener
 
     private void spotHit()
     {
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering tpll listener");
+
         //Unregisters this task
         HandlerList.unregisterAll(this);
 
@@ -156,6 +172,7 @@ public class TpllListener extends Task implements Listener
 
     //A public version is required for when spotHit is called from the difficulty listener
     //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
+    @Override
     public void newLocationSpotHit()
     {
         spotHit();

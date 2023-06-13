@@ -1,5 +1,12 @@
 name: TeachingTutorials
-version: 1.0
+version: '${project.version}'
 main: teachingtutorials.TeachingTutorials
-description: Imagine
+description: Provides a system for propsective builders of the Build the Earth project to learn skills
 api-version: 1.18
+author: George112n
+database: true
+commands:
+  tutorials:
+    usage: /<command>
+    description: Deals will all tutorial related commands.
+website: https://github.com/BTEUK/TeachingTutorials

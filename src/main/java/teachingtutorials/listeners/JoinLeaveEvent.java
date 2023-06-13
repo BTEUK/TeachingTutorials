@@ -14,13 +14,13 @@ import teachingtutorials.utils.User;
 
 import java.util.ArrayList;
 
-public class JoinEvent implements Listener
+public class JoinLeaveEvent implements Listener
 {
     private final TeachingTutorials plugin;
 
-    public JoinEvent(TeachingTutorials plugin)
+    public JoinLeaveEvent(TeachingTutorials plugin)
     {
-        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] " + ChatColor.GREEN + "åJoinEvent loaded");
+        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] " + ChatColor.GREEN + "JoinEvent loaded");
         this.plugin = plugin;
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -55,8 +55,8 @@ public class JoinEvent implements Listener
             //Found user
             if (user.player.getUniqueId().equals(player.getUniqueId()))
             {
+                user.playerLeave(plugin);
                 users.remove(i);
-                user.playerLeave();
                 //Does not break, as they may be there multiple times through an error,
                 // and this would finally clear them
             }

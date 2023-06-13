@@ -19,11 +19,12 @@ public class Stage
 
     private Player player;
     private TeachingTutorials plugin;
-    private int iCurrentStep;
     public Lesson lesson; //Still want component objects to be able to access it. Or do I? yep, and all the children of that
     public boolean bStageFinished;
 
     public ArrayList<Step> steps = new ArrayList<>();
+    private int iCurrentStep; //1 indexed
+    private Step currentStep;
 
     public int iNewLocationID;
     public NewLocation newLocation;
@@ -91,6 +92,11 @@ public class Stage
         return player;
     }
 
+    public int getCurrentStep()
+    {
+        return iCurrentStep;
+    }
+
     private void fetchAndInitialiseSteps()
     {
         //Gets a list of all of the steps of the specified stage and loads each with the relevant data.
@@ -100,7 +106,8 @@ public class Stage
 
     public void startStage(int iStep)
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Stage "+iOrder +" starting");
+        //Step is 1 indexed
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Stage "+iOrder +" starting, at step "+iStep);
 
         fetchAndInitialiseSteps();
 
@@ -114,13 +121,15 @@ public class Stage
     {
         //1 indexed
         iCurrentStep++;
-
-        Step step;
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+lesson.student.player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
 
         if (iCurrentStep <= steps.size())
         {
-            step = steps.get(iCurrentStep-1);
-            step.startStep();
+            currentStep = steps.get(iCurrentStep-1);
+            currentStep.startStep();
+
+            //Save the positions of stage and step
+            lesson.savePositions();
         }
         else
         {
@@ -135,6 +144,12 @@ public class Stage
             newLocation.nextStage();
         else
             lesson.nextStage();
+    }
+
+    //Unregister all listeners under this stage
+    public void terminateEarly()
+    {
+        currentStep.terminateEarly();
     }
 
     public static ArrayList<Stage> fetchStagesByTutorialID(Player player, TeachingTutorials plugin, Lesson lesson)

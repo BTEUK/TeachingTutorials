@@ -21,7 +21,9 @@ public class Step
     public boolean bStepFinished;
     protected int iStepID;
     protected int iStepInStage;
+
     private int iGroupInStepLocationCreation;
+    private Group currentGroup;
 
     //Groups are completed asynchronously.
     //Tasks in groups are completed synchronously
@@ -78,7 +80,8 @@ public class Step
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
             //Register the start of the first group
-            groups.get(0).initialRegister();
+            currentGroup = groups.get(0);
+            currentGroup.initialRegister();
             iGroupInStepLocationCreation = 1;
         }
         else
@@ -113,7 +116,8 @@ public class Step
             {
                 bAllGroupsFinished = false;
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registering group "+iGroupInStepLocationCreation);
-                groups.get(iGroupInStepLocationCreation).initialRegister();
+                currentGroup = groups.get(iGroupInStepLocationCreation);
+                currentGroup.initialRegister();
                 iGroupInStepLocationCreation++;
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registered group "+iGroupInStepLocationCreation);
             }
@@ -136,6 +140,27 @@ public class Step
             this.bStepFinished = true;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Step "+iStepInStage +" finished");
             parentStage.nextStep();
+        }
+    }
+
+    public void terminateEarly()
+    {
+        if (parentStage.bLocationCreation)
+        {
+            currentGroup.terminateEarly();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Unregistered group "+iGroupInStepLocationCreation);
+        }
+
+        else
+        {
+            int i;
+            int iGroups = groups.size();
+            for (i = 0; i < iGroups; i++)
+            {
+                Group group = groups.get(i);
+                group.terminateEarly();
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Unregistered group "+(i+1));
+            }
         }
     }
 

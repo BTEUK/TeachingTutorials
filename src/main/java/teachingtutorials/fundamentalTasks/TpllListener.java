@@ -8,6 +8,7 @@ import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -65,7 +66,8 @@ public class TpllListener extends Task implements Listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler
+    //Want the tutorials tpll process to occur first
+    @EventHandler(priority = EventPriority.LOWEST)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
         fPerformance = 0F;
@@ -127,7 +129,7 @@ public class TpllListener extends Task implements Listener
                     //Data is added to database once difficulty is provided
 
                     //Prompt difficulty
-                    Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty from 0 to 1 as a decimal. Use command /tutorials [difficulty]");
+                    Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty of that tpll from 0 to 1 as a decimal. Use /tutorials [difficulty]");
                     difficultyPrompt.Message();
 
                     //SpotHit is then called from inside the difficulty listener once the difficulty has been established
@@ -168,6 +170,13 @@ public class TpllListener extends Task implements Listener
 
         //Marks the task as complete
         taskComplete();
+    }
+
+    @Override
+    public void unregister()
+    {
+        //Unregisters this task
+        HandlerList.unregisterAll(this);
     }
 
     //A public version is required for when spotHit is called from the difficulty listener

@@ -9,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -81,7 +82,7 @@ public class Selection extends Task implements Listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void interactEvent(PlayerInteractEvent event)
     {
         fPerformance = 0F;
@@ -162,7 +163,7 @@ public class Selection extends Task implements Listener
                 //Data is added to database once difficulty is provided
 
                 //Prompt difficulty
-                Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty from 0 to 1 as a decimal. Use command /tutorials [difficulty]");
+                Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty of that selection from 0 to 1 as a decimal. Use /tutorials [difficulty]");
                 difficultyPrompt.Message();
 
                 //SpotHit is then called from inside the difficulty listener once the difficulty has been established
@@ -254,6 +255,13 @@ public class Selection extends Task implements Listener
 
         //Marks the task as complete
         taskComplete();
+    }
+
+    @Override
+    public void unregister()
+    {
+        //Unregisters this task
+        HandlerList.unregisterAll(this);
     }
 
     //A public version is required for when spotHit is called from the difficulty listener

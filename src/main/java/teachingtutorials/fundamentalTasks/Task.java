@@ -60,6 +60,11 @@ public class Task
         parentGroup.taskFinished();
     }
 
+    public void unregister()
+    {
+
+    }
+
     private static void fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player, String sql)
     {
 

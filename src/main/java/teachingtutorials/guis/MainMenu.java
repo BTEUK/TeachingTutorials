@@ -95,7 +95,7 @@ public class MainMenu
         }
 
         //Compulsory tutorial
-        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Start Compulsory Tutorial"))
+        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Start Compulsory Tutorial") || clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Continue Compulsory Tutorial"))
         {
             player.closeInventory();
             Compulsory compulsory = new Compulsory(plugin, user);

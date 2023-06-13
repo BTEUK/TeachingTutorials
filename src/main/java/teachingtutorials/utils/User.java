@@ -5,11 +5,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.newlocation.NewLocation;
+import teachingtutorials.tutorials.Lesson;
 import teachingtutorials.tutorials.Tutorial;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 public class User
 {
@@ -18,7 +21,7 @@ public class User
     //Stores whether a player has completed the compulsory tutorial or not
     public boolean bHasCompletedCompulsory;
 
-    //Determines whether a player has Lesson to finish
+    //Records whether a player has Lesson to finish in the Lesson's table of the database
     public boolean bInLesson;
 
     //Determines what the player is currently doing on the tutorials server
@@ -106,9 +109,77 @@ public class User
     }
 
     //Does all the necessary thing when a player leaves the server
-    public void playerLeave()
+    public void playerLeave(TeachingTutorials plugin)
     {
+        boolean bAllRemoved;
 
+        //Checks their status
+        switch (currentMode)
+        {
+            case Idle:
+                Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE +"[TeachingTutorials] Player "+player.getName() +" is leaving but was idle");
+                break; //Assume the system is keeping an accurate account of the player's status
+            case Doing_Tutorial:
+                Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE +"[TeachingTutorials] Player "+player.getName() +" is leaving and was doing a tutorial. Saving and removing listeners...");
+                ArrayList<Lesson> lessons = plugin.lessons;
+                Lesson lesson;
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] There are currently "+lessons.size() +" lessons taking place");
+
+                do
+                {
+                    bAllRemoved = true;
+
+                    for (int i = 0 ; i < lessons.size() ; i++)
+                    {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson "+i);
+                        lesson = lessons.get(i);
+                        if (lesson.getStudent().equals(this))
+                        {
+                            bAllRemoved = false;
+                            //Saves the scores, saves the position, removes the listeners
+                            lesson.terminateEarly();
+
+                            //If a lesson is removed from the list we must start the for-loop again
+                            break;
+                        }
+                    }
+
+                } while (bAllRemoved);
+                //If none where found for this user, we can stop looking
+
+                Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE +"[TeachingTutorials] Paused all lessons for player "+player.getName());
+                break;
+            case Creating_New_Location:
+                Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE +"[TeachingTutorials] Player "+player.getName() +" is leaving whilst creating a location for a tutorial. Removing listeners...");
+                ArrayList<NewLocation> newLocations = plugin.newLocations;
+                NewLocation newLocation;
+
+                do
+                {
+                    bAllRemoved = true;
+
+                    for (int i = 0 ; i < newLocations.size() ; i++)
+                    {
+                        newLocation = newLocations.get(i);
+                        if (newLocation.getCreator().equals(this))
+                        {
+                            bAllRemoved = false;
+                            //Removes the listeners
+                            newLocation.terminateEarly();
+
+                            //If a newLocation is removed from the list we must start the for-loop again
+                            break;
+                        }
+                    }
+                } while (bAllRemoved);
+                //If none where found for this user, we can stop looking
+
+                Bukkit.getConsoleSender().sendMessage(ChatColor.LIGHT_PURPLE +"[TeachingTutorials] Paused all new location creations for player "+player.getName());
+                break;
+            case Creating_New_Tutorial:
+            default:
+                break;
+        }
     }
 
 

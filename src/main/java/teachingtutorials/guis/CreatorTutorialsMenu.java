@@ -13,6 +13,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
@@ -198,15 +199,24 @@ public class CreatorTutorialsMenu
         {
             //Do nothing, they've clicked on a blank space
         }
-        else
+        else //They've right clicked on an actual tutorial
         {
-            player.closeInventory();
+            //Only starts the new location process if the creator is idle
+            if (user.currentMode.equals(Mode.Idle))
+            {
+                player.closeInventory();
 
-            //Creates a NewLocation object
-            NewLocation newLocation = new NewLocation(user, tutorials[slot], plugin);
+                //Creates a NewLocation object
+                NewLocation newLocation = new NewLocation(user, tutorials[slot], plugin);
 
-            //Launches them into the new location adding process
-            newLocation.launchNewLocationAdding();
+                //Launches them into the new location adding process
+                newLocation.launchNewLocationAdding();
+            }
+            else
+            {
+                Display display = new Display(user.player, (ChatColor.RED +"Complete or pause your current tutorial or location creation first"));
+                display.Message();
+            }
         }
     }
 }

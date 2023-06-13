@@ -15,11 +15,9 @@ import teachingtutorials.guis.CreatorTutorialsMenu;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.listeners.InventoryClicked;
 import teachingtutorials.listeners.PlayerInteract;
-import teachingtutorials.listeners.JoinEvent;
-import teachingtutorials.tutorials.Group;
-import teachingtutorials.tutorials.Stage;
-import teachingtutorials.tutorials.Step;
-import teachingtutorials.tutorials.Tutorial;
+import teachingtutorials.listeners.JoinLeaveEvent;
+import teachingtutorials.newlocation.NewLocation;
+import teachingtutorials.tutorials.*;
 import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.User;
 
@@ -41,12 +39,20 @@ public class TeachingTutorials extends JavaPlugin
 
     Statement SQL = null;
 
+    //The connection for the database
     private DBConnection dbConnection;
 
     public ItemStack slot5;
     public static ItemStack menu;
 
+    //A list of all connected players
     public ArrayList<User> players;
+
+    //A list of all ongoing lessons
+    public ArrayList<Lesson> lessons;
+
+    //A list of all ongoing location creations
+    public ArrayList<NewLocation> newLocations;
 
     @Override
     public void onEnable()
@@ -57,6 +63,8 @@ public class TeachingTutorials extends JavaPlugin
         saveDefaultConfig();
 
         players = new ArrayList<>();
+        lessons = new ArrayList<>();
+        newLocations = new ArrayList<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
@@ -101,11 +109,17 @@ public class TeachingTutorials extends JavaPlugin
 
         //Goes through the folder and if files are found, interpret it
         //Folder is sent as it is needed
+       // int iNumFiles = folder.list().length;
+
+       //This will break when file moving is fixed. Solution could be to create a local array of all the files then iterate through in a for loop
         for (int i = 0 ; i < folder.list().length ; i++)
         {
             File file = folder.listFiles()[i];
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Loading new tutorial file: "+file.getName());
-            interpretNewTutorial(file);
+            if (!file.isDirectory())
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Loading new tutorial file: "+file.getName());
+                interpretNewTutorial(file);
+            }
         }
 
         //---------------------------------------
@@ -148,7 +162,7 @@ public class TeachingTutorials extends JavaPlugin
         //---------------------------------------
 
         //Handles welcome message and gamemode
-        new JoinEvent(this);
+        new JoinLeaveEvent(this);
         new PlayerInteract(this);
         new InventoryClicked(this);
     //    new Wand(this);
@@ -157,6 +171,7 @@ public class TeachingTutorials extends JavaPlugin
 
     private void interpretNewTutorial(File file)
     {
+        //Stores each line as a separate string
         String[] szLines;
 
         //Holds all of the information for the new tutorial
@@ -187,8 +202,10 @@ public class TeachingTutorials extends JavaPlugin
             }
             szFile.close();
         }
-        catch (Exception e)
+        catch (IOException e)
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - IO - IO Error whilst reading file, skipping file");
+            e.printStackTrace();
             return;
         }
 
@@ -491,10 +508,8 @@ public class TeachingTutorials extends JavaPlugin
                             continue;
                         }
                     }
-
                 }
             }
-
         }
         return true;
     }
@@ -517,8 +532,9 @@ public class TeachingTutorials extends JavaPlugin
 
     private boolean createTables()
     {
-        boolean bSuccess = false;
-        int iCount = -1;
+        //Is assumed true and if any of the tables fail to create will change to false
+        boolean bSuccess = true;
+//        int iCount = -1;
 
         sql = "";
 
@@ -527,49 +543,62 @@ public class TeachingTutorials extends JavaPlugin
 
         try
         {
+            //Adds the Tutorials DB creation DDL if not already in the folder
             this.saveResource("TutorialsDDL.sql", false);
 
+            //Creates a file object and sets it to the path of the Tutorials DB creation DDL
             File file = new File("/home/container/plugins/TeachingTutorials/TutorialsDDL.sql");
 
             fileReader = new FileReader(file);
-
             bufferedReader = new BufferedReader(fileReader);
-            sql = readAll(bufferedReader);
-            sql.replace("TeachingTutorials", dbConnection.Database);
 
-            sql.replace("\n", "");
+            //Reads the file in
+            sql = readAll(bufferedReader);
+
+            //Replaces the database name with that of the one specified in the config
+            sql = sql.replace("TeachingTutorials", dbConnection.Database);
+
+            //Removes all line breaks
+           // sql = sql.replaceAll("\n", "");
+
+            //Splits each statement into separate strings
             String[] statements = sql.split(";");
 
-            for (int i = 0 ; i < statements.length ; i++)
+            //Goes through each statement and executes it
+            for (int i = 0 ; i < statements.length - 1 ; i++)
             {
                 SQL = dbConnection.getConnection().createStatement();
 
-                //    Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] [SQL]: " + sql);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - SQL - DB Creation, Statement "+i +" \n" + statements[i]);
 
                 //Executes the update and returns how many rows were changed
-                iCount = SQL.executeUpdate(statements[i]);
+                SQL.executeUpdate(statements[i]);
 
-                //If only 1 record was changed, success is set to true
-                if (iCount == 1)
-                {
-                    Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]" +ChatColor.AQUA + "Created tables");
-                    bSuccess = true;
-                }
+//                //If only 1 record was changed, success is set to true - FCKING IDIOT
+//                if (iCount == 1)
+//                {
+//                }
+//                else
+//                {
+//                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - Failed to execute table, iCount = "+iCount +"\n");
+//                    bSuccess = false;
+//                }
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Executed command\n");
             }
-
         }
         catch (IOException e)
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - IO - IO Error Creating Tables");
             e.printStackTrace();
         }
         catch (SQLException se)
         {
-          //  Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] - SQL - SQL Error Creating Tables");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - SQL Error Creating Tables");
             se.printStackTrace();
         }
         catch (Exception e)
         {
-         //   Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] - SQL - Error Creating Tables");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - Error Creating Tables");
             e.printStackTrace();
         }
         finally
@@ -603,8 +632,11 @@ public class TeachingTutorials extends JavaPlugin
             line = br.readLine();
             while (line != null)
             {
-                sb.append(line);
-                sb.append("\n");
+                if (!line.startsWith("--"))
+                {
+                    sb.append(line);
+                    sb.append("\n");
+                }
                 line = br.readLine();
             }
         }

@@ -20,6 +20,7 @@ public class Group
 
     //What stage of the group the player is at
     private int taskNo;
+    private Task currentTask;
 
     public boolean groupFinished;
 
@@ -86,10 +87,10 @@ public class Group
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] This group has "+tasks.size() +" tasks");
 
-            Task newTask = tasks.get(0);
+            currentTask = tasks.get(0);
             //Tasks unregister themselves once complete
-            newTask.register();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] First task registered: "+newTask.type);
+            currentTask.register();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] First task registered: "+currentTask.type);
 
             //Sets the current task number to the first task
             //1 indexed
@@ -117,12 +118,17 @@ public class Group
         }
         else //Registers the next task
         {
-            Task newTask = tasks.get(taskNo);
+            currentTask = tasks.get(taskNo);
             //Tasks unregister themselves once complete
-            newTask.register();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] Next task registered: "+newTask.type);
+            currentTask.register();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] Next task registered: "+currentTask.type);
             taskNo++;
         }
+    }
+
+    public void terminateEarly()
+    {
+        currentTask.unregister();
     }
 
     public static ArrayList<Group> fetchGroupsByStepID(Player player, TeachingTutorials plugin, Step step)

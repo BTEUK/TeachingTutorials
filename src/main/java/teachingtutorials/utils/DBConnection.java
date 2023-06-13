@@ -64,7 +64,7 @@ public class DBConnection
     public boolean connect()
     {
         Bukkit.getConsoleSender().sendMessage("Username: "+this.USER);
-        Bukkit.getConsoleSender().sendMessage("Password: "+this.PASSWORD);
+       // Bukkit.getConsoleSender().sendMessage("Password: "+this.PASSWORD);
         try
         {
             //	System.out.println(this.getClass().getName() +" : Connecting la la la");
@@ -139,11 +139,16 @@ public class DBConnection
             }
             else
             {
-                connect();
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - SQL - Connecting to DB...");
+                if (connect())
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] - SQL - Successfully connected to the DB");
+                else
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - Failed to connect to the DB");
             }
         }
         catch (SQLException e)
         {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - Failed to get the connection to the DB");
             e.printStackTrace();
         }
         return connection;

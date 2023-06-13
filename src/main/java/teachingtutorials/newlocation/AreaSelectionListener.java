@@ -5,6 +5,7 @@ import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -37,7 +38,8 @@ public class AreaSelectionListener implements Listener
         return bounds;
     }
 
-    @EventHandler
+    //Want the tutorials tpll process to occur first
+    @EventHandler(priority = EventPriority.LOWEST)
     public void tpllCommand(PlayerCommandPreprocessEvent event)
     {
         if (event.getPlayer().getUniqueId().equals(this.creator.player.getUniqueId()))
@@ -69,7 +71,7 @@ public class AreaSelectionListener implements Listener
                 {
                     HandlerList.unregisterAll(this);
                     event.setCancelled(true);
-                    callingClass.AreaMade();
+                    callingClass.AreaSelectionMade();
                 }
                 else
                 {
@@ -83,5 +85,10 @@ public class AreaSelectionListener implements Listener
     public void register()
     {
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    public void deregister()
+    {
+        HandlerList.unregisterAll(this);
     }
 }

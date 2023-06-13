@@ -189,4 +189,50 @@ public class Location
             return false;
         }
     }
+
+    public static boolean deleteLocationByID(int iLocationID)
+    {
+        String sql;
+        Statement SQL = null;
+
+        int iCount;
+
+        try
+        {
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            sql = "Delete FROM LocationTasks WHERE LocationID = " +iLocationID;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
+            iCount = SQL.executeUpdate(sql);
+
+            if (iCount != 1)
+            {
+                return false;
+            }
+            else
+            {
+                sql = "Delete FROM Locations WHERE LocationID = " +iLocationID;
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
+                iCount = SQL.executeUpdate(sql);
+            }
+
+            if (iCount != 1)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error deleting location with LocationID = "+iLocationID);
+            se.printStackTrace();
+            return false;
+        }
+        catch (Exception e)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting location with LocationID = "+iLocationID);
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

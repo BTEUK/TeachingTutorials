@@ -121,15 +121,21 @@ public class Stage
     {
         //1 indexed
         iCurrentStep++;
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+lesson.student.player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
+        if (!bLocationCreation)
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+lesson.student.player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
+        else
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+newLocation.getCreator().player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
 
         if (iCurrentStep <= steps.size())
         {
             currentStep = steps.get(iCurrentStep-1);
             currentStep.startStep();
 
-            //Save the positions of stage and step
-            lesson.savePositions();
+            if (bLocationCreation == false)
+            {
+                //Save the positions of stage and step
+                lesson.savePositions();
+            }
         }
         else
         {

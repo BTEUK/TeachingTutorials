@@ -442,7 +442,9 @@ public class TeachingTutorials extends JavaPlugin
                 Step step = steps.get(j);
                 try
                 {
-                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, StepInstructions) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+", '"+step.getInstructions()+"')";
+                    String szStepInstructions = step.getInstructions().replace("\'", "\'\'");
+                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, StepInstructions) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+", '" +szStepInstructions +"')";
+                    Bukkit.getConsoleSender().sendMessage(sql);
                     SQL.executeUpdate(sql);
 
                     sql = "Select LAST_INSERT_ID()";

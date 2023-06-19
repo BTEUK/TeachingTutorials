@@ -135,6 +135,8 @@ public class Command extends Task implements Listener
             //This is what moves it onto the next task
 
             event.setCancelled(true);
+
+            return;
         }
 
         if (command.startsWith("/"+szTargetCommand))

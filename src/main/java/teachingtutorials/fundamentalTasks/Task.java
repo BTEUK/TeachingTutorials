@@ -99,6 +99,8 @@ public class Task
                 iCount++;
                 String szType = resultSet.getString("Tasks.TaskType");
                 String szAnswers = resultSet.getString("LocationTasks.Answers");
+
+                //The scoring, difficulty and rating system is not utilised in this release, so it can be mostly ignored
                 float fTpllDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TpllDifficulty"));
                 float fWEDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.WEDifficulty"));
                 float fColouringDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.ColouringDifficulty"));
@@ -120,6 +122,9 @@ public class Task
                         Command command = new Command(plugin, player, parentGroup, szAnswers, fWEDifficulty);
                         tasks.add(command);
                         break;
+                    case "chat":
+                        Chat chat = new Chat(plugin, player, parentGroup, szAnswers, fWEDifficulty);
+                        tasks.add(chat);
                 }
             }
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "      [TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
@@ -172,6 +177,10 @@ public class Task
                     case "command":
                         Command command = new Command(plugin, player, parentGroup, iTaskID);
                         tasks.add(command);
+                        break;
+                    case "chat":
+                        Chat chat = new Chat(plugin, player, parentGroup, iTaskID);
+                        tasks.add(chat);
                         break;
                 }
             }

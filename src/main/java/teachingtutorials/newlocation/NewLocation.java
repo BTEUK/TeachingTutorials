@@ -264,25 +264,32 @@ public class NewLocation
         this.stage = NewLocationProcess.generatingTerrain;
 
         //Generates the required area in the world
-        try
-        {
-            Display generatingArea = new Display(Creator.player, ChatColor.AQUA +"Generating the area");
-            generatingArea.Message();
-            generateArea(world);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Generated the area in the world");
-            generatingArea = new Display(Creator.player, ChatColor.AQUA +"Area generated");
-            generatingArea.Message();
-        }
-        catch (OutOfProjectionBoundsException ProjectionException)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Out of bounds exception. Could not generate the required area in the world");
-        }
-        catch (Exception e)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not generate the required area in the world: "+e.getMessage());
-            return;
-        }
+        Display generatingArea = new Display(Creator.player, ChatColor.AQUA +"Generating the area");
+        generatingArea.Message();
 
+        //For the future, an idea could be to generate terrain as soon as 3 area selection points have been made
+
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    generateArea(world);
+                }
+                catch (OutOfProjectionBoundsException e)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Out of bounds exception. Could not generate the required area in the world");
+                }
+                catch (Exception e)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not generate the required area in the world: "+e.getMessage());
+                    return;
+                }
+            }
+        });
+    }
+
+    private void teleportCreatorAndStartLesson(World world)
+    {
         double[] xz;
 
         //Converts the tpll coordinates to minecraft coordinates
@@ -292,7 +299,7 @@ public class NewLocation
         }
         catch (OutOfProjectionBoundsException e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Unable to convert lat,long coordinates of start location to minecraft coordinates");
             return;
         }
 
@@ -308,14 +315,14 @@ public class NewLocation
         catch (Exception e)
         {
             tpLocation = new org.bukkit.Location(world, xz[0], 70, xz[1]);
-        //    Display display = new Display(Creator.player, ChatColor.DARK_AQUA +"Error teleporting to start location, attempting again");
-        //    display.Message();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Error occurred whilst creating Bukkit.Location object to tp to: "+e.getMessage());
+            //    Display display = new Display(Creator.player, ChatColor.DARK_AQUA +"Error teleporting to start location, attempting again");
+            //    display.Message();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Error occurred whilst creating Bukkit.Location object to tp to: "+e.getMessage());
         }
 
         //Teleports player to the start location
         Creator.player.teleport(tpLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Creator teleported to the start location, starting lesson to get answers");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Creator teleported to the start location, starting lesson to get answers");
 
         //Imports the stages of the tutorial, with no answers loaded
         this.stages = Stage.fetchStagesByTutorialIDWithoutLocationInformation(Creator.player, plugin, tutorial.getTutorialID(), location.getLocationID(), this);
@@ -399,7 +406,7 @@ public class NewLocation
         display.ActionBar();
 
         //Informs the console of successful creation of a location
-        Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_GREEN +"Location Created with LocationID: "+this.location.getLocationID());
+        Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_GREEN +"[TeachingTutorials] Location Created with LocationID: "+this.location.getLocationID());
 
         //Changes the player's mode
         this.Creator.currentMode = Mode.Idle;
@@ -412,6 +419,16 @@ public class NewLocation
     {
         //UK121Generation(world);
         TerraMinusMinusGeneration(world);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Generated the area in the world");
+        Display generatingArea = new Display(Creator.player, ChatColor.AQUA +"Area generated");
+        generatingArea.Message();
+
+        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                teleportCreatorAndStartLesson(world);
+            }
+        });
     }
 
     private void UK121Generation(World world) throws OutOfProjectionBoundsException
@@ -421,7 +438,6 @@ public class NewLocation
 
         //Gets heights for the area
         iHeights = elevationManager.getHeights(ixMin, ixMax, izMin, izMax);
-
 
         //Goes through the grid of heights and generates the block
         for (int x = 0; x < ixMax - ixMax; x++)
@@ -464,10 +480,21 @@ public class NewLocation
                     {
                         for (int z = 0 ; z < 16 ; z++)
                         {
+                            final int iFinalxChunk = ixChunk;
+                            final int iFinalX = x;
+                            final int iFinalzChunk = izChunk;
+                            final int iFinalZ = z;
+
                             iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z] = terraData.groundHeight(x, z);
 
-                            Block block = world.getBlockAt((ixChunk << 4) + x, iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z], (izChunk << 4) + z);
-                            block.setType(Material.GRASS_BLOCK);
+                            Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Block block = world.getBlockAt((iFinalxChunk << 4) + iFinalX, iHeights[((iFinalxChunk-ixMinChunk)<<4) + iFinalX][((iFinalzChunk-izMinChunk)<<4) + iFinalZ], (iFinalzChunk << 4) + iFinalZ);
+                                    block.setType(Material.GRASS_BLOCK);
+                                }
+                            });
+
 
                             //world.getBlockState((ixChunk << 4) + x, iHeights[((ixChunk-ixMinChunk)<<4) + x][((izChunk-izMinChunk)<<4) + z], (izChunk << 4) + z).setType(Material.GRASS_BLOCK);
                             //This line no work
@@ -476,7 +503,7 @@ public class NewLocation
                 }
                 catch (Exception e)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to generate block in the world: " +e.getMessage());
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED+"[TeachingTutorials] Unable to generate block in the world: " +e.getMessage());
                     return;
                 }
             }

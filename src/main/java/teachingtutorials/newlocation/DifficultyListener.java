@@ -82,6 +82,8 @@ public class DifficultyListener implements Listener
                     case command:
                         locationTask.setDifficulties(0, fDifficulty, 0, 0, 0);
                         break;
+                    case chat:
+                        locationTask.setDifficulties(0, 0, 0, 0, 0);
                 }
                 if (locationTask.storeNewData())
                 {

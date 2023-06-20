@@ -495,7 +495,13 @@ public class Lesson
 
         //And trigger the scoreboard to refresh
         student.calculateRatings();
-        student.refreshScoreboard();
+
+        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                student.refreshScoreboard();
+            }
+        });
 
         //Change player mode
         student.currentMode = Mode.Idle;

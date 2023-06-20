@@ -25,6 +25,8 @@ public class Step
     private int iGroupInStepLocationCreation;
     private Group currentGroup;
 
+    private boolean selectionCompleteHold;
+
     //Groups are completed asynchronously.
     //Tasks in groups are completed synchronously
     public ArrayList<Group> groups = new ArrayList<>();
@@ -38,12 +40,14 @@ public class Step
         this.iStepID = iStepID;
         this.iStepInStage = iStepInStage;
         this.szStepInstructions = szStepInstructions;
+        this.selectionCompleteHold = false;
     }
 
     public Step(String szName, String szInstructions)
     {
         this.szName = szName;
         this.szStepInstructions = szInstructions;
+        this.selectionCompleteHold = false;
     }
 
     //Getters
@@ -55,11 +59,29 @@ public class Step
     {
         return szStepInstructions;
     }
+    public boolean getSelectionCompleteHold()
+    {
+        return selectionCompleteHold;
+    }
 
     private void fetchAndInitialiseGroups()
     {
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  Fetching groups of step with ID: "+iStepID);
         groups = Group.fetchGroupsByStepID(player, plugin, this);
+    }
+
+    public void holdSelectionComplete()
+    {
+        selectionCompleteHold = true;
+
+        //Changes the hold back to false in 0.5 seconds
+        this.plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+            public void run()
+            {
+                selectionCompleteHold = false;
+            }
+        }, 10L);
+
     }
 
     public void startStep()

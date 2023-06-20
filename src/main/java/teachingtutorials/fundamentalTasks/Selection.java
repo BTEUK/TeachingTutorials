@@ -169,6 +169,8 @@ public class Selection extends Task implements Listener
                     //Especially since this is quantised into blocks, so it wouldn't be a precise measure of performance anyway
                     fPerformance = 1;
 
+                    //This will block any "Correct position selected" messages until the "Selection complete" message has faded
+                    this.parentGroup.parentStep.holdSelectionComplete();
                     bothSelectionsMade();
                 }
                 else
@@ -176,33 +178,11 @@ public class Selection extends Task implements Listener
                     //Checks to see if any of the other active selection listeners have both selections complete by this interaction
                     //(A corner has two sides it could be on and if one side is now complete we want that side's message to take precedence)
 
-                    ArrayList<Group> groups = this.parentGroup.parentStep.groups;
-                    Group group;
-                    boolean bSelectionCompleteOtherTaskFound = false;
-
-                    int iNumGroups = groups.size();
-                    int i;
-
-                    for(i = 0 ; i < iNumGroups ; i++)
+                    if (this.parentGroup.parentStep.getSelectionCompleteHold())
                     {
-                        //Get the group into a local variable
-                        group = groups.get(i);
-                        //If a group with a task with a selection which gets completed by the event, mark, come out
-                        if (group.getCurrentTask().type.equals("selection"))
-                        {
-                            Selection selectionTask = (Selection) group.getCurrentTask();
-                            if (selectionTask.wasCorrectPointAndBothSelectionsMade(event, longLat)[1])
-                            {
-                                //A different selection task was found and would be completed by this interaction
-                                //This may break if actually that group was already dealt with and moved onto the next group
-                                bSelectionCompleteOtherTaskFound = true;
-                                break;
-                            }
-                        }
+                        //A different selection task was found and would be completed by this interaction
                     }
-
-                    //If a mark was made, display no correct position selected message
-                    if (!bSelectionCompleteOtherTaskFound)
+                    else
                     {
                         Display display = new Display(player, ChatColor.GREEN+"Correct position selected");
                         display.ActionBar();

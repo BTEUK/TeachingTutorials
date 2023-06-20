@@ -62,6 +62,11 @@ public class Group
         return this.szName;
     }
 
+    public Task getCurrentTask()
+    {
+       return this.currentTask;
+    }
+
     //Where to fetch tasks, where to initialise them etc
 
     public void fetchAndInitialiseTasks()

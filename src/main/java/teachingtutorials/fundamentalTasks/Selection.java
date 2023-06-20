@@ -20,6 +20,8 @@ import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
+import java.util.ArrayList;
+
 public class Selection extends Task implements Listener
 {
     //Stores the target coords - the location a player should select as a point
@@ -171,8 +173,40 @@ public class Selection extends Task implements Listener
                 }
                 else
                 {
-                    Display display = new Display(player, ChatColor.GREEN+"Correct position selected");
-                    display.ActionBar();
+                    //Checks to see if any of the other active selection listeners have both selections complete by this interaction
+                    //(A corner has two sides it could be on and if one side is now complete we want that side's message to take precedence)
+
+                    ArrayList<Group> groups = this.parentGroup.parentStep.groups;
+                    Group group;
+                    boolean bSelectionCompleteOtherTaskFound = false;
+
+                    int iNumGroups = groups.size();
+                    int i;
+
+                    for(i = 0 ; i < iNumGroups ; i++)
+                    {
+                        //Get the group into a local variable
+                        group = groups.get(i);
+                        //If a group with a task with a selection which gets completed by the event, mark, come out
+                        if (group.getCurrentTask().type.equals("selection"))
+                        {
+                            Selection selectionTask = (Selection) group.getCurrentTask();
+                            if (selectionTask.wasCorrectPointAndBothSelectionsMade(event, longLat)[1])
+                            {
+                                //A different selection task was found and would be completed by this interaction
+                                //This may break if actually that group was already dealt with and moved onto the next group
+                                bSelectionCompleteOtherTaskFound = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    //If a mark was made, display no correct position selected message
+                    if (!bSelectionCompleteOtherTaskFound)
+                    {
+                        Display display = new Display(player, ChatColor.GREEN+"Correct position selected");
+                        display.ActionBar();
+                    }
                 }
             }
         }

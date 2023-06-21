@@ -2,18 +2,25 @@ package teachingtutorials.tutorials;
 
 import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
+import teachingtutorials.utils.plugins.Luckperms;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 //Lesson stores all the information needed for a lesson and handles the gameplay of said lesson
 public class Lesson
@@ -521,8 +528,139 @@ public class Lesson
             display.ActionBar();
 
             //Promotes the player
+            FileConfiguration config = plugin.getConfig();
+            String szCompulsoryTutorialPromotionType = config.getString("Compulsory_Tutorial_Promotion_Type");
+            String szRankOld = config.getString("Compulsory_Tutorial_RankOld");
+            String szRankNew = config.getString("Compulsory_Tutorial_RankNew");
+            String szTrack = config.getString("Compulsory_Tutorial_Track");
+            String[] szTracks = config.getString("Compulsory_Tutorial_TrackOutline").split(",");
 
-            Bukkit.broadcast(ChatColor.AQUA +student.player.getName() +" is now an applicant!", "");
+            ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
+
+            if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("none"))
+            {
+                //Do nothing
+            }
+            //Deals with a promotion on a track
+            else if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("track"))
+            {
+                net.luckperms.api.model.user.User lpUser = Luckperms.getUser(student.player.getUniqueId());
+
+                //Go through all of a user's groups and see if they have a group with a weight above that of the target promotion
+                List<String> groups = lpUser.getNodes().stream()
+                        .filter(NodeType.INHERITANCE::matches)
+                        .map(NodeType.INHERITANCE::cast)
+                        .map(InheritanceNode::getGroupName)
+                        .collect(Collectors.toList());
+                int iNumGroups = groups.size();
+
+                int iNumGroupsInTrack = szTracks.length;
+
+                //We have a list of tracks in order, we have a target and an old
+                //Let's just use indexes
+                //Find the index of the new and old rank in the track
+                int j, k;
+                int iIndexOldRank = -1;
+                int iIndexNewRank = -1;
+                int iHighestIndexOnTrack = -1;
+
+                //Find the index of the old and new rank in the track
+                for (j = 0 ; j < iNumGroupsInTrack ; j++)
+                {
+                    if (szRankOld.equals(szTracks[j]))
+                    {
+                        iIndexOldRank = j;
+                    }
+                    if (szRankNew.equals(szTracks[j]))
+                    {
+                        iIndexNewRank = j;
+                    }
+                }
+
+                if (iIndexNewRank == -1 || iIndexOldRank == -1)
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Either new rank or old rank is not on the specified track");
+                else if (iIndexNewRank <= iIndexOldRank)
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The position of the new rank in the track is less than or equal to the position of the old rank");
+
+                else
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Let's find the index of the highest rank the player has in the track");
+                    //Let's find the index of the highest rank the player has in the track
+
+                    //Compares each of a user's groups to the groups in the relevant track
+                    for (j = 0 ; j < iNumGroups ; j++)
+                    {
+                        //Cycles through the ranks in the track
+                        for (k = 0 ; k < iNumGroupsInTrack ; k++)
+                        {
+                            //The current group of the user is on the track
+                            if (groups.get(j).equals(szTracks[k]))
+                            {
+                                //Let's find the index
+                                iHighestIndexOnTrack = k;
+                            }
+                        }
+                    }
+
+                    //User is not currently on the track
+                    if (iHighestIndexOnTrack == -1)
+                    {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] User not on track: lp user " +student.player.getName() +" promote " +szTrack);
+                        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                            @Override
+                            public void run() {
+                                Bukkit.dispatchCommand(console, "lp user " +student.player.getName() +" promote "+szTrack);
+                            }
+                        });
+                        iHighestIndexOnTrack = 0;
+                    }
+                    if (iHighestIndexOnTrack >= iIndexNewRank)
+                    {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Highest index on track is greater than the index of the new rank");
+                        //No action should be taken, user is already at the new rank or higher
+                    }
+                    else
+                    {
+                        int iDifference = iIndexNewRank - iHighestIndexOnTrack;
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Index difference between new rank and highest current rank = " +iDifference);
+                        for (int l = 0 ; l < iDifference ; l++)
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"lp user " +student.player.getName() +" promote " +szTrack);
+                            Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Bukkit.dispatchCommand(console, "lp user " +student.player.getName() +" promote "+szTrack);
+                                }
+                            });
+                        }
+                        Bukkit.broadcast(ChatColor.AQUA +student.player.getName() +" is now a " +szRankNew +" !", "");
+                    }
+                }
+            }
+            //Deals with a promotion on a rank
+            else if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("rank"))
+            {
+                Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        Bukkit.dispatchCommand(console, "lp user " +student.player.getName() +" parent add "+szRankNew);
+                    }
+                });
+                Bukkit.broadcast(ChatColor.AQUA +student.player.getName() +" is now a " +szRankNew +" !", "");
+            }
+
+            //Deals with a manual exchange of ranks
+            else if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("manualpromote"))
+            {
+                Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        Bukkit.dispatchCommand(console, "lp user " +student.player.getName() +" parent remove " +szRankOld);
+                        Bukkit.dispatchCommand(console, "lp user " +student.player.getName() +" parent add " +szRankNew);
+                    }
+                });
+                Bukkit.broadcast(ChatColor.AQUA +student.player.getName() +" is now a " +szRankNew +" !", "");
+            }
         }
         else
         {

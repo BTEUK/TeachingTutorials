@@ -14,14 +14,22 @@ import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
+enum commandType
+{
+    none, virtualBlocks, full
+}
+
+
 public class Command extends Task implements Listener
 {
     private String szTargetCommand;
     private String szTargetCommandArgs;
+    private commandType commandType;
 
     private DifficultyListener difficultyListener;
 
-    public Command(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fDifficulty)
+    //Used in a lesson
+    public Command(TeachingTutorials plugin, Player player, Group parentGroup, String szDetails, String szAnswers, float fDifficulty)
     {
         super(plugin);
         this.type = "command";
@@ -50,12 +58,15 @@ public class Command extends Task implements Listener
             this.szTargetCommandArgs = " " + szTargetCommandArgs;
         }
 
+        this.szDetails = szDetails;
+        this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
+
         this.fDifficulty = fDifficulty;
 
         this.bNewLocation = false;
     }
 
-    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
+    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szDetails)
     {
         super(plugin);
         this.type = "command";
@@ -63,6 +74,8 @@ public class Command extends Task implements Listener
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+        this.szDetails = szDetails;
+        this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
 
         //Listen out for difficulty - There will only be one difficulty listener per command to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.command);
@@ -134,12 +147,19 @@ public class Command extends Task implements Listener
             //SpotHit is then called from inside the difficulty listener once the difficulty has been established
             //This is what moves it onto the next task
 
-            event.setCancelled(true);
-
-            return;
+            switch (commandType)
+            {
+                case full:
+                    break;
+                case virtualBlocks:
+                    //Do some weird WE checking stuff and display virtual blocks
+                    break;
+                case none:
+                    event.setCancelled(true);
+            }
         }
 
-        if (command.startsWith("/"+szTargetCommand))
+        else if (command.startsWith("/"+szTargetCommand))
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Correct base command");
             command = command.replace(("/"+szTargetCommand), "");
@@ -149,6 +169,17 @@ public class Command extends Task implements Listener
                 display.ActionBar();
                 commandComplete();
                 fPerformance = 1F;
+
+                switch (commandType)
+                {
+                    case full:
+                        break;
+                    case virtualBlocks:
+                        //Do some weird WE checking stuff and display virtual blocks
+                        break;
+                    case none:
+                        event.setCancelled(true);
+                }
             }
             else
             {

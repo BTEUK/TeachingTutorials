@@ -39,7 +39,8 @@ public class Selection extends Task implements Listener
 
     private DifficultyListener difficultyListener;
 
-    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fWEDifficulty)
+    //Used in a lesson
+    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, String szDetails, String szAnswers, float fWEDifficulty)
     {
         super(plugin);
         this.type = "selection";
@@ -53,6 +54,8 @@ public class Selection extends Task implements Listener
         this.dTargetCoords2[0] = Double.parseDouble(cords[2]);
         this.dTargetCoords2[1] = Double.parseDouble(cords[3]);
 
+        this.szDetails = szDetails;
+
         this.fWEDifficulty = fWEDifficulty;
 
         this.bNewLocation = false;
@@ -61,7 +64,7 @@ public class Selection extends Task implements Listener
         this.bSelection2Made = false;
     }
 
-    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
+    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szDetails)
     {
         super(plugin);
         this.type = "selection";
@@ -69,6 +72,7 @@ public class Selection extends Task implements Listener
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+        this.szDetails = szDetails;
 
         this.bSelection1Made = false;
         this.bSelection2Made = false;

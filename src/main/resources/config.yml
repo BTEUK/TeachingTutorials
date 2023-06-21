@@ -3,3 +3,8 @@ MySQL_port: 3306
 MySQL_database: TeachingTutorials
 MySQL_username: newuser1
 MySQL_password: xxxx
+Compulsory_Tutorial_Promotion_Type: track
+Compulsory_Tutorial_RankOld: default
+Compulsory_Tutorial_RankNew: applicant
+Compulsory_Tutorial_Track: builder
+Compulsory_Tutorial_TrackOutline: default,applicant,apprentice,jrbuilder,builder,architect,reviewer

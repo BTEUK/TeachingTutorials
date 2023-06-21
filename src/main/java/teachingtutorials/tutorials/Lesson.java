@@ -465,7 +465,16 @@ public class Lesson
         //Declare variables
         int i;
 
-        //Initialise arrays - used for for loop
+        //Announce to console
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All stages complete");
+
+        //Display a tutorial complete message to the student
+        Display display = new Display(student.player, " ");
+        display.Title(ChatColor.AQUA +"Tutorial Complete", 10, 60, 12);
+
+        //Calculate final scores
+
+        //Initialise arrays - used for the for loop
         float[] fFinalScores = new float[5];
 
         float[] fScoreTotals = new float[5];
@@ -482,10 +491,6 @@ public class Lesson
         fDifficultyTotals[3] = fDetailDifTotal;
         fDifficultyTotals[4] = fTerraDifTotal;
 
-        //Announce to console
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All stages complete");
-        
-        //Calculate final scores
         for (i = 0 ; i < 5 ; i++)
         {
             if (fDifficultyTotals[i] == 0)
@@ -518,7 +523,6 @@ public class Lesson
         student.setInLesson(0);
 
         //Updates the DB and user's boolean variable, notifies the player of completion
-        Display display;
         if (bCompulsory)
         {
             student.triggerCompulsory();

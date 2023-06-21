@@ -42,7 +42,10 @@ public class MainMenu
 
         if (u.bHasCompletedCompulsory)
         {
-            Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+            if (u.bInLesson)
+                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
+            else
+                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
             Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
         }
         else if (u.bInLesson)
@@ -107,7 +110,7 @@ public class MainMenu
         else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
         {
             player.closeInventory();
-            player.sendMessage(ChatColor.AQUA + "Welcome back");
+       //     player.sendMessage(ChatColor.AQUA + "Welcome back");
             //Creates a lesson with the user
             Lesson lesson = new Lesson(user, plugin, false);
             lesson.startLesson();

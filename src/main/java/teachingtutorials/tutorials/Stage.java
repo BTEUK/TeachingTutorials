@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.NewLocation;
+import teachingtutorials.utils.Display;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,17 +37,22 @@ public class Stage
     //--------------------------------------------------
     //-------------------Constructors-------------------
     //--------------------------------------------------
-    public Stage(int iStageID, int iOrder, Player player, TeachingTutorials plugin, Lesson lesson)
+
+    //Used when fetching the stages for a lesson
+    public Stage(int iStageID, int iOrder, String szName, Player player, TeachingTutorials plugin, Lesson lesson)
     {
+        //Inherited properties from the lesson
         this.plugin = plugin;
         this.lesson = lesson;
-
-        this.iStageID = iStageID;
-        this.iOrder = iOrder;
-        this.bStageFinished = false;
-
         this.player = player;
 
+        //Fixed stage properties
+        this.iStageID = iStageID;
+        this.iOrder = iOrder;
+        this.szName = szName;
+
+        //Other
+        this.bStageFinished = false;
         bLocationCreation = false;
     }
 
@@ -56,6 +62,7 @@ public class Stage
         this.szName = szName;
     }
 
+    //Used when creating a new location
     public Stage(int iStageID, int iOrder, Player player, TeachingTutorials plugin, int iLocationID, NewLocation newLocation)
     {
         this.plugin = plugin;
@@ -106,9 +113,15 @@ public class Stage
 
     public void startStage(int iStep)
     {
+        //Inform console of stage starting
         //Step is 1 indexed
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Stage "+iOrder +" starting, at step "+iStep);
 
+        //Display the Stage title
+        Display display = new Display(player, " ");
+        display.Title(ChatColor.AQUA +"Stage " +iOrder +" - " +szName, 10, 60, 12);
+
+        //Get the steps
         fetchAndInitialiseSteps();
 
         //Takes the step back, for it to be increased in the next step
@@ -176,7 +189,7 @@ public class Stage
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), player, plugin, lesson);
+                Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), resultSet.getString("StageName"), player, plugin, lesson);
                 stages.add(stage);
             }
         }

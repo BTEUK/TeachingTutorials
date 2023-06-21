@@ -31,7 +31,8 @@ public class Step
     //Tasks in groups are completed synchronously
     public ArrayList<Group> groups = new ArrayList<>();
 
-    public Step(int iStepID, int iStepInStage, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions)
+    //Used for creating a step in a lesson
+    public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions)
     {
         this.player = player;
         this.plugin = plugin;
@@ -39,6 +40,7 @@ public class Step
         this.bStepFinished = false;
         this.iStepID = iStepID;
         this.iStepInStage = iStepInStage;
+        this.szName = szStepName;
         this.szStepInstructions = szStepInstructions;
         this.selectionCompleteHold = false;
     }
@@ -86,11 +88,32 @@ public class Step
 
     public void startStep()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Step "+iStepInStage +" starting");
+        //Inform console of step starting
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Step "+iStepInStage +" starting for " +player.getName());
+
+        //Display step title
+        Display display = new Display(player, " ");
+
+        //Wait a second before sending it if it is the first step in a stage. We don't want to override the stage title
+        if (iStepInStage == 1)
+        {
+            final Display finalDisplay = display;
+            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    finalDisplay.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
+                }
+            }, 76L);
+        }
+        else
+        {
+            display.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
+        }
 
         //TP to location?
 
-        Display display = new Display(player, szStepInstructions);
+        //Displays the step instructions as a message
+        display = new Display(player, szStepInstructions);
         display.Message();
 
         //Fetches the details of groups and stores them in memory
@@ -204,7 +227,7 @@ public class Step
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), player, plugin, stage, resultSet.getString("StepInstructions"));
+                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), resultSet.getString("StepName") ,player, plugin, stage, resultSet.getString("StepInstructions"));
                 steps.add(step);
             }
         }

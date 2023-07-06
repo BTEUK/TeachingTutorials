@@ -1,7 +1,12 @@
 package teachingtutorials.fundamentalTasks;
 
+//import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
+//import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+//import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,15 +18,31 @@ import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.WorldEdit;
+
+import java.util.ArrayList;
+
+enum commandType
+{
+    none, virtualBlocks, full
+}
+
 
 public class Command extends Task implements Listener
 {
     private String szTargetCommand;
     private String szTargetCommandArgs;
+    private commandType commandType;
 
     private DifficultyListener difficultyListener;
 
-    public Command(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fDifficulty)
+    //Used for virtual blocks command type
+    private boolean bDisplayVirtualBlocks = false;
+    //Blocks of the selection
+    private ArrayList<Location> selectionBlocks = null;
+
+    //Used in a lesson
+    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
     {
         super(plugin);
         this.type = "command";
@@ -50,12 +71,25 @@ public class Command extends Task implements Listener
             this.szTargetCommandArgs = " " + szTargetCommandArgs;
         }
 
+        this.iOrder = iOrder;
+
+        //Gets the details of the command from the DB and determines which of the 3 actions should be taken
+        this.szDetails = szDetails;
+        this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
+
+        //Sets up the necessary logic for if it is a virtual blocks command type
+        if (commandType.equals(teachingtutorials.fundamentalTasks.commandType.virtualBlocks))
+        {
+            scheduleVirtualBlocks(tasks);
+        }
+
         this.fDifficulty = fDifficulty;
 
         this.bNewLocation = false;
     }
 
-    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
+    //Used when creating a new location
+    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, ArrayList<Task> tasks)
     {
         super(plugin);
         this.type = "command";
@@ -63,10 +97,19 @@ public class Command extends Task implements Listener
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+        this.iOrder = iOrder;
+        this.szDetails = szDetails;
+        this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
 
         //Listen out for difficulty - There will only be one difficulty listener per command to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.command);
         difficultyListener.register();
+
+        //Sets up the necessary logic for if it is a virtual blocks command type
+        if (commandType.equals(teachingtutorials.fundamentalTasks.commandType.virtualBlocks))
+        {
+            scheduleVirtualBlocks(tasks);
+        }
     }
 
     @Override
@@ -134,12 +177,32 @@ public class Command extends Task implements Listener
             //SpotHit is then called from inside the difficulty listener once the difficulty has been established
             //This is what moves it onto the next task
 
-            event.setCancelled(true);
+            //Does the desired command action
+            switch (commandType)
+            {
+                case full:
+                    break;
+                case virtualBlocks:
+                    //There is a schedule which every second checks to see if the command is done, and if so, will display the virtual blocks
+                    bDisplayVirtualBlocks = true;
 
-            return;
+                    String szWorldName;
+                    if (this.bNewLocation)
+                        szWorldName = this.parentGroup.parentStep.parentStage.newLocation.getTutorialID() +"";
+                    else
+                        szWorldName = this.parentGroup.parentStep.parentStage.lesson.location.getWorld().getName();
+
+                    Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
+                    selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
+                    event.setCancelled(true);
+                    break;
+                case none:
+                    event.setCancelled(true);
+                    break;
+            }
         }
 
-        if (command.startsWith("/"+szTargetCommand))
+        else if (command.startsWith("/"+szTargetCommand))
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Correct base command");
             command = command.replace(("/"+szTargetCommand), "");
@@ -149,6 +212,29 @@ public class Command extends Task implements Listener
                 display.ActionBar();
                 commandComplete();
                 fPerformance = 1F;
+
+                switch (commandType)
+                {
+                    case full:
+                        break;
+                    case virtualBlocks:
+                        //There is a schedule which every second checks to see if the command is done, and if so, will display the virtual blocks
+                        bDisplayVirtualBlocks = true;
+
+                        String szWorldName;
+                        if (this.bNewLocation)
+                            szWorldName = this.parentGroup.parentStep.parentStage.newLocation.getTutorialID() +"";
+                        else
+                            szWorldName = this.parentGroup.parentStep.parentStage.lesson.location.getWorld().getName();
+
+                        Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
+                        selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
+                        event.setCancelled(true);
+                        break;
+                    case none:
+                        event.setCancelled(true);
+                        break;
+                }
             }
             else
             {
@@ -180,5 +266,91 @@ public class Command extends Task implements Listener
     public void newLocationSpotHit()
     {
         commandComplete();
+    }
+
+    //-------------------------------------------------
+    //----------------------Utils----------------------
+    //-------------------------------------------------
+
+    private void scheduleVirtualBlocks(ArrayList<Task> tasks)
+    {
+        //Gets the selection task associated with this command (assumes it is the previous task in the group)
+        if (this.iOrder == 1)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] There was no previous selection task before the virtual blocks command task, changing to a no action command task");
+            this.commandType = teachingtutorials.fundamentalTasks.commandType.none;
+        }
+        else if (!(tasks.get(this.iOrder - 2) instanceof Selection))
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] There was no previous selection task before the virtual blocks command task, changing to a no action command task");
+            this.commandType = teachingtutorials.fundamentalTasks.commandType.none;
+        }
+        else
+        {
+            //If it's a virtual blocks command type, assume a selection task was the previous task
+//            //Gets the associated selection of this virtual blocks type command
+//            Selection selection = (Selection) tasks.get(this.iOrder - 2);
+//
+//            double[] dTargetCoords1 = selection.dTargetCoords1;
+//            double[] dTargetCoords2 = selection.dTargetCoords2;
+//
+//            //Converts block coordinates to lat/long
+//            double[] xz1;
+//            double[] xz2;
+//
+//            final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+//            try
+//            {
+//                xz1 = projection.fromGeo(dTargetCoords1[1], dTargetCoords1[0]);
+//                xz2 = projection.fromGeo(dTargetCoords2[1], dTargetCoords2[0]);
+//            }
+//            catch (OutOfProjectionBoundsException e)
+//            {
+//                //Player has selected an area outside of the projection
+//                return;
+//            }
+//
+//            finalXZ1 = xz1;
+//            finalXZ2 = xz2;
+
+            plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
+            {
+                boolean bLessonActive;
+                @Override
+                public void run()
+                {
+                    //Fetches the status of the lesson or new location creation
+                    if (bNewLocation)
+                        bLessonActive = !parentGroup.parentStep.parentStage.newLocation.bCompleteOrFinished;
+                    else
+                        bLessonActive = !parentGroup.parentStep.parentStage.lesson.bCompleteOrFinished;
+
+                    //Have a command complete checker because this just repeats every second
+                    //Also check whether the lesson/new location creation is still active. If the user is finished with it then we need to stop displaying virtual blocks
+                    if (bDisplayVirtualBlocks)
+                    {
+                        if (bLessonActive)
+                        {
+                            if (selectionBlocks != null)
+                            {
+                                BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommand);
+                                for (Location location : selectionBlocks)
+                                {
+                                    player.sendBlockChange(location, material);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (Location location : selectionBlocks)
+                            {
+                                player.sendBlockChange(location, location.getBlock().getBlockData());
+                            }
+                            return;
+                        }
+                    }
+                }
+            }, 20, 20);
+        }
     }
 }

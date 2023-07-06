@@ -330,10 +330,18 @@ public class TeachingTutorials extends JavaPlugin
                 {
                     case "tpll":
                     case "selection":
-                    case "command":
                     case "place":
                     case "chat":
-                        task = new Task(szTaskType);
+                        task = new Task(szTaskType, "");
+                        lastGroup.addTaskCreation(task);
+                        break;
+                    case "command":
+                        if (!(szFields[1].equals("none") || szFields[1].equals("virtualBlocks") || szFields[1].equals("full")))
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid command type, line: "+(iLine+1));
+                            return;
+                        }
+                        task = new Task(szTaskType, szFields[1]);
                         lastGroup.addTaskCreation(task);
                         break;
                     default:
@@ -496,10 +504,18 @@ public class TeachingTutorials extends JavaPlugin
                     {
                         //Insert the new group into the groups table
                         Task task = tasks.get(l);
+
+                        String szDetails = "";
+
+                        if (task.type.equals("command"))
+                        {
+                            szDetails = task.szDetails;
+                        }
+
                         try
                         {
                             sql = "INSERT INTO Tasks (GroupID, TaskType, `Order`)" +
-                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1)+")";
+                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1) +", " +szDetails +")";
                             Bukkit.getConsoleSender().sendMessage(sql);
                             SQL.executeUpdate(sql);
                         }

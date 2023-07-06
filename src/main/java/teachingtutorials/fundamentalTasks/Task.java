@@ -15,6 +15,8 @@ public class Task
 {
     public int iTaskID;
     public String type;
+    public int iOrder;
+    public String szDetails;
 
     public float fDifficulties[] = new float[5];
 
@@ -37,9 +39,10 @@ public class Task
         this.iTaskID = iTaskID;
     }
 
-    public Task(String type)
+    public Task(String type, String szDetails)
     {
         this.type = type;
+        this.szDetails = szDetails;
     }
 
     public Task(TeachingTutorials plugin)
@@ -98,6 +101,8 @@ public class Task
             {
                 iCount++;
                 String szType = resultSet.getString("Tasks.TaskType");
+                int iOrder = resultSet.getInt("Tasks.Order");
+                String szDetails = resultSet.getString("Tasks.Details");
                 String szAnswers = resultSet.getString("LocationTasks.Answers");
 
                 //The scoring, difficulty and rating system is not utilised in this release, so it can be mostly ignored
@@ -111,19 +116,19 @@ public class Task
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, szAnswers, fTpllDifficulty);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fTpllDifficulty);
                         tasks.add(tpllListener);
                         break;
                     case "selection":
-                        Selection selection = new Selection(plugin, player, parentGroup, szAnswers, fWEDifficulty);
+                        Selection selection = new Selection(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty);
                         tasks.add(selection);
                         break;
                     case "command":
-                        Command command = new Command(plugin, player, parentGroup, szAnswers, fWEDifficulty);
+                        Command command = new Command(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty, tasks);
                         tasks.add(command);
                         break;
                     case "chat":
-                        Chat chat = new Chat(plugin, player, parentGroup, szAnswers, fWEDifficulty);
+                        Chat chat = new Chat(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty);
                         tasks.add(chat);
                 }
             }
@@ -161,25 +166,27 @@ public class Task
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                String szType = resultSet.getString("TaskType");
                 int iTaskID = resultSet.getInt("TaskID");
+                String szType = resultSet.getString("TaskType");
+                int iOrder = resultSet.getInt("Order");
+                String szDetails = resultSet.getString("Details");
 
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID, iOrder, szDetails);
                         tasks.add(tpllListener);
                         break;
                     case "selection":
-                        Selection selection = new Selection(plugin, player, parentGroup, iTaskID);
+                        Selection selection = new Selection(plugin, player, parentGroup, iTaskID, iOrder, szDetails);
                         tasks.add(selection);
                         break;
                     case "command":
-                        Command command = new Command(plugin, player, parentGroup, iTaskID);
+                        Command command = new Command(plugin, player, parentGroup, iTaskID, iOrder, szDetails, tasks);
                         tasks.add(command);
                         break;
                     case "chat":
-                        Chat chat = new Chat(plugin, player, parentGroup, iTaskID);
+                        Chat chat = new Chat(plugin, player, parentGroup, iTaskID, iOrder, szDetails);
                         tasks.add(chat);
                         break;
                 }

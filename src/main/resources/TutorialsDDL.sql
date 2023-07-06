@@ -3,17 +3,17 @@
 -- Model: New Model    Version: 1.0
 -- MySQL Workbench Forward Engineering
 
-DROP TABLE IF EXISTS `TeachingTutorials`.`LocationTasks` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Scores` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Tasks` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Groups` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Steps` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Stages` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`CategoryPoints` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Lessons` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Tutorials` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Locations` ;
-DROP TABLE IF EXISTS `TeachingTutorials`.`Players` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`LocationTasks` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Scores` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Tasks` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Groups` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Steps` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Stages` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`CategoryPoints` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Lessons` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Tutorials` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Locations` ;
+-- DROP TABLE IF EXISTS `TeachingTutorials`.`Players` ;
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Players`
@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Tasks` (
   `GroupID` INT NOT NULL,
   `TaskType` VARCHAR(32) NULL,
   `Order` INT NOT NULL,
+  `Details` VARCHAR(45) NULL,
   PRIMARY KEY (`TaskID`),
   CONSTRAINT `Group`
     FOREIGN KEY (`GroupID`)

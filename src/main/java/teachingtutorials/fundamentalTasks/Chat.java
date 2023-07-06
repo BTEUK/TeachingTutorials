@@ -20,7 +20,8 @@ public class Chat extends Task implements Listener
 
     private DifficultyListener difficultyListener;
 
-    public Chat(TeachingTutorials plugin, Player player, Group parentGroup, String szAnswers, float fDifficulty)
+    //Used in a lesson
+    public Chat(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty)
     {
         super(plugin);
         this.type = "chat";
@@ -28,11 +29,13 @@ public class Chat extends Task implements Listener
         this.parentGroup = parentGroup;
         this.szTargetAnswer = szAnswers;
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Target answer = "+szAnswers);
+        this.iOrder = iOrder;
+        this.szDetails = szDetails;
         this.fDifficulty = fDifficulty;
         this.bNewLocation = false;
     }
 
-    public Chat(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID)
+    public Chat(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
         super(plugin);
         this.type = "chat";
@@ -40,6 +43,8 @@ public class Chat extends Task implements Listener
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+        this.iOrder = iOrder;
+        this.szDetails = szDetails;
 
         //Listen out for difficulty - There will only be one difficulty listener per chat to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.chat);

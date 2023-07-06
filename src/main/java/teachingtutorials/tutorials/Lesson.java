@@ -25,25 +25,24 @@ import java.util.stream.Collectors;
 //Lesson stores all the information needed for a lesson and handles the gameplay of said lesson
 public class Lesson
 {
+    TeachingTutorials plugin;
+
     private int iLessonID;
     protected User student;
     private boolean bCompulsory;
 
     private int iTutorialIndex;
     protected Tutorial tutorial;
-
-    public int iStage;
-
-    //The step that a user is currently at (1 indexed), used for "resuming" tutorials
-    private int iStep;
-
     public Location location;
 
+    public int iStage;
+    //The step that a user is currently at (1 indexed), used for "resuming" tutorials
+    private int iStep;
     private Stage currentStage;
-
-    TeachingTutorials plugin;
-
     ArrayList<Stage> Stages = new ArrayList<>();
+
+    //Accessed by virtual blocks displays
+    public boolean bCompleteOrFinished = false;
 
     //Stores the total scores for each of the categories
     public float fTpllScoreTotal;
@@ -468,6 +467,9 @@ public class Lesson
         //Announce to console
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All stages complete");
 
+        //Marks the lesson complete or finished
+        this.bCompleteOrFinished = true;
+
         //Display a tutorial complete message to the student
         Display display = new Display(student.player, " ");
         display.Title(ChatColor.AQUA +"Tutorial Complete", 10, 60, 12);
@@ -698,6 +700,9 @@ public class Lesson
 
         //Remove the listeners; accesses the stage, step and groups to do this
         currentStage.terminateEarly();
+
+        //Marks the lesson complete or finished
+        this.bCompleteOrFinished = true;
 
         //Removes the lesson from the lessons list
         this.plugin.lessons.remove(this);

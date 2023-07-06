@@ -47,6 +47,8 @@ public class NewLocation
     //Keeps track of the current stage
     private Stage currentStage;
 
+    public boolean bCompleteOrFinished = false;
+
     //Records what stage the new location creation process is at
     private NewLocationProcess stage;
 
@@ -394,6 +396,9 @@ public class NewLocation
                 break;
         }
 
+        //Updates the status of the activity
+        bCompleteOrFinished = false;
+
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);
     }
@@ -410,6 +415,9 @@ public class NewLocation
 
         //Changes the player's mode
         this.Creator.currentMode = Mode.Idle;
+
+        //Updates the status of the activity
+        bCompleteOrFinished = false;
 
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);

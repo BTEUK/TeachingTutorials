@@ -38,12 +38,8 @@ public class Command extends Task implements Listener
 
     //Used for virtual blocks command type
     private boolean bDone = false;
-    private boolean bWorldEditBlocksCalculated = false;
     //Blocks of the selection
     private ArrayList<Location> selectionBlocks = null;
-    private double[] finalXZ1;
-    private double[] finalXZ2;
-
 
     //Used in a lesson
     public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
@@ -197,7 +193,7 @@ public class Command extends Task implements Listener
                         szWorldName = this.parentGroup.parentStep.parentStage.lesson.location.getWorld().getName();
 
                     Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
-                    selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, finalXZ1, finalXZ2, selection.iY1, selection.iY2, szWorldName);
+                    selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
                     event.setCancelled(true);
                     break;
                 case none:
@@ -232,7 +228,7 @@ public class Command extends Task implements Listener
                             szWorldName = this.parentGroup.parentStep.parentStage.lesson.location.getWorld().getName();
 
                         Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
-                        selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, finalXZ1, finalXZ2, selection.iY1, selection.iY2, szWorldName);
+                        selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
                         event.setCancelled(true);
                         break;
                     case none:
@@ -292,30 +288,30 @@ public class Command extends Task implements Listener
         else
         {
             //If it's a virtual blocks command type, assume a selection task was the previous task
-            //Gets the associated selection of this virtual blocks type command
-            Selection selection = (Selection) tasks.get(this.iOrder - 2);
-
-            double[] dTargetCoords1 = selection.dTargetCoords1;
-            double[] dTargetCoords2 = selection.dTargetCoords2;
-
-            //Converts block coordinates to lat/long
-            double[] xz1;
-            double[] xz2;
-
-            final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-            try
-            {
-                xz1 = projection.fromGeo(dTargetCoords1[1], dTargetCoords1[0]);
-                xz2 = projection.fromGeo(dTargetCoords2[1], dTargetCoords2[0]);
-            }
-            catch (OutOfProjectionBoundsException e)
-            {
-                //Player has selected an area outside of the projection
-                return;
-            }
-
-            finalXZ1 = xz1;
-            finalXZ2 = xz2;
+//            //Gets the associated selection of this virtual blocks type command
+//            Selection selection = (Selection) tasks.get(this.iOrder - 2);
+//
+//            double[] dTargetCoords1 = selection.dTargetCoords1;
+//            double[] dTargetCoords2 = selection.dTargetCoords2;
+//
+//            //Converts block coordinates to lat/long
+//            double[] xz1;
+//            double[] xz2;
+//
+//            final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+//            try
+//            {
+//                xz1 = projection.fromGeo(dTargetCoords1[1], dTargetCoords1[0]);
+//                xz2 = projection.fromGeo(dTargetCoords2[1], dTargetCoords2[0]);
+//            }
+//            catch (OutOfProjectionBoundsException e)
+//            {
+//                //Player has selected an area outside of the projection
+//                return;
+//            }
+//
+//            finalXZ1 = xz1;
+//            finalXZ2 = xz2;
 
             plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
             {

@@ -33,8 +33,8 @@ public class Selection extends Task implements Listener
     double[] dSelectionPoint2 = new double[3]; //Lat then long
 
     //Y coordinates of the selected blocks
-    public int iY1 = 0;
-    public int iY2 = 0;
+    public int[] iSelectedBlockCoordinates1 = new int[]{0, 0, 0};
+    public int[] iSelectedBlockCoordinates2 = new int[]{0, 0, 0};
 
     //Variables used by new location procedures
     boolean bSelection1Made;
@@ -120,9 +120,9 @@ public class Selection extends Task implements Listener
 
         //Stores the Y coordinates of the selections
         if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))
-            iY1 = event.getClickedBlock().getY();
+            iSelectedBlockCoordinates1 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
         else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
-            iY2 = event.getClickedBlock().getY();
+            iSelectedBlockCoordinates2 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
 
         //Checks whether it is a new location
         if (bNewLocation)

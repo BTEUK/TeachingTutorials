@@ -1,18 +1,18 @@
 package teachingtutorials.utils;
 
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.LocalSession;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.entity.Player;
-import com.sk89q.worldedit.extension.platform.Actor;
-import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
-import com.sk89q.worldedit.function.operation.Operation;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.session.ClipboardHolder;
-import com.sk89q.worldedit.session.SessionManager;
-import com.sk89q.worldedit.session.SessionOwner;
-import org.apache.commons.lang.WordUtils;
+//import com.sk89q.worldedit.EditSession;
+//import com.sk89q.worldedit.LocalSession;
+//import com.sk89q.worldedit.bukkit.BukkitWorld;
+//import com.sk89q.worldedit.entity.Player;
+//import com.sk89q.worldedit.extension.platform.Actor;
+//import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
+//import com.sk89q.worldedit.function.operation.Operation;
+//import com.sk89q.worldedit.math.BlockVector3;
+//import com.sk89q.worldedit.regions.CuboidRegion;
+//import com.sk89q.worldedit.session.ClipboardHolder;
+//import com.sk89q.worldedit.session.SessionManager;
+//import com.sk89q.worldedit.session.SessionOwner;
+//import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 
 public class WorldEdit
 {
-    public static ArrayList<Location> BlocksCalculator(String szCommand, double[] xz1, double[] xz2, int iY1, int iY2, String szWorld)
+    public static ArrayList<Location> BlocksCalculator(String szCommand, int[] iSelectedBlockCoordinates1, int[] iSelectedBlockCoordinates2, String szWorld)
     {
         World bukkitWorld = Bukkit.getWorld(szWorld);
 
@@ -49,26 +49,23 @@ public class WorldEdit
         if (szCommand.startsWith("/line"))
         {
             line = new ArrayList<Location>();
-            int dx = (int) Math.abs(xz1[0]-xz2[0]);
-            int dy = Math.abs(iY1-iY2);
-            int dz = (int) Math.abs(xz1[1]-xz2[1]);
+            int dx = Math.abs(iSelectedBlockCoordinates1[0]-iSelectedBlockCoordinates2[0]);
+            int dy = Math.abs(iSelectedBlockCoordinates1[1]-iSelectedBlockCoordinates2[1]);
+            int dz = Math.abs(iSelectedBlockCoordinates1[2]-iSelectedBlockCoordinates2[2]);
 
             double dMax = Math.max(Math.max(dx, dz), dy);
-            double minX = xz1[0] + 0.5d;
-            double minY = iY1 + 0.5d;
-            double minZ = xz1[1] + 0.5d;
 
-            int x1 = (int) xz1[0];
-            int x2 = (int) xz2[0];
-            int y1 = iY1;
-            int y2 = iY2;
-            int z1 = (int) xz1[1];
-            int z2 = (int) xz2[1];
+            int x1 = iSelectedBlockCoordinates1[0];
+            int x2 = iSelectedBlockCoordinates2[0];
+            int y1 = iSelectedBlockCoordinates1[1];
+            int y2 = iSelectedBlockCoordinates2[1];
+            int z1 = iSelectedBlockCoordinates1[2];
+            int z2 = iSelectedBlockCoordinates2[2];
 
             if (dx + dy + dz == 0)
             {
                 Bukkit.getConsoleSender().sendMessage("All add to 0");
-                line.add(new Location(bukkitWorld, xz1[0], iY1, xz1[1]));
+                line.add(new Location(bukkitWorld, x1, y1, z1));
             }
             else
             {

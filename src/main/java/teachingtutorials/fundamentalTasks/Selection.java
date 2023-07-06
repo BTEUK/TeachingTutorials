@@ -6,6 +6,7 @@ import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsExcepti
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,8 +29,12 @@ public class Selection extends Task implements Listener
     final double dTargetCoords1[] = new double[2]; //Lat then long
     final double dTargetCoords2[] = new double[2]; //Lat then long
 
-    double[] dSelectionPoint1 = new double[2]; //Lat then long
-    double[] dSelectionPoint2 = new double[2]; //Lat then long
+    double[] dSelectionPoint1 = new double[3]; //Lat then long
+    double[] dSelectionPoint2 = new double[3]; //Lat then long
+
+    //Y coordinates of the selected blocks
+    public int iY1 = 0;
+    public int iY2 = 0;
 
     //Variables used by new location procedures
     boolean bSelection1Made;
@@ -40,7 +45,7 @@ public class Selection extends Task implements Listener
     private DifficultyListener difficultyListener;
 
     //Used in a lesson
-    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, String szDetails, String szAnswers, float fWEDifficulty)
+    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fWEDifficulty)
     {
         super(plugin);
         this.type = "selection";
@@ -54,6 +59,7 @@ public class Selection extends Task implements Listener
         this.dTargetCoords2[0] = Double.parseDouble(cords[2]);
         this.dTargetCoords2[1] = Double.parseDouble(cords[3]);
 
+        this.iOrder = iOrder;
         this.szDetails = szDetails;
 
         this.fWEDifficulty = fWEDifficulty;
@@ -64,7 +70,7 @@ public class Selection extends Task implements Listener
         this.bSelection2Made = false;
     }
 
-    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szDetails)
+    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
         super(plugin);
         this.type = "selection";
@@ -72,6 +78,7 @@ public class Selection extends Task implements Listener
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+        this.iOrder = iOrder;
         this.szDetails = szDetails;
 
         this.bSelection1Made = false;
@@ -100,15 +107,22 @@ public class Selection extends Task implements Listener
         double[] longLat;
 
         final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
         try
         {
-            longLat = projection.toGeo(event.getClickedBlock().getX()+0.5d, event.getClickedBlock().getY()+0.5d);
+            longLat = projection.toGeo(event.getClickedBlock().getX()+0.5d, event.getClickedBlock().getZ()+0.5d);
         }
         catch (OutOfProjectionBoundsException e)
         {
             //Player has selected an area outside of the projection
             return;
         }
+
+        //Stores the Y coordinates of the selections
+        if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))
+            iY1 = event.getClickedBlock().getY();
+        else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
+            iY2 = event.getClickedBlock().getY();
 
         //Checks whether it is a new location
         if (bNewLocation)
@@ -143,7 +157,8 @@ public class Selection extends Task implements Listener
 
                 //Set the answers - answers are stored in a format matching that of how they are decoded in the constructor of this class
                 LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
-                locationTask.setAnswers(dTargetCoords1[0] +"," +dTargetCoords1[1] +"," +dTargetCoords2[0] +"," +dTargetCoords2[1]);
+                String szAnswers = dTargetCoords1[0] +"," +dTargetCoords1[1] +"," +dTargetCoords2[0] +"," +dTargetCoords2[1];
+                locationTask.setAnswers(szAnswers);
                 difficultyListener.setLocationTask(locationTask);
 
                 //Data is added to database once difficulty is provided
@@ -336,4 +351,5 @@ public class Selection extends Task implements Listener
     {
         bothSelectionsMade();
     }
+
 }

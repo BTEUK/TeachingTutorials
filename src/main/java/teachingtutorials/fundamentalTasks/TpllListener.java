@@ -30,7 +30,7 @@ public class TpllListener extends Task implements Listener
     private DifficultyListener difficultyListener;
 
     //Used in a lesson
-    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, String szDetails, String szAnswers, float fDifficulty)
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty)
     {
         super(plugin);
         this.type = "tpll";
@@ -42,6 +42,7 @@ public class TpllListener extends Task implements Listener
         this.dTargetCoords[0] = Double.parseDouble(cords[0]);
         this.dTargetCoords[1] = Double.parseDouble(cords[1]);
 
+        this.iOrder = iOrder;
         this.szDetails = szDetails;
 
         this.fDifficulty = fDifficulty;
@@ -49,7 +50,7 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = false;
     }
 
-    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, String szDetails)
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
         super(plugin);
         this.type = "tpll";
@@ -57,6 +58,7 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = true;
         this.parentGroup = parentGroup;
         this.iTaskID = iTaskID;
+        this.iOrder = iOrder;
         this.szDetails = szDetails;
 
         //Listen out for difficulty - There will only be one difficulty listener per tpll command to avoid bugs

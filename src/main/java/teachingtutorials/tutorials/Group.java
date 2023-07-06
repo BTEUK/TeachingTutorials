@@ -18,7 +18,7 @@ public class Group
 
     private int groupID;
 
-    //What stage of the group the player is at
+    //What task of the group the player is at
     private int taskNo;
     private Task currentTask;
 
@@ -67,8 +67,14 @@ public class Group
        return this.currentTask;
     }
 
+    public int getTaskNo()
+    {
+        return this.taskNo;
+    }
+
     //Where to fetch tasks, where to initialise them etc
 
+    //Fetches the tasks from the database and initialises them, then adds them to a list which is sent here
     public void fetchAndInitialiseTasks()
     {
         if (this.parentStep.parentStage.bLocationCreation)

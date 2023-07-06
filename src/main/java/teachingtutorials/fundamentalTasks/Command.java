@@ -1,8 +1,8 @@
 package teachingtutorials.fundamentalTasks;
 
-import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
-import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
+//import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
+//import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+//import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -37,7 +37,7 @@ public class Command extends Task implements Listener
     private DifficultyListener difficultyListener;
 
     //Used for virtual blocks command type
-    private boolean bDone = false;
+    private boolean bDisplayVirtualBlocks = false;
     //Blocks of the selection
     private ArrayList<Location> selectionBlocks = null;
 
@@ -184,7 +184,7 @@ public class Command extends Task implements Listener
                     break;
                 case virtualBlocks:
                     //There is a schedule which every second checks to see if the command is done, and if so, will display the virtual blocks
-                    bDone = true;
+                    bDisplayVirtualBlocks = true;
 
                     String szWorldName;
                     if (this.bNewLocation)
@@ -219,7 +219,7 @@ public class Command extends Task implements Listener
                         break;
                     case virtualBlocks:
                         //There is a schedule which every second checks to see if the command is done, and if so, will display the virtual blocks
-                        bDone = true;
+                        bDisplayVirtualBlocks = true;
 
                         String szWorldName;
                         if (this.bNewLocation)
@@ -315,19 +315,38 @@ public class Command extends Task implements Listener
 
             plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
             {
+                boolean bLessonActive;
                 @Override
                 public void run()
                 {
+                    //Fetches the status of the lesson or new location creation
+                    if (bNewLocation)
+                        bLessonActive = !parentGroup.parentStep.parentStage.newLocation.bCompleteOrFinished;
+                    else
+                        bLessonActive = !parentGroup.parentStep.parentStage.lesson.bCompleteOrFinished;
+
                     //Have a command complete checker because this just repeats every second
-                    if (bDone)
+                    //Also check whether the lesson/new location creation is still active. If the user is finished with it then we need to stop displaying virtual blocks
+                    if (bDisplayVirtualBlocks)
                     {
-                        if (selectionBlocks != null)
+                        if (bLessonActive)
                         {
-                            BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommand);
+                            if (selectionBlocks != null)
+                            {
+                                BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommand);
+                                for (Location location : selectionBlocks)
+                                {
+                                    player.sendBlockChange(location, material);
+                                }
+                            }
+                        }
+                        else
+                        {
                             for (Location location : selectionBlocks)
                             {
-                                player.sendBlockChange(location, material);
+                                player.sendBlockChange(location, location.getBlock().getBlockData());
                             }
+                            return;
                         }
                     }
                 }

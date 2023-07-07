@@ -42,8 +42,9 @@ public class TeachingTutorials extends JavaPlugin
     //The connection for the database
     private DBConnection dbConnection;
 
-    public ItemStack slot5;
+    public ItemStack learningMenuSlot;
     public static ItemStack menu;
+    private int iLearningMenuSlot;
 
     //A list of all connected players
     public ArrayList<User> players;
@@ -136,6 +137,7 @@ public class TeachingTutorials extends JavaPlugin
         ItemMeta meta = menu.getItemMeta();
         meta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Learning Menu");
         menu.setItemMeta(meta);
+        iLearningMenuSlot = config.getInt("Learning_Menu_Slot");
 
         //1 second timer - updates slot
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
@@ -144,14 +146,14 @@ public class TeachingTutorials extends JavaPlugin
                 for (Player p : Bukkit.getOnlinePlayers())
                 {
                     //Menu
-                    slot5 = p.getInventory().getItem(4);
-                    if (slot5 == null)
+                    learningMenuSlot = p.getInventory().getItem(iLearningMenuSlot - 1);
+                    if (learningMenuSlot == null)
                     {
-                        p.getInventory().setItem(4, menu);
+                        p.getInventory().setItem(iLearningMenuSlot - 1, menu);
                     }
-                    else if (!slot5.equals(menu))
+                    else if (!learningMenuSlot.equals(menu))
                     {
-                        p.getInventory().setItem(4, menu);
+                        p.getInventory().setItem(iLearningMenuSlot - 1, menu);
                     }
                 }
             }

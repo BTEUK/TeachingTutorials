@@ -3,6 +3,7 @@ package teachingtutorials.guis;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -20,7 +21,6 @@ public class MainMenu
     public static Inventory inventory;
     public static String inventory_name;
     public static int inv_rows = 3 * 9;
-    public static TeachingTutorials plugin;
 
     public static void initialize()
     {
@@ -40,22 +40,36 @@ public class MainMenu
 
         inventory.clear();
 
-        if (u.bHasCompletedCompulsory)
+        FileConfiguration config = TeachingTutorials.getInstance().getConfig();
+        boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial");
+
+        if (bCompulsoryTutorialEnabled)
+        {
+            if (u.bHasCompletedCompulsory)
+            {
+                if (u.bInLesson)
+                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
+                else
+                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+                Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
+            }
+            else if (u.bInLesson)
+            {
+                Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            }
+            else
+            {
+                Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+            }
+        }
+        else
         {
             if (u.bInLesson)
                 Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
             else
                 Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-            Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
         }
-        else if (u.bInLesson)
-        {
-            Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
-        }
-        else
-        {
-            Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
-        }
+
 
 
         if (u.player.hasPermission("TeachingTutorials.Admin") || u.player.hasPermission("TeachingTutorials.Creator"))

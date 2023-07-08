@@ -418,7 +418,7 @@ public class NewLocation
         }
 
         //Updates the status of the activity
-        bCompleteOrFinished = false;
+        bCompleteOrFinished = true;
 
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);
@@ -446,7 +446,7 @@ public class NewLocation
         this.Creator.currentMode = Mode.Idle;
 
         //Updates the status of the activity
-        bCompleteOrFinished = false;
+        bCompleteOrFinished = true;
 
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);

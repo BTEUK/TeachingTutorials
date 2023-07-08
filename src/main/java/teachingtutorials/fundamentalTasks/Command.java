@@ -238,8 +238,12 @@ public class Command extends Task implements Listener
             }
             else
             {
+                //Tells the student that the command was correct but the args were wrong
                 Display display = new Display(player, ChatColor.GOLD+"Command /"+szTargetCommand +" was correct but the arguments of the command were not");
                 display.ActionBar();
+
+                //Cancels the event if the args were wrong but the command was correct
+                event.setCancelled(true);
             }
         }
     }
@@ -333,7 +337,7 @@ public class Command extends Task implements Listener
                         {
                             if (selectionBlocks != null)
                             {
-                                BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommand);
+                                BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommandArgs.replace(" ", ""));
                                 for (Location location : selectionBlocks)
                                 {
                                     player.sendBlockChange(location, material);

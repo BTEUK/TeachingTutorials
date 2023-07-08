@@ -123,9 +123,18 @@ public class WorldEdit
         return line;
     }
 
-    public static BlockData BlockTypeCalculator(String szCommand)
+    public static BlockData BlockTypeCalculator(String szCommandArgs)
     {
-        BlockData blockData = Bukkit.createBlockData(Material.STONE);
+        BlockData blockData;
+        try
+        {
+            blockData = Bukkit.createBlockData(Material.valueOf(szCommandArgs.toUpperCase()));
+        }
+        catch (Exception e)
+        {
+            blockData = Bukkit.createBlockData(Material.STONE);
+            e.printStackTrace();
+        }
         return blockData;
     }
 }

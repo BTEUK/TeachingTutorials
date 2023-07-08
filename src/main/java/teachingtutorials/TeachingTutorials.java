@@ -334,7 +334,7 @@ public class TeachingTutorials extends JavaPlugin
                     case "selection":
                     case "place":
                     case "chat":
-                        task = new Task(szTaskType, "");
+                        task = new Task(szTaskType, " ");
                         lastGroup.addTaskCreation(task);
                         break;
                     case "command":
@@ -516,8 +516,8 @@ public class TeachingTutorials extends JavaPlugin
 
                         try
                         {
-                            sql = "INSERT INTO Tasks (GroupID, TaskType, `Order`)" +
-                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1) +", " +szDetails +")";
+                            sql = "INSERT INTO Tasks (GroupID, TaskType, `Order`, Details)" +
+                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1) +", '" +szDetails +"')";
                             Bukkit.getConsoleSender().sendMessage(sql);
                             SQL.executeUpdate(sql);
                         }

@@ -97,7 +97,6 @@ public class Place extends Task implements Listener
 
             //Get the material placed
             Block blockPlaced = event.getBlockPlaced();
-            mTargetMaterial = blockPlaced.getType();
 
             //Get the location of the placed block
             int iBlockX = blockPlaced.getX();
@@ -107,6 +106,9 @@ public class Place extends Task implements Listener
             //Checks whether it is a new location
             if (bNewLocation)
             {
+                //Store the material
+                mTargetMaterial = blockPlaced.getType();
+
                 //Store the location
                 iTargetCoords[0] = iBlockX;
                 iTargetCoords[1] = iBlockY;

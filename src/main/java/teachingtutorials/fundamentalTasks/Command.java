@@ -350,7 +350,7 @@ public class Command extends Task implements Listener
                         }
                     }
                 }
-            }, 20, 20);
+            }, 20, 10);
         }
     }
 }

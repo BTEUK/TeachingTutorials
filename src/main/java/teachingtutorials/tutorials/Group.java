@@ -102,18 +102,18 @@ public class Group
             //Tasks unregister themselves once complete
             currentTask.register();
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] First task registered: "+currentTask.type);
-
-            //Sets the current task number to the first task
-            //1 indexed
-            taskNo = 1;
         }
         else
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] This group had no tasks, group finished");
             //Signal that group is complete before it even started
             groupFinished = true;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"    [TeachingTutorials] GroupID "+groupID +" finished");
             parentStep.groupFinished();
         }
+        //Sets the current task number to the first task
+        //1 indexed
+        taskNo = 1;
     }
 
     public void taskFinished()

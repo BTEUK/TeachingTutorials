@@ -126,8 +126,8 @@ public class Step
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
             //Register the start of the first group
             currentGroup = groups.get(0);
-            currentGroup.initialRegister();
             iGroupInStepLocationCreation = 1;
+            currentGroup.initialRegister();
         }
         else
         {
@@ -161,9 +161,9 @@ public class Step
             {
                 bAllGroupsFinished = false;
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registering group "+iGroupInStepLocationCreation);
-                currentGroup = groups.get(iGroupInStepLocationCreation);
-                currentGroup.initialRegister();
                 iGroupInStepLocationCreation++;
+                currentGroup = groups.get(iGroupInStepLocationCreation-1);
+                currentGroup.initialRegister();
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registered group "+iGroupInStepLocationCreation);
             }
         }

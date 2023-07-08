@@ -186,32 +186,32 @@ public class User
     //Updates the scoreboard with the current ratings stored in the User object
     public void refreshScoreboard()
     {
-        //Get scoreboard
-        Scoreboard SB;
-
-        ScoreboardManager SBM = Bukkit.getScoreboardManager();
-        SB = SBM.getNewScoreboard();
-
-        Objective scores = SB.registerNewObjective("Ratings", "dummy", ChatColor.AQUA +"Skills", RenderType.INTEGER);
-
-        Score tpllRating = scores.getScore("1. Tpll");
-        tpllRating.setScore(this.iScoreTpll);
-
-        Score WERating = scores.getScore("2. WorldEdit");
-        WERating.setScore(this.iScoreWE);
-
-        Score TerraRating = scores.getScore("5. Terraforming");
-        TerraRating.setScore(this.iScoreTerraforming);
-
-        Score ColouringRating = scores.getScore("3. Colouring");
-        ColouringRating.setScore(this.iScoreColouring);
-
-        Score DetailingRating = scores.getScore("4. Detailing");
-        DetailingRating.setScore(this.iScoreDetailing);
-
-        scores.setDisplaySlot(DisplaySlot.SIDEBAR);
-
-        this.player.setScoreboard(SB);
+//        //Get scoreboard
+//        Scoreboard SB;
+//
+//        ScoreboardManager SBM = Bukkit.getScoreboardManager();
+//        SB = SBM.getNewScoreboard();
+//
+//        Objective scores = SB.registerNewObjective("Ratings", "dummy", ChatColor.AQUA +"Skills", RenderType.INTEGER);
+//
+//        Score tpllRating = scores.getScore("1. Tpll");
+//        tpllRating.setScore(this.iScoreTpll);
+//
+//        Score WERating = scores.getScore("2. WorldEdit");
+//        WERating.setScore(this.iScoreWE);
+//
+//        Score TerraRating = scores.getScore("5. Terraforming");
+//        TerraRating.setScore(this.iScoreTerraforming);
+//
+//        Score ColouringRating = scores.getScore("3. Colouring");
+//        ColouringRating.setScore(this.iScoreColouring);
+//
+//        Score DetailingRating = scores.getScore("4. Detailing");
+//        DetailingRating.setScore(this.iScoreDetailing);
+//
+//        scores.setDisplaySlot(DisplaySlot.SIDEBAR);
+//
+//        this.player.setScoreboard(SB);
     }
 
     //---------------------------------------------------

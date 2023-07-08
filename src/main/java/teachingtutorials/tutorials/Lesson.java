@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 //Lesson stores all the information needed for a lesson and handles the gameplay of said lesson
@@ -269,9 +270,11 @@ public class Lesson
             if (resultSet.next())
             {
                 iTutorialID = resultSet.getInt("TutorialID");
+                tutorial.szTutorialName = resultSet.getString("TutorialName");
+                tutorial.uuidAuthor = UUID.fromString(resultSet.getString("Author"));
             }
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "Compulsory Tutorial ID found as "+iTutorialID);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "Compulsory Tutorial ID found as "+iTutorialID +". Tutorial = "+tutorial.szTutorialName);
 
             //Stores the TutorialID into the tutorial object of this Lesson
             this.tutorial.setTutorialID(iTutorialID);
@@ -395,7 +398,11 @@ public class Lesson
                 }
             }
             iTutorialIndex = iIndexBiggestRelevance;
-            this.tutorial.setTutorialID(tutorials[iTutorialIndex].getTutorialID());
+
+            //Sets this lessons tutorial as the tutorial decided upon
+            this.tutorial = tutorials[iTutorialIndex];
+
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "Tutorial ID found as "+tutorial.getTutorialID() +". Tutorial = "+tutorial.szTutorialName);
             return true;
         }
         else
@@ -469,6 +476,14 @@ public class Lesson
 
         //Marks the lesson complete or finished
         this.bCompleteOrFinished = true;
+
+        //Remove tracker scoreboard
+        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                student.player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+            }
+        });
 
         //Display a tutorial complete message to the student
         Display display = new Display(student.player, " ");
@@ -701,6 +716,14 @@ public class Lesson
         //Remove the listeners; accesses the stage, step and groups to do this
         currentStage.terminateEarly();
 
+        //Remove tracker scoreboard
+        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                student.player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+            }
+        });
+
         //Marks the lesson complete or finished
         this.bCompleteOrFinished = true;
 
@@ -736,6 +759,7 @@ public class Lesson
             {
                 this.iLessonID = resultSet.getInt("LessonID");
                 this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
+                this.tutorial.fetchByTutorialID();
                 this.iStage = resultSet.getInt("StageAt");
                 this.iStep = resultSet.getInt("StepAt");
 

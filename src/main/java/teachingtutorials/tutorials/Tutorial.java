@@ -78,6 +78,8 @@ public class Tutorial
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
+
+            //Counts the amount of tutorials
             while (resultSet.next())
             {
                 iCount++;
@@ -256,6 +258,37 @@ public class Tutorial
         return tutorials;
     }
 
+    //Fetches the details of a tutorial by the tutorial ID
+    public boolean fetchByTutorialID()
+    {
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch tutoria
+            sql = "Select * FROM Tutorials WHERE Tutorials.TutorialID = " +this.iTutorialID;
+
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            resultSet.next();
+            this.szTutorialName = resultSet.getString("TutorialName");
+            this.uuidAuthor = UUID.fromString(resultSet.getString("Author"));
+            this.bCompulsory = resultSet.getBoolean("Compulsory");
+            this.bInUse = resultSet.getBoolean("InUse");
+
+            return true;
+        }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching tutorial details by tutorial id: " +this.iTutorialID);
+            se.printStackTrace();
+            return false;
+        }
+    }
 
     //---------------------------------------------------
     //--------------------SQL Updates--------------------

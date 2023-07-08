@@ -90,6 +90,11 @@ public class NewLocation
         return this.Creator;
     }
 
+    public String getTutorialName()
+    {
+        return this.tutorial.szTutorialName;
+    }
+
     //First method, started from the CreatorTutorialsMenu when they right click
     public void launchNewLocationAdding()
     {
@@ -378,18 +383,34 @@ public class NewLocation
                 break;
             case creatingNewWorld:
             case generatingTerrain:
+                //Delete the location in the DB
                 if(Location.deleteLocationByID(location.getLocationID()))
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Location with LocationID = "+location.getLocationID() +" was deleted");
                 else
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Location with LocationID = "+location.getLocationID() +" could not be deleted");
+
+                //Delete the world
                 Multiverse.deleteWorld(location.getLocationID()+"");
                 break;
             case inputtingAnswers:
+                //Remove tracker scoreboard
+                Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        getCreator().player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                    }
+                });
+
+                //Remove the listeners
                 currentStage.terminateEarly();
+
+                //Delete the location in the DB
                 if(Location.deleteLocationByID(location.getLocationID()))
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Location with LocationID = "+location.getLocationID() +" was deleted");
                 else
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Location with LocationID = "+location.getLocationID() +" could not be deleted");
+
+                //Delete the world
                 Multiverse.deleteWorld(location.getLocationID()+"");
                 break;
             default:
@@ -412,6 +433,14 @@ public class NewLocation
 
         //Informs the console of successful creation of a location
         Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_GREEN +"[TeachingTutorials] Location Created with LocationID: "+this.location.getLocationID());
+
+        //Remove tracker scoreboard
+        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                getCreator().player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+            }
+        });
 
         //Changes the player's mode
         this.Creator.currentMode = Mode.Idle;

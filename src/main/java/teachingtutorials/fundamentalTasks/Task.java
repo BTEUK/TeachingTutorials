@@ -130,6 +130,11 @@ public class Task
                     case "chat":
                         Chat chat = new Chat(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty);
                         tasks.add(chat);
+                        break;
+                    case "place":
+                        Place place = new Place(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fColouringDifficulty);
+                        tasks.add(place);
+                        break;
                 }
             }
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "      [TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
@@ -188,6 +193,10 @@ public class Task
                     case "chat":
                         Chat chat = new Chat(plugin, player, parentGroup, iTaskID, iOrder, szDetails);
                         tasks.add(chat);
+                        break;
+                    case "place":
+                        Place place = new Place(plugin, player, parentGroup, iTaskID, iOrder, szDetails);
+                        tasks.add(place);
                         break;
                 }
             }

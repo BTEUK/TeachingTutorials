@@ -84,6 +84,10 @@ public class DifficultyListener implements Listener
                         break;
                     case chat:
                         locationTask.setDifficulties(0, 0, 0, 0, 0);
+                        break;
+                    case place:
+                        locationTask.setDifficulties(0, 0, fDifficulty, 0, 0);
+                        break;
                 }
                 if (locationTask.storeNewData())
                 {

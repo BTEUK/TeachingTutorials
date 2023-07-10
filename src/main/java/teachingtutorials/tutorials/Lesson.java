@@ -1,5 +1,6 @@
 package teachingtutorials.tutorials;
 
+import com.sk89q.worldedit.bukkit.BukkitCommandSender;
 import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.luckperms.api.node.NodeType;
@@ -30,7 +31,7 @@ public class Lesson
 
     private int iLessonID;
     protected User student;
-    private boolean bCompulsory;
+    private final boolean bCompulsory;
 
     private int iTutorialIndex;
     protected Tutorial tutorial;
@@ -155,6 +156,32 @@ public class Lesson
 
         //Gets the data for all of the stages
         fetchStages();
+
+        //Teleports the player to the location's world
+        double[] xz;
+        World world = location.getWorld();
+        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
+        //Converts the longitude and latitude start coordinates of the location to minecraft coordinates
+        try
+        {
+            xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
+            Bukkit.getConsoleSender().sendMessage(location.getStartCoordinates().getLng() +", " +location.getStartCoordinates().getLat());
+            //Declares location object
+            org.bukkit.Location tpLocation;
+
+            tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
+
+            //Teleports the student to the start location of the location
+            student.player.teleport(tpLocation);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
+            student.player.sendMessage(ChatColor.RED +"Could not teleport you to the start location");
+            return false;
+        }
 
         //Takes the stage position back for it to then be set forward again at the start of nextStage()
         iStage = iStage - 1;

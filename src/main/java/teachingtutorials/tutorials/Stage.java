@@ -56,6 +56,7 @@ public class Stage
         bLocationCreation = false;
     }
 
+    //Used for inserting a new stage into the DB
     public Stage(String szName)
     {
         bLocationCreation = false;
@@ -63,20 +64,21 @@ public class Stage
     }
 
     //Used when creating a new location
-    public Stage(int iStageID, int iOrder, Player player, TeachingTutorials plugin, int iLocationID, NewLocation newLocation)
+    public Stage(int iStageID, int iOrder, String szName, Player player, TeachingTutorials plugin, int iLocationID, NewLocation newLocation)
     {
+        this.bLocationCreation = true;
+        this.bStageFinished = false;
         this.plugin = plugin;
 
+        //Stage specific properties
         this.iStageID = iStageID;
         this.iOrder = iOrder;
-        this.bStageFinished = false;
+        this.szName = szName;
 
+        //New location specific
         this.player = player;
-
         this.iNewLocationID = iLocationID;
         this.newLocation = newLocation;
-
-        bLocationCreation = true;
     }
 
     //---------------------------------------------------
@@ -129,7 +131,6 @@ public class Stage
         nextStep();
     }
 
-    //Incomplete
     protected void nextStep()
     {
         //1 indexed
@@ -148,18 +149,18 @@ public class Stage
             {
                 //Save the positions of stage and step
                 lesson.savePositions();
-
-                //Update tracker scoreboard
-                Bukkit.getScheduler().runTask(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        if (bLocationCreation)
-                            TrackerScoreboard.updateScoreboard(player, newLocation.getTutorialName(), szName, currentStep.getName());
-                        else
-                            TrackerScoreboard.updateScoreboard(player, lesson.tutorial.szTutorialName, szName, currentStep.getName());
-                    }
-                });
             }
+
+            //Update tracker scoreboard
+            Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    if (bLocationCreation)
+                        TrackerScoreboard.updateScoreboard(player, newLocation.getTutorialName(), szName, currentStep.getName());
+                    else
+                        TrackerScoreboard.updateScoreboard(player, lesson.tutorial.szTutorialName, szName, currentStep.getName());
+                }
+            });
         }
         else
         {
@@ -238,7 +239,7 @@ public class Stage
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), player, plugin, iLocationID, newLocation);
+                Stage stage = new Stage(resultSet.getInt("StageID"), resultSet.getInt("Order"), resultSet.getString("StageName"), player, plugin, iLocationID, newLocation);
                 stages.add(stage);
                 iCount++;
             }

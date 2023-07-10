@@ -22,12 +22,14 @@ public class Location
     //-------------------Constructors-------------------
     //--------------------------------------------------
 
+    //Used for creating a new location
     public Location(LatLng latlong, int iTutorialID)
     {
         this.startCoordinates = latlong;
         this.iTutorialID = iTutorialID;
     }
 
+    //Used for fetching a location
     public Location(int iLocationID)
     {
         this.iLocationID = iLocationID;

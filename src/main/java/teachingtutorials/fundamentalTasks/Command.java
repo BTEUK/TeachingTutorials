@@ -1,8 +1,5 @@
 package teachingtutorials.fundamentalTasks;
 
-//import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-//import net.buildtheearth.terraminusminus.projection.GeographicProjection;
-//import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -150,21 +147,19 @@ public class Command extends Task implements Listener
                 return;
             }
 
-            String szTargetCommand;
-            String szArgs;
             //Checks whether there are parameters or just the bare command
             if (command.contains(" "))
             {
                 szTargetCommand = command.substring(1, event.getMessage().indexOf(" "));
-                szArgs = command.replace("/" +szTargetCommand+" ", "");
+                szTargetCommandArgs = command.replace("/" +szTargetCommand+" ", "");
             }
             else
             {
                 szTargetCommand = command.substring(1);
-                szArgs = "";
+                szTargetCommandArgs = "";
             }
 
-            String szAnswers = szTargetCommand+","+szArgs;
+            String szAnswers = szTargetCommand+","+szTargetCommandArgs;
             locationTask.setAnswers(szAnswers);
             difficultyListener.setLocationTask(locationTask);
 

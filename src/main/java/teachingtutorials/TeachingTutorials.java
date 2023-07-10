@@ -16,6 +16,7 @@ import teachingtutorials.guis.MainMenu;
 import teachingtutorials.listeners.InventoryClicked;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinLeaveEvent;
+import teachingtutorials.listeners.lltpll;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.*;
 import teachingtutorials.utils.DBConnection;
@@ -165,8 +166,13 @@ public class TeachingTutorials extends JavaPlugin
 
         //Handles welcome message and gamemode
         new JoinLeaveEvent(this);
+
+        //Handles menus
         new PlayerInteract(this);
         new InventoryClicked(this);
+
+        //Handles tpll and ll
+        new lltpll(this);
     //    new Wand(this);
 
     }

@@ -7,17 +7,30 @@ import org.bukkit.entity.Player;
 public class Display
 {
     Player player;
+    boolean bRawText;
     String szText;
+    net.kyori.adventure.text.TextComponent textComponent;
 
     public Display(Player player, String text)
     {
         this.player = player;
         this.szText = Utils.chat(text);
+        this.bRawText = true;
+    }
+
+    public Display(Player player, net.kyori.adventure.text.TextComponent text)
+    {
+        this.player = player;
+        this.textComponent = text;
+        this.bRawText = false;
     }
 
     public void Message()
     {
-        player.spigot().sendMessage(ChatMessageType.CHAT, TextComponent.fromLegacyText(szText));
+        if (bRawText)
+            player.spigot().sendMessage(ChatMessageType.CHAT, TextComponent.fromLegacyText(szText));
+        else
+            player.sendMessage(textComponent);
     }
 
     public void ActionBar()

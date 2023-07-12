@@ -2,6 +2,7 @@ package teachingtutorials.utils;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class Display
@@ -44,8 +45,9 @@ public class Display
         player.sendTitle(szText, szSubtitle, iFadeInTicks, iStayTicks, iFadeOutTicks);
     }
 
-    public void Hologram()
+    public Hologram Hologram(String szTitle, Location location)
     {
-
+        Hologram hologram = new Hologram(location, player, szTitle, szText);
+        return hologram;
     }
 }

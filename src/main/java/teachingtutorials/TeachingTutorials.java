@@ -59,6 +59,15 @@ public class TeachingTutorials extends JavaPlugin
     @Override
     public void onEnable()
     {
+        //Dependency checkers
+        if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays"))
+        {
+            getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+
         // Plugin startup logic
         TeachingTutorials.instance = this;
         TeachingTutorials.config = this.getConfig();
@@ -175,6 +184,7 @@ public class TeachingTutorials extends JavaPlugin
         new lltpll(this);
     //    new Wand(this);
 
+        this.setEnabled(true);
     }
 
     private void interpretNewTutorial(File file)
@@ -283,7 +293,8 @@ public class TeachingTutorials extends JavaPlugin
                     return;
                 }
                 szFields = szLines[iLine].split(",");
-                if (!(szFields.length > 1))
+                //Field 1 is step name, field 2 is display type, field 3 is the instruction
+                if (!(szFields.length > 2))
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
@@ -291,13 +302,13 @@ public class TeachingTutorials extends JavaPlugin
                 szType = "Step";
 
                 //Compiles instructions if commas were part of the instruction and split
-                String szInstructions = szFields[1];
+                String szInstructions = szFields[2];
                 for (int k = 2 ; k < szFields.length ; k++)
                 {
                     szInstructions = szInstructions +"," +szFields[k];
                 }
 
-                Step step = new Step(szFields[0].replace("(",""), szInstructions);
+                Step step = new Step(szFields[0].replace("(",""), szFields[1], szInstructions);
                 lastStage.steps.add(step);
                 lastStep = step;
             }
@@ -459,7 +470,9 @@ public class TeachingTutorials extends JavaPlugin
                 try
                 {
                     String szStepInstructions = step.getInstructions().replace("\'", "\'\'");
-                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, StepInstructions) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+", '" +szStepInstructions +"')";
+                    String szInstructionType = step.getInstructionDisplayType();
+
+                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, StepInstructions, InstructionDisplay) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+", '" +szStepInstructions +"' ,'" +szInstructionType +"')";
                     Bukkit.getConsoleSender().sendMessage(sql);
                     SQL.executeUpdate(sql);
 

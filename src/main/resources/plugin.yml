@@ -10,3 +10,5 @@ commands:
     usage: /<command>
     description: Deals will all tutorial related commands.
 website: https://github.com/BTEUK/TeachingTutorials
+softdepend:
+  - HolographicDisplays

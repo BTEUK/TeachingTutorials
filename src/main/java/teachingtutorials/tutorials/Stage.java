@@ -120,10 +120,6 @@ public class Stage
 
     public void startStage(int iStep)
     {
-        //Inform console of stage starting
-        //Step is 1 indexed
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Stage "+iOrder +" starting, at step "+iStep);
-
         //Display the Stage title
         Display display = new Display(player, " ");
         display.Title(ChatColor.AQUA +"Stage " +iOrder +" - " +szName, 10, 60, 12);
@@ -140,13 +136,14 @@ public class Stage
     {
         //1 indexed
         iCurrentStep++;
-        if (!bLocationCreation)
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+lesson.student.player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
-        else
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+newLocation.getCreator().player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
 
         if (iCurrentStep <= steps.size())
         {
+            if (!bLocationCreation)
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+lesson.student.player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
+            else
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+newLocation.getCreator().player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
+
             currentStep = steps.get(iCurrentStep-1);
             currentStep.startStep();
 
@@ -248,7 +245,7 @@ public class Stage
                 stages.add(stage);
                 iCount++;
             }
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iCount +" Stages fetched from the database");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials]" +iCount +" Stages fetched from the database for "+player.getName()+"'s lesson");
         }
         catch(SQLException se)
         {

@@ -92,7 +92,6 @@ public class Task
         {
             //Compiles the command to fetch the tasks and answers
             sql = "Select * FROM LocationTasks,Tasks WHERE LocationTasks.LocationID = "+iLocationID +" AND Tasks.GroupID = "+parentGroup.getGroupID() +" AND Tasks.TaskID = LocationTasks.TaskID ORDER BY 'Order' ASC";
-            Bukkit.getConsoleSender().sendMessage(sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -137,11 +136,10 @@ public class Task
                         break;
                 }
             }
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "      [TeachingTutorials] "+iCount +" tasks were fetched for this group and location");
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "      [TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Tasks by LocationID and GroupID");
             se.printStackTrace();
         }
         catch (Exception e)

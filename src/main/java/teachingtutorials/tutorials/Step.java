@@ -81,7 +81,7 @@ public class Step
 
     private void fetchAndInitialiseGroups()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  Fetching groups of step with ID: "+iStepID);
+//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Fetching groups of step with ID: "+iStepID);
         groups = Group.fetchGroupsByStepID(player, plugin, this);
     }
 
@@ -101,9 +101,6 @@ public class Step
 
     public void startStep()
     {
-        //Inform console of step starting
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Step "+iStepInStage +" starting for " +player.getName());
-
         //Display step title
         Display display = new Display(player, " ");
 
@@ -152,16 +149,16 @@ public class Step
 
         //Fetches the details of groups and stores them in memory
         fetchAndInitialiseGroups();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] " +groups.size() +" groups fetched");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +groups.size() +" groups fetched");
 
         //If a location is being created, groups are made synchronous rather than asynchronous
         if (parentStage.bLocationCreation)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
             //Register the start of the first group
             currentGroup = groups.get(0);
             iGroupInStepLocationCreation = 1;
             currentGroup.initialRegister();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
         }
         else
         {
@@ -171,9 +168,8 @@ public class Step
 
             for (i = 0; i < iGroups; i++)
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registering group "+(i+1));
                 groups.get(i).initialRegister();
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Registered group "+(i+1));
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+(i+1));
             }
         }
     }
@@ -227,7 +223,6 @@ public class Step
                 instructions.removeHologram();
 
             this.bStepFinished = true;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Step "+iStepInStage +" finished");
             parentStage.nextStep();
         }
     }
@@ -281,7 +276,7 @@ public class Step
         }
         catch(SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "  [TeachingTutorials] - SQL - SQL Error fetching Steps by StageID");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Steps by StageID");
             se.printStackTrace();
         }
         catch (Exception e)

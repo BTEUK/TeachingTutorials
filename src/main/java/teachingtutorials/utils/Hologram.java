@@ -31,7 +31,6 @@ public class Hologram
 
                 //Inserts the text
                 hologram.getLines().appendText(szTitle);
-                Bukkit.getConsoleSender().sendMessage("In hologram.java: " +szText);
                 String[] szWords = szText.split(" ");
 
                 String szLine = "";

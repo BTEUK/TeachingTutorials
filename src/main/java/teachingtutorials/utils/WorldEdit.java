@@ -64,7 +64,6 @@ public class WorldEdit
 
             if (dx + dy + dz == 0)
             {
-                Bukkit.getConsoleSender().sendMessage("All add to 0");
                 line.add(new Location(bukkitWorld, x1, y1, z1));
             }
             else
@@ -75,13 +74,11 @@ public class WorldEdit
                 int domstep;
                 if (dMax == dx)
                 {
-                    Bukkit.getConsoleSender().sendMessage("It was dx = " +dx);
                     for(domstep = 0; domstep <= dx; domstep++)
                     {
                         tipx = x1 + domstep * (x2 - x1 > 0 ? 1 : -1);
                         tipy = (int)Math.round((double)y1 + (double)domstep * (double)dy / (double)dx * (double)(y2 - y1 > 0 ? 1 : -1));
                         tipz = (int)Math.round((double)z1 + (double)domstep * (double)dz / (double)dx * (double)(z2 - z1 > 0 ? 1 : -1));
-                        Bukkit.getConsoleSender().sendMessage(tipx +", " +tipy +", " +tipz);
                         line.add(new Location(bukkitWorld, tipx, tipy, tipz));
                     }
                 }

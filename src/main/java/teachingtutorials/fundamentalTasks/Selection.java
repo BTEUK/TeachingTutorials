@@ -21,8 +21,6 @@ import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
-import java.util.ArrayList;
-
 public class Selection extends Task implements Listener
 {
     //Stores the target coords - the location a player should select as a point
@@ -151,7 +149,7 @@ public class Selection extends Task implements Listener
             //Checks whether both selections have been made
             if ((bSelection1Made && bSelection2Made))
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player has now made both points of the selection");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Player has now made both points of the selection");
                 Display display = new Display(player, ChatColor.DARK_GREEN+"Selection complete");
                 display.ActionBar();
 
@@ -180,7 +178,7 @@ public class Selection extends Task implements Listener
             {
                 if (bCorrectPointSelectedAndBothSelectionsMade[1])
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player has now made both points of the selection");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Player has now made both points of the selection");
                     Display display = new Display(player, ChatColor.DARK_GREEN+"Selection complete");
                     display.ActionBar();
 
@@ -328,8 +326,6 @@ public class Selection extends Task implements Listener
 
     private void bothSelectionsMade()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering selection listener");
-
         //Unregisters this task
         HandlerList.unregisterAll(this);
 

@@ -51,7 +51,6 @@ public class LocationTask extends Task
             }
 
             sql = sql +")";
-            Bukkit.getConsoleSender().sendMessage(sql);
             SQL.executeUpdate(sql);
             bSuccess = true;
         }

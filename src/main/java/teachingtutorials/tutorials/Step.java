@@ -15,6 +15,7 @@ public class Step
 {
     private String szName;
     private String szStepInstructions;
+    private String szInstructionDisplayType;
     private Player player;
     private TeachingTutorials plugin;
     public Stage parentStage;
@@ -45,10 +46,12 @@ public class Step
         this.selectionCompleteHold = false;
     }
 
-    public Step(String szName, String szInstructions)
+    //Used for adding a step to the DB
+    public Step(String szName, String szInstructionDisplayType, String szInstructions)
     {
         this.szName = szName;
         this.szStepInstructions = szInstructions;
+        this.szInstructionDisplayType = szInstructionDisplayType;
         this.selectionCompleteHold = false;
     }
 
@@ -61,6 +64,12 @@ public class Step
     {
         return szStepInstructions;
     }
+
+    public String getInstructionDisplayType()
+    {
+        return szInstructionDisplayType;
+    }
+
     public boolean getSelectionCompleteHold()
     {
         return selectionCompleteHold;

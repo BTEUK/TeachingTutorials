@@ -12,6 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.elevation.ElevationManager;
@@ -417,6 +418,9 @@ public class NewLocation
                 break;
         }
 
+        //Teleports the creator back to the lobby
+        teleportToLobby();
+
         //Updates the status of the activity
         bCompleteOrFinished = true;
 
@@ -445,11 +449,63 @@ public class NewLocation
         //Changes the player's mode
         this.Creator.currentMode = Mode.Idle;
 
+        //Teleports the creator back to the lobby
+        teleportToLobby();
+
         //Updates the status of the activity
         bCompleteOrFinished = true;
 
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);
+    }
+
+    private void teleportToLobby()
+    {
+        FileConfiguration config = this.plugin.getConfig();
+
+        String szLobbyTPType = config.getString("Lobby_TP_Type");
+
+        //If a server switch is to occur
+        if (szLobbyTPType.equals("Server"))
+        {
+            String szServerName = config.getString("Server_Name");
+
+            //Switches the player's server after 40 seconds
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    getCreator().player.performCommand("server " +szServerName);
+                }
+            }, 40L);
+        }
+
+        //If a player teleport is to occur
+        else if (szLobbyTPType.equals("LobbyLocation"))
+        {
+            World tpWorld = Bukkit.getWorld(config.getString("Lobby_World"));
+            if (tpWorld == null)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Cannot tp player to lobby, world null");
+                Display display = new Display(getCreator().player, ChatColor.RED +"Cannot tp you to lobby");
+                display.Message();
+            }
+            else
+            {
+                org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Lobby_X"), config.getDouble("Lobby_Y"), config.getDouble("Lobby_Z"), config.getInt("Lobby_Yaw"), config.getInt("Lobby_Pitch"));
+
+                //Teleports the player after 2 seconds
+                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        getCreator().player.teleport(location);
+                    }
+                }, 40L);
+            }
+        }
     }
 
     private void generateArea(World world) throws OutOfProjectionBoundsException

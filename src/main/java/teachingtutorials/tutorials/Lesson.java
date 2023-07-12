@@ -1,6 +1,5 @@
 package teachingtutorials.tutorials;
 
-import com.sk89q.worldedit.bukkit.BukkitCommandSender;
 import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.luckperms.api.node.NodeType;
@@ -722,7 +721,7 @@ public class Lesson
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +student.player.getName() +" has completed a tutorial");
 
         //Teleport the player back to the lobby area
-        //Lobby location stored in config
+        teleportToLobby();
 
         //Removes the lesson from the lessons list
         this.plugin.lessons.remove(this);
@@ -751,11 +750,64 @@ public class Lesson
             }
         });
 
+        //Teleports the player back to lobby
+        teleportToLobby();
+
         //Marks the lesson complete or finished
         this.bCompleteOrFinished = true;
 
         //Removes the lesson from the lessons list
         this.plugin.lessons.remove(this);
+
+    }
+
+    private void teleportToLobby()
+    {
+        FileConfiguration config = this.plugin.getConfig();
+
+        String szLobbyTPType = config.getString("Lobby_TP_Type");
+
+        //If a server switch is to occur
+        if (szLobbyTPType.equals("Server"))
+        {
+            String szServerName = config.getString("Server_Name");
+
+            //Switches the player's server after 40 seconds
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    student.player.performCommand("server " +szServerName);
+                }
+            }, 40L);
+        }
+
+        //If a player teleport is to occur
+        else if (szLobbyTPType.equals("LobbyLocation"))
+        {
+            World tpWorld = Bukkit.getWorld(config.getString("Lobby_World"));
+            if (tpWorld == null)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Cannot tp player to lobby, world null");
+                Display display = new Display(student.player, ChatColor.RED +"Cannot tp you to lobby");
+                display.Message();
+            }
+            else
+            {
+                org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Lobby_X"), config.getDouble("Lobby_Y"), config.getDouble("Lobby_Z"), config.getInt("Lobby_Yaw"), config.getInt("Lobby_Pitch"));
+
+                //Teleports the player after 2 seconds
+                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        student.player.teleport(location);
+                    }
+                }, 40L);
+            }
+        }
     }
 
     public static void main(String[] args)

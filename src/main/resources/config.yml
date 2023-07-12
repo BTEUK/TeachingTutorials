@@ -10,3 +10,11 @@ Compulsory_Tutorial_RankOld: default
 Compulsory_Tutorial_RankNew: applicant
 Compulsory_Tutorial_Track: builder
 Compulsory_Tutorial_TrackOutline: default,applicant,apprentice,jrbuilder,builder,architect,reviewer
+Lobby_TP_Type: Server
+Server_Name: tutorials
+Lobby_World:
+Lobby_X:
+Lobby_Y:
+Lobby_Z:
+Lobby_Pitch:
+Lobby_Yaw:

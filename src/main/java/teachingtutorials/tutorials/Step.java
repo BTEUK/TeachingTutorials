@@ -33,7 +33,7 @@ public class Step
     public ArrayList<Group> groups = new ArrayList<>();
 
     //Used for creating a step in a lesson
-    public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions)
+    public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions, String szInstructionDisplayType)
     {
         this.player = player;
         this.plugin = plugin;
@@ -43,6 +43,7 @@ public class Step
         this.iStepInStage = iStepInStage;
         this.szName = szStepName;
         this.szStepInstructions = szStepInstructions;
+        this.szInstructionDisplayType = szInstructionDisplayType;
         this.selectionCompleteHold = false;
     }
 
@@ -236,7 +237,7 @@ public class Step
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), resultSet.getString("StepName") ,player, plugin, stage, resultSet.getString("StepInstructions"));
+                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), resultSet.getString("StepName") ,player, plugin, stage, resultSet.getString("StepInstructions"), resultSet.getString("InstructionDisplay"));
                 steps.add(step);
             }
         }

@@ -2,9 +2,11 @@ package teachingtutorials.tutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.Hologram;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +18,7 @@ public class Step
     private String szName;
     private String szStepInstructions;
     private String szInstructionDisplayType;
+    private Hologram instructions;
     private Player player;
     private TeachingTutorials plugin;
     public Stage parentStage;
@@ -122,9 +125,30 @@ public class Step
 
         //TP to location?
 
-        //Displays the step instructions as a message
-        display = new Display(player, szStepInstructions);
-        display.Message();
+        //Displays the step instructions
+        Location instructionLocation;
+        if (iStepInStage == 1 && parentStage.isFirstStage())
+        {
+            if (parentStage.bLocationCreation)
+                instructionLocation = parentStage.newLocation.getLocation().calculateBukkitStartLocation();
+            else
+                instructionLocation = parentStage.lesson.location.calculateBukkitStartLocation();
+        }
+        else
+            instructionLocation = player.getLocation();
+
+        switch (szInstructionDisplayType)
+        {
+            case "hologram":
+                display = new Display(player, szStepInstructions);
+                instructions = display.Hologram(ChatColor.AQUA +szName, instructionLocation);
+                break;
+            case "chat":
+            default:
+                display = new Display(player, szStepInstructions);
+                display.Message();
+                break;
+        }
 
         //Fetches the details of groups and stores them in memory
         fetchAndInitialiseGroups();
@@ -166,7 +190,13 @@ public class Step
         {
             //iGroupInStepLocationCreation is 1 indexed
             if (iGroupInStepLocationCreation == groups.size()) //If the current group is the last group
+            {
                 bAllGroupsFinished = true;
+
+                //Remove hologram
+                if (szInstructionDisplayType.equals("hologram"))
+                    instructions.removeHologram();
+            }
             else
             {
                 bAllGroupsFinished = false;
@@ -192,6 +222,10 @@ public class Step
 
         if (bAllGroupsFinished == true)
         {
+            //Remove hologram
+            if (szInstructionDisplayType.equals("hologram"))
+                instructions.removeHologram();
+
             this.bStepFinished = true;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Step "+iStepInStage +" finished");
             parentStage.nextStep();
@@ -200,6 +234,10 @@ public class Step
 
     public void terminateEarly()
     {
+        //Remove holograms
+        if (szInstructionDisplayType.equals("hologram"))
+            instructions.removeHologram();
+
         if (parentStage.bLocationCreation)
         {
             currentGroup.terminateEarly();

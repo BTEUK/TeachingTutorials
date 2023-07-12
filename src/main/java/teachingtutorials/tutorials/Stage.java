@@ -106,6 +106,11 @@ public class Stage
         return iCurrentStep;
     }
 
+    public boolean isFirstStage()
+    {
+        return (iOrder == 1);
+    }
+
     private void fetchAndInitialiseSteps()
     {
         //Gets a list of all of the steps of the specified stage and loads each with the relevant data.

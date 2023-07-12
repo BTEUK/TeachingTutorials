@@ -96,6 +96,10 @@ public class NewLocation
         return this.tutorial.szTutorialName;
     }
 
+    public Location getLocation() {
+        return location;
+    }
+
     //First method, started from the CreatorTutorialsMenu when they right click
     public void launchNewLocationAdding()
     {

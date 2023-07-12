@@ -1,5 +1,7 @@
 package teachingtutorials.tutorials;
 
+import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -235,6 +237,30 @@ public class Location
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting location with LocationID = "+iLocationID);
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public org.bukkit.Location calculateBukkitStartLocation()
+    {
+        double[] xz;
+        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
+        //Converts the longitude and latitude start coordinates of the location to minecraft coordinates
+        try
+        {
+            xz = projection.fromGeo(this.getStartCoordinates().getLng(), this.getStartCoordinates().getLat());
+            Bukkit.getConsoleSender().sendMessage(this.getStartCoordinates().getLng() +", " +this.getStartCoordinates().getLat());
+            //Declares location object
+            org.bukkit.Location tpLocation;
+
+            tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
+            return tpLocation;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
+            return null;
         }
     }
 }

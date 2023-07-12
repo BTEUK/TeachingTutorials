@@ -59,6 +59,15 @@ public class TeachingTutorials extends JavaPlugin
     @Override
     public void onEnable()
     {
+        //Dependency checkers
+        if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays"))
+        {
+            getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+
         // Plugin startup logic
         TeachingTutorials.instance = this;
         TeachingTutorials.config = this.getConfig();
@@ -175,6 +184,7 @@ public class TeachingTutorials extends JavaPlugin
         new lltpll(this);
     //    new Wand(this);
 
+        this.setEnabled(true);
     }
 
     private void interpretNewTutorial(File file)

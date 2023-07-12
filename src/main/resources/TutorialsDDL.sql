@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Steps` (
   `StepInStage` INT NOT NULL,
   `StepName` VARCHAR(45) NULL,
   `StepInstructions` TEXT NULL,
+  `InstructionDisplay` VARCHAR(45) NULL,
   PRIMARY KEY (`StepID`),
   CONSTRAINT `Stage`
     FOREIGN KEY (`StageID`)

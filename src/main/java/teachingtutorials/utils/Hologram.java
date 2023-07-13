@@ -35,11 +35,13 @@ public class Hologram
 
                 String szLine = "";
                 String szLineNew;
+                String szDisplayedText;
 
                 for (int iWord = 0; iWord < szWords.length ; iWord++)
                 {
                     szLineNew = szLine + szWords[iWord] +" ";
-                    if (szLineNew.length() > TeachingTutorials.getInstance().getConfig().getInt("Hologram_Max_Width") + 1) //Line is Hologram_Max_Width without the space
+                    szDisplayedText = szLineNew.replace("&[A-Fa-f0-9]", "");
+                    if (szDisplayedText.length() > TeachingTutorials.getInstance().getConfig().getInt("Hologram_Max_Width") + 1) //Line is Hologram_Max_Width without the space
                     {
                         //Indicates that the line just added had one, >40 characters long word, so must display on a new line
                         if (szLine.equals(""))
@@ -53,21 +55,26 @@ public class Hologram
                             hologram.getLines().appendText(szLine.substring(0, szLine.length() - 1));
                         }
                         szLine = szWords[iWord] +" ";
+                        if (iWord == szWords.length - 1)
+                        {
+                            hologram.getLines().appendText(szWords[iWord]);
+                        }
+                    }
+                    else if (iWord == szWords.length - 1)
+                    {
+                        hologram.getLines().appendText(szLineNew);
                     }
                     else
                     {
                         szLine = szLineNew;
                     }
-                    if (iWord == szWords.length - 1)
-                    {
-                        hologram.getLines().appendText(szLineNew);
-                    }
                 }
 
+                Bukkit.getConsoleSender().sendMessage(hologram.getLines().size() +"");
                 //Shifts the hologram up if it is too tall
-                if (hologram.getLines().size() > 8)
+                if (hologram.getLines().size() > 7)
                 {
-                    position.add(0, 0.3 * hologram.getLines().size() - 8 , 0);
+                    position = position.add(0, 0.2 * (hologram.getLines().size() - 7) , 0);
                     hologram.setPosition(position);
                 }
 
@@ -75,7 +82,6 @@ public class Hologram
                 VisibilitySettings visibilitySettings = hologram.getVisibilitySettings();
                 visibilitySettings.setGlobalVisibility(VisibilitySettings.Visibility.HIDDEN);
                 visibilitySettings.setIndividualVisibility(player, VisibilitySettings.Visibility.VISIBLE);
-
             }
         });
     }

@@ -1,7 +1,5 @@
 package teachingtutorials.tutorials;
 
-import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.Bukkit;
@@ -546,9 +544,18 @@ public class Lesson
         {
             student.triggerCompulsory();
 
-            display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial. You may now start building.");
-            display.Message();
-            display.ActionBar();
+            if (!student.bHasCompletedCompulsory)
+            {
+                //Informs the user that they have completed the tutorial
+                display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial. You may now start building.");
+                display.Message();
+            }
+            else
+            {
+                //Informs the user that they have completed the tutorial
+                display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial");
+                display.ActionBar();
+            }
 
             //Promotes the player
             FileConfiguration config = plugin.getConfig();
@@ -689,7 +696,6 @@ public class Lesson
         {
             //Informs the user that they have completed the tutorial
             display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the tutorial");
-            display.Message();
             display.ActionBar();
         }
 
@@ -781,7 +787,7 @@ public class Lesson
                     {
                         student.player.teleport(location);
                     }
-                }, 40L);
+                }, 60L);
             }
         }
     }

@@ -54,9 +54,8 @@ public class PlayerInteract implements Listener
                     e.setCancelled(true);
                     player.openInventory(MainMenu.getGUI(user));
                 }
+                break;
             }
-
-            break;
         } //End for
     }
 }

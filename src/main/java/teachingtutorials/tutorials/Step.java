@@ -138,7 +138,7 @@ public class Step
         {
             case "hologram":
                 display = new Display(player, szStepInstructions);
-                instructions = display.Hologram(ChatColor.AQUA +szName, instructionLocation);
+                instructions = display.Hologram(ChatColor.AQUA +"" +ChatColor.UNDERLINE +ChatColor.BOLD +szName, instructionLocation);
                 break;
             case "chat":
             default:

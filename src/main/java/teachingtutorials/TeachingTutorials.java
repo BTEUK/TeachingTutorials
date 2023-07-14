@@ -64,6 +64,20 @@ public class TeachingTutorials extends JavaPlugin
             this.setEnabled(false);
             return;
         }
+        if (!Bukkit.getPluginManager().isPluginEnabled("Multiverse-Core"))
+        {
+            getLogger().severe("*** Multiverse-Core is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+        if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
+        {
+            getLogger().severe("*** WorldGuard is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
 
         // Plugin startup logic
         TeachingTutorials.instance = this;

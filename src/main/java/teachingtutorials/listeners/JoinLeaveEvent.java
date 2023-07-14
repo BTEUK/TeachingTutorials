@@ -46,10 +46,9 @@ public class JoinLeaveEvent implements Listener
         Player player = event.getPlayer();
 
         ArrayList<User> users = plugin.players;
-        int iLength = users.size();
         int i;
 
-        for (i = 0 ; i < iLength ; i++)
+        for (i = 0 ; i < users.size() ; i++)
         {
             User user = users.get(i);
             //Found user
@@ -57,7 +56,8 @@ public class JoinLeaveEvent implements Listener
             {
                 user.playerLeave(plugin);
                 users.remove(i);
-                //Does not break, as they may be there multiple times through an error,
+                i--;
+                //Does not break because they may be there multiple times through an error,
                 // and this would finally clear them
             }
         }

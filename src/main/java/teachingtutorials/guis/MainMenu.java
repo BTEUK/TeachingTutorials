@@ -10,11 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.compulsory.Compulsory;
 import teachingtutorials.tutorials.Lesson;
-import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
-
-import java.util.ArrayList;
 
 public class MainMenu
 {
@@ -81,69 +78,61 @@ public class MainMenu
 
         return toReturn;
     }
-    //Finds the correct user for this player from the plugins list of users
 
     public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
     {
-        boolean bUserFound = false;
-
-        ArrayList<User> users = plugin.players;
-        int iLength = users.size();
-        int i;
-        User user = new User(player);
-
-        for (i = 0 ; i < iLength ; i++)
-        {
-            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-            {
-                user = users.get(i);
-                bUserFound = true;
-                break;
-            }
-        }
-
-        if (!bUserFound)
-        {
-            Display display = new Display(player, ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-            display.Message();
-            display = new Display(player, ChatColor.RED +"Try relogging");
-            display.Message();
+        //Identifies the user from the list of users based on the player
+        User user = User.identifyUser(plugin, player);
+        if (user == null)
             return;
-        }
 
         //Compulsory tutorial
         if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Start Compulsory Tutorial") || clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Continue Compulsory Tutorial"))
         {
-            player.closeInventory();
-            Compulsory compulsory = new Compulsory(plugin, user);
-            //Starts the compulsory tutorial
-            compulsory.startLesson();
+            performEvent(EventType.COMPULSORY, user, plugin);
         }
 
         //Continue learning
         else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
         {
-            player.closeInventory();
-       //     player.sendMessage(ChatColor.AQUA + "Welcome back");
-            //Creates a lesson with the user
-            Lesson lesson = new Lesson(user, plugin, false);
-            lesson.startLesson();
+            performEvent(EventType.CONTINUE, user, plugin);
         }
 
         //Redo compulsory tutorial
         else if (slot == 1) //0 Indexed
         {
-            player.closeInventory();
-            Compulsory compulsory = new Compulsory(plugin, user);
-            //Starts the compulsory tutorial again
-            compulsory.startLesson();
+            performEvent(EventType.COMPULSORY, user, plugin);
         }
 
         //Admin/creator menu
         else if (slot == 18 && (player.hasPermission("TeachingTutorials.Admin") || player.hasPermission("TeachingTutorials.Creator")))
         {
-            player.closeInventory();
-            player.openInventory(AdminMenu.getGUI(user));
+            performEvent(EventType.ADMIN_MENU, user, plugin);
+        }
+    }
+
+    public static void performEvent(EventType event, User user, TeachingTutorials plugin)
+    {
+        Player player = user.player;
+
+        switch (event)
+        {
+            case COMPULSORY:
+                player.closeInventory();
+                //Starts the compulsory tutorial
+                Compulsory compulsory = new Compulsory(plugin, user);
+                compulsory.startLesson();
+                break;
+            case CONTINUE:
+                player.closeInventory();
+                //Creates a lesson with the user
+                Lesson lesson = new Lesson(user, plugin, false);
+                lesson.startLesson();
+                break;
+            case ADMIN_MENU:
+                player.closeInventory();
+                player.openInventory(AdminMenu.getGUI(user));
+                break;
         }
     }
 }

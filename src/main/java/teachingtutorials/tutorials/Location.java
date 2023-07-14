@@ -70,6 +70,42 @@ public class Location
     }
 
     //---------------------------------------------------
+    //----------------------Setters----------------------
+    //---------------------------------------------------
+
+    public void setWorld(World world)
+    {
+        this.world = world;
+    }
+
+    //---------------------------------------------------
+    //-----------------------Utils-----------------------
+    //---------------------------------------------------
+
+    public org.bukkit.Location calculateBukkitStartLocation()
+    {
+        double[] xz;
+        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
+        //Converts the longitude and latitude start coordinates of the location to minecraft coordinates
+        try
+        {
+            xz = projection.fromGeo(this.getStartCoordinates().getLng(), this.getStartCoordinates().getLat());
+            //Declares location object
+            org.bukkit.Location tpLocation;
+
+            tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
+            return tpLocation;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
+            return null;
+        }
+    }
+
+    //---------------------------------------------------
     //--------------------SQL Fetches--------------------
     //---------------------------------------------------
 
@@ -204,20 +240,17 @@ public class Location
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "Delete FROM LocationTasks WHERE LocationID = " +iLocationID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
-            iCount = SQL.executeUpdate(sql);
 
-            if (iCount != 1)
-            {
-                return false;
-            }
-            else
-            {
-                sql = "Delete FROM Locations WHERE LocationID = " +iLocationID;
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
-                iCount = SQL.executeUpdate(sql);
-            }
+            //Removes the answers
+            sql = "Delete FROM LocationTasks WHERE LocationID = " +iLocationID;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
+            iCount = SQL.executeUpdate(sql);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationTasks were deleted");
+
+            //Removes the location
+            sql = "Delete FROM Locations WHERE LocationID = " +iLocationID;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
+            iCount = SQL.executeUpdate(sql);
 
             if (iCount != 1)
             {
@@ -237,30 +270,6 @@ public class Location
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting location with LocationID = "+iLocationID);
             e.printStackTrace();
             return false;
-        }
-    }
-
-    public org.bukkit.Location calculateBukkitStartLocation()
-    {
-        double[] xz;
-        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-
-        //Converts the longitude and latitude start coordinates of the location to minecraft coordinates
-        try
-        {
-            xz = projection.fromGeo(this.getStartCoordinates().getLng(), this.getStartCoordinates().getLat());
-            Bukkit.getConsoleSender().sendMessage(this.getStartCoordinates().getLng() +", " +this.getStartCoordinates().getLat());
-            //Declares location object
-            org.bukkit.Location tpLocation;
-
-            tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
-            return tpLocation;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
-            return null;
         }
     }
 }

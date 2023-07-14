@@ -9,10 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.fundamentalTasks.Task;
-import teachingtutorials.guis.AdminMenu;
-import teachingtutorials.guis.CompulsoryTutorialMenu;
-import teachingtutorials.guis.CreatorTutorialsMenu;
-import teachingtutorials.guis.MainMenu;
+import teachingtutorials.guis.*;
 import teachingtutorials.listeners.InventoryClicked;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinLeaveEvent;
@@ -149,7 +146,7 @@ public class TeachingTutorials extends JavaPlugin
         menu.setItemMeta(meta);
         iLearningMenuSlot = config.getInt("Learning_Menu_Slot");
 
-        //1 second timer - updates slot
+        //1 second timer - updates slot, checks events
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
             {
@@ -165,6 +162,19 @@ public class TeachingTutorials extends JavaPlugin
                     {
                         p.getInventory().setItem(iLearningMenuSlot - 1, menu);
                     }
+                }
+                ArrayList<Event> events = Event.getLatestEvents();
+                int iNumEvents = events.size();
+                Event event;
+                User user;
+
+                for (int i = 0 ; i < iNumEvents ; i++)
+                {
+                    event = events.get(i);
+                    user = User.identifyUser(TeachingTutorials.getInstance(), event.player);
+                    if (user != null)
+                        MainMenu.performEvent(event.eventType, user, TeachingTutorials.getInstance());
+                    event.remove();
                 }
             }
         }, 0L, 20L);

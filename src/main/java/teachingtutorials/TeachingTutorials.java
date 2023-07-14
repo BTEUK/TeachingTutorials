@@ -163,21 +163,39 @@ public class TeachingTutorials extends JavaPlugin
                         p.getInventory().setItem(iLearningMenuSlot - 1, menu);
                     }
                 }
+            }
+        }, 0L, 20L);
+
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+            public void run()
+            {
+                //Deal with external events in the DB
                 ArrayList<Event> events = Event.getLatestEvents();
                 int iNumEvents = events.size();
                 Event event;
                 User user;
 
+                //Goes through all of the fetched events
                 for (int i = 0 ; i < iNumEvents ; i++)
                 {
+                    //Stores the event in it's own local variable
                     event = events.get(i);
-                    user = User.identifyUser(TeachingTutorials.getInstance(), event.player);
+
+                    //Gets the user from the list of the plugin's users based on the player
+                    user = User.identifyUser(instance, event.player);
                     if (user != null)
+                    {
                         MainMenu.performEvent(event.eventType, user, TeachingTutorials.getInstance());
-                    event.remove();
+
+                        //We only want the event to be removed if the player was on the server and the event took place
+                        //There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
+                        //So we want to keep the event around if that happens so on the next run through the user who might
+                        //Now be on the server will be taken to a tutorial or whatever
+                        event.remove();
+                    }
                 }
             }
-        }, 0L, 20L);
+        }, 0L, 60L);
 
         //---------------------------------------
         //---------------Listeners---------------

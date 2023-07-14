@@ -12,3 +12,5 @@ commands:
 website: https://github.com/BTEUK/TeachingTutorials
 softdepend:
   - HolographicDisplays
+  - Multiverse-Core
+  - WorldGuard

@@ -276,7 +276,6 @@ public class User
             {
                 this.bHasCompletedCompulsory = resultSet.getBoolean("CompletedCompulsory");
                 this.bInLesson = resultSet.getBoolean("InLesson");
-                player.sendMessage(this.bInLesson +"");
             }
 
             //If no result is found for the user, insert a new user into the database

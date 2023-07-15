@@ -1,7 +1,5 @@
 package teachingtutorials.tutorials;
 
-import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.Bukkit;
@@ -156,6 +154,12 @@ public class Lesson
         //Gets the data for all of the stages
         fetchStages();
 
+        //Inform console of lesson start
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson resuming for "
+                +student.player.getName()+" with LessonID = " +this.iLessonID
+                +", Tutorial ID = " +this.tutorial.getTutorialID()
+                +" and LocationID = "+this.location.getLocationID());
+
         //Teleports the player to the location's world
         org.bukkit.Location tpLocation = location.calculateBukkitStartLocation();
         if (tpLocation == null)
@@ -190,7 +194,6 @@ public class Lesson
     private boolean createNewLesson()
     {
         //Decide on the Tutorial ID
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting up lesson for "+student.player.getName());
         if (bCompulsory)
         { //Finds the compulsory tutorial and sets the ID to that
             if (!fetchCompulsoryID())
@@ -213,17 +216,15 @@ public class Lesson
         }
 
         //Import the stages of the tutorial selected
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Fetching stages");
         fetchStages();
 
         if (selectLocation())
         {
-            //Set the current stage to the first stage
-            this.iStage = 0;
-
-            //Signals for the next stage to begin
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Signal next stage");
-            nextStage();
+            //Inform console of lesson start
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson starting for "
+                    +student.player.getName()+" with LessonID = " +this.iLessonID
+                    +", Tutorial ID = " +this.tutorial.getTutorialID()
+                    +" and LocationID = "+this.location.getLocationID());
 
             //Teleports the student to the start location of the location
             org.bukkit.Location tpLocation = location.calculateBukkitStartLocation();
@@ -234,10 +235,16 @@ public class Lesson
             }
             else
                 student.player.teleport(tpLocation);
+
+            //Set the current stage to the first stage
+            this.iStage = 0;
+
+            //Signals for the next stage to begin
+            nextStage();
         }
         else
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] No location found");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] No location found for " +student.player.getName()+"'s lesson");
             student.player.sendMessage(ChatColor.AQUA +"No location has been created for this tutorial yet :(");
             return false;
         }
@@ -439,8 +446,6 @@ public class Lesson
     //Moves the tutorial on to the next stage
     protected void nextStage()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Next stage");
-
         this.iStage++;
         if (this.iStage <= Stages.size())
         {
@@ -539,9 +544,18 @@ public class Lesson
         {
             student.triggerCompulsory();
 
-            display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial. You may now start building.");
-            display.Message();
-            display.ActionBar();
+            if (!student.bHasCompletedCompulsory)
+            {
+                //Informs the user that they have completed the tutorial
+                display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial. You may now start building.");
+                display.Message();
+            }
+            else
+            {
+                //Informs the user that they have completed the tutorial
+                display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial");
+                display.ActionBar();
+            }
 
             //Promotes the player
             FileConfiguration config = plugin.getConfig();
@@ -682,7 +696,6 @@ public class Lesson
         {
             //Informs the user that they have completed the tutorial
             display = new Display(student.player, ChatColor.DARK_GREEN + "You have successfully completed the tutorial");
-            display.Message();
             display.ActionBar();
         }
 
@@ -774,7 +787,7 @@ public class Lesson
                     {
                         student.player.teleport(location);
                     }
-                }, 40L);
+                }, 60L);
             }
         }
     }
@@ -878,11 +891,9 @@ public class Lesson
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             szSql = "UPDATE Lessons SET StageAt = " +iStage +" WHERE LessonID = "+ this.iLessonID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] SQL Statement - "+szSql);
             SQL.executeUpdate(szSql);
 
             szSql = "UPDATE Lessons SET StepAt = " +currentStage.getCurrentStep() +" WHERE LessonID = "+ this.iLessonID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] SQL Statement - "+szSql);
             SQL.executeUpdate(szSql);
         }
         catch (Exception e)

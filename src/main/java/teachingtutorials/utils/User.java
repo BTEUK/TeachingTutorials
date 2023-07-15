@@ -214,6 +214,44 @@ public class User
 //        this.player.setScoreboard(SB);
     }
 
+    public static User identifyUser(TeachingTutorials plugin, Player player)
+    {
+        //Finds the correct user for this player from the plugin's list of users
+        boolean bUserFound = false;
+
+        ArrayList<User> users = plugin.players;
+        int iLength = users.size();
+        int i;
+        User user = new User(player);
+
+        //Prevents null exception error if player is null as would happen if the player was offline
+        if (player == null)
+            return null;
+
+        for (i = 0 ; i < iLength ; i++)
+        {
+            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
+            {
+                user = users.get(i);
+                bUserFound = true;
+                break;
+            }
+        }
+
+        if (!bUserFound)
+        {
+            Display display = new Display(player, ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
+            display.Message();
+            display = new Display(player, ChatColor.RED +"Try relogging");
+            display.Message();
+            return null;
+        }
+        else
+        {
+            return user;
+        }
+    }
+
     //---------------------------------------------------
     //--------------------SQL Fetches--------------------
     //---------------------------------------------------

@@ -199,7 +199,6 @@ public class Command extends Task implements Listener
 
         else if (command.startsWith("/"+szTargetCommand))
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Correct base command");
             command = command.replace(("/"+szTargetCommand), "");
             if (command.equals(szTargetCommandArgs))
             {

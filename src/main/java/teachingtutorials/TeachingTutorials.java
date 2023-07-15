@@ -9,10 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.fundamentalTasks.Task;
-import teachingtutorials.guis.AdminMenu;
-import teachingtutorials.guis.CompulsoryTutorialMenu;
-import teachingtutorials.guis.CreatorTutorialsMenu;
-import teachingtutorials.guis.MainMenu;
+import teachingtutorials.guis.*;
 import teachingtutorials.listeners.InventoryClicked;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinLeaveEvent;
@@ -63,6 +60,20 @@ public class TeachingTutorials extends JavaPlugin
         if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays"))
         {
             getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+        if (!Bukkit.getPluginManager().isPluginEnabled("Multiverse-Core"))
+        {
+            getLogger().severe("*** Multiverse-Core is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+        if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
+        {
+            getLogger().severe("*** WorldGuard is not installed or not enabled. ***");
             getLogger().severe("*** This plugin will be disabled. ***");
             this.setEnabled(false);
             return;
@@ -168,6 +179,38 @@ public class TeachingTutorials extends JavaPlugin
                 }
             }
         }, 0L, 20L);
+
+        //3 second timer - checks events
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+            public void run()
+            {
+                //Deal with external events in the DB
+                ArrayList<Event> events = Event.getLatestEvents();
+                int iNumEvents = events.size();
+                Event event;
+                User user;
+
+                //Goes through all of the fetched events
+                for (int i = 0 ; i < iNumEvents ; i++)
+                {
+                    //Stores the event in it's own local variable
+                    event = events.get(i);
+
+                    //Gets the user from the list of the plugin's users based on the player
+                    user = User.identifyUser(instance, event.player);
+                    if (user != null)
+                    {
+                        MainMenu.performEvent(event.eventType, user, TeachingTutorials.getInstance());
+
+                        //We only want the event to be removed if the player was on the server and the event took place
+                        //There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
+                        //So we want to keep the event around if that happens so on the next run through the user who might
+                        //Now be on the server will be taken to a tutorial or whatever
+                        event.remove();
+                    }
+                }
+            }
+        }, 0L, 60L);
 
         //---------------------------------------
         //---------------Listeners---------------

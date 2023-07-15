@@ -23,6 +23,7 @@ import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.plugins.Multiverse;
+import teachingtutorials.utils.plugins.WorldGuard;
 
 import java.util.ArrayList;
 
@@ -242,7 +243,11 @@ public class NewLocation
         try
         {
             if (Multiverse.createVoidWorld(szWorldName))
+            {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Created new world");
+                WorldGuard.setWorldPerms(Bukkit.getWorld(szWorldName), Creator.player);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Set the world perms");
+            }
             else
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create new world");
@@ -272,6 +277,8 @@ public class NewLocation
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"World object for world with name: "+world.getName() +" could not be created in plugin");
             return;
         }
+
+        this.location.setWorld(world);
 
         this.stage = NewLocationProcess.generatingTerrain;
 

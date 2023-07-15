@@ -160,7 +160,7 @@ public class TeachingTutorials extends JavaPlugin
         menu.setItemMeta(meta);
         iLearningMenuSlot = config.getInt("Learning_Menu_Slot");
 
-        //1 second timer - updates slot, checks events
+        //1 second timer - updates slot
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
             {
@@ -180,6 +180,7 @@ public class TeachingTutorials extends JavaPlugin
             }
         }, 0L, 20L);
 
+        //3 second timer - checks events
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
             {

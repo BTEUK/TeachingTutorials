@@ -224,6 +224,10 @@ public class User
         int i;
         User user = new User(player);
 
+        //Prevents null exception error if player is null as would happen if the player was offline
+        if (player == null)
+            return null;
+
         for (i = 0 ; i < iLength ; i++)
         {
             if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))

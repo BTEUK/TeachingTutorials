@@ -38,14 +38,14 @@ public class JoinLeaveEvent implements Listener
 
         //Set mode to idle
         user.currentMode = Mode.Idle;
+
+        User.teleportPlayerToLobby(event.getPlayer(), plugin, 1L);
     }
 
     @EventHandler
     public void playerLeave(PlayerQuitEvent event)
     {
         Player player = event.getPlayer();
-
-        User.teleportPlayerToLobby(player, plugin, 0L);
 
         ArrayList<User> users = plugin.players;
         int i;

@@ -269,7 +269,7 @@ public class User
         {
             org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Lobby_X"), config.getDouble("Lobby_Y"), config.getDouble("Lobby_Z"), config.getInt("Lobby_Yaw"), config.getInt("Lobby_Pitch"));
 
-            //Teleports the player after 2 seconds
+            //Teleports the player
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
             {
                 @Override

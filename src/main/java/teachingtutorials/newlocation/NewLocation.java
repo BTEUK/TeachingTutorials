@@ -495,27 +495,7 @@ public class NewLocation
         //If a player teleport is to occur
         else if (szLobbyTPType.equals("LobbyLocation"))
         {
-            World tpWorld = Bukkit.getWorld(config.getString("Lobby_World"));
-            if (tpWorld == null)
-            {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Cannot tp player to lobby, world null");
-                Display display = new Display(getCreator().player, ChatColor.RED +"Cannot tp you to lobby");
-                display.Message();
-            }
-            else
-            {
-                org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Lobby_X"), config.getDouble("Lobby_Y"), config.getDouble("Lobby_Z"), config.getInt("Lobby_Yaw"), config.getInt("Lobby_Pitch"));
-
-                //Teleports the player after 2 seconds
-                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        getCreator().player.teleport(location);
-                    }
-                }, 40L);
-            }
+            User.teleportPlayerToLobby(Creator.player, plugin, 40L);
         }
     }
 

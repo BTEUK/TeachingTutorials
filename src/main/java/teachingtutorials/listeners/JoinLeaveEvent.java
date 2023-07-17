@@ -45,6 +45,8 @@ public class JoinLeaveEvent implements Listener
     {
         Player player = event.getPlayer();
 
+        User.teleportPlayerToLobby(player, plugin, 0L);
+
         ArrayList<User> users = plugin.players;
         int i;
 

@@ -18,18 +18,20 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.MainMenu;
 import teachingtutorials.utils.Display;
 import net.kyori.adventure.text.Component;
+import teachingtutorials.utils.User;
 
 import java.text.DecimalFormat;
 
-public class lltpll implements Listener
+public class GlobalPlayerCommandProcess implements Listener
 {
     private final EarthGeneratorSettings bteGeneratorSettings = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS);
     private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("##.#####");
     private TeachingTutorials plugin;
 
-    public lltpll(TeachingTutorials plugin)
+    public GlobalPlayerCommandProcess(TeachingTutorials plugin)
     {
         this.plugin = plugin;
 
@@ -37,7 +39,7 @@ public class lltpll implements Listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    //Want the tutorials tpll and ll processes to occur first, then this, then the network
+    //Want the /tutorials endarea and /tutorials [difficulty], tpll and ll processes to occur first, then this, then the network
     @EventHandler(priority = EventPriority.LOW)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
@@ -87,7 +89,7 @@ public class lltpll implements Listener
                 return;
             }
         }
-        if (command.startsWith("/ll"))
+        else if (command.startsWith("/ll"))
         {
             //Cancels the event
             event.setCancelled(true);
@@ -112,6 +114,16 @@ public class lltpll implements Listener
                 Display display = new Display(player, ChatColor.RED +"You are not on the projection world");
                 display.Message();
             }
+        }
+        else if (command.startsWith("/tutorials") || command.startsWith("/learn"))
+        {
+            //Cancels the event
+            event.setCancelled(true);
+
+            //Open the menu
+            User user = User.identifyUser(plugin, player);
+            if (user != null)
+                player.openInventory(MainMenu.getGUI(user));
         }
     }
 }

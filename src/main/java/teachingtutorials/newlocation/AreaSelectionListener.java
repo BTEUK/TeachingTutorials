@@ -38,7 +38,7 @@ public class AreaSelectionListener implements Listener
         return bounds;
     }
 
-    //Want the tutorials tpll process to occur first
+    //Want the tutorials tpll and /tutorials command process to occur first
     @EventHandler(priority = EventPriority.LOWEST)
     public void tpllCommand(PlayerCommandPreprocessEvent event)
     {

@@ -107,7 +107,7 @@ public class Event
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Removes the answers
-            sql = "Delete FROM Events WHERE UUID = '" +this.player.getUniqueId() +"' AND Timestamp = "+this.timestamp;
+            sql = "Delete FROM Events WHERE UUID = '" +this.player.getUniqueId() +"' AND Timestamp = '"+this.timestamp+"'";
             iCount = SQL.executeUpdate(sql);
         }
         catch (SQLException se)

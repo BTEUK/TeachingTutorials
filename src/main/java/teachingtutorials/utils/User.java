@@ -2,6 +2,8 @@ package teachingtutorials.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 import teachingtutorials.TeachingTutorials;
@@ -252,6 +254,34 @@ public class User
         }
     }
 
+    public static void teleportPlayerToLobby(Player player, TeachingTutorials plugin, long waitTimeTicks)
+    {
+        FileConfiguration config = plugin.getConfig();
+
+        World tpWorld = Bukkit.getWorld(config.getString("Lobby_World"));
+        if (tpWorld == null)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Cannot tp player to lobby, world null");
+            Display display = new Display(player, ChatColor.RED +"Cannot tp you to lobby");
+            display.Message();
+        }
+        else
+        {
+            org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Lobby_X"), config.getDouble("Lobby_Y"), config.getDouble("Lobby_Z"), config.getInt("Lobby_Yaw"), config.getInt("Lobby_Pitch"));
+
+            //Teleports the player
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    player.teleport(location);
+                }
+            }, waitTimeTicks);
+        }
+
+    }
+
     //---------------------------------------------------
     //--------------------SQL Fetches--------------------
     //---------------------------------------------------
@@ -276,7 +306,6 @@ public class User
             {
                 this.bHasCompletedCompulsory = resultSet.getBoolean("CompletedCompulsory");
                 this.bInLesson = resultSet.getBoolean("InLesson");
-                player.sendMessage(this.bInLesson +"");
             }
 
             //If no result is found for the user, insert a new user into the database

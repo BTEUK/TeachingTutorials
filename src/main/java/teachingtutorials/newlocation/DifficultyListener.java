@@ -4,17 +4,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.plugin.RegisteredListener;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.FundamentalTask;
 import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
-import java.util.ArrayList;
 
 public class DifficultyListener implements Listener
 {
@@ -50,7 +49,8 @@ public class DifficultyListener implements Listener
         return bReadyForDifficulty;
     }
 
-    @EventHandler
+    //Want this /tutorials event to be handled first
+    @EventHandler(priority = EventPriority.LOWEST)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
         if (event.getPlayer().getUniqueId().equals(player.getUniqueId()))

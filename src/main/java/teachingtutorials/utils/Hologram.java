@@ -47,7 +47,7 @@ public class Hologram
 
                 //Raises or lowers the hologram
                 int iHeight = location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
-                location.set(location.getX(), iHeight + 2.1, location.getZ());
+                location.set(location.getX(), iHeight + 3.1, location.getZ());
 
                 //Creates the hologram
                 hologram = api.createHologram(location);

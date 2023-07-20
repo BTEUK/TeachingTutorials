@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.listeners.Falling;
 import teachingtutorials.newlocation.elevation.ElevationManager;
 import teachingtutorials.tutorials.Location;
 import teachingtutorials.tutorials.Stage;
@@ -65,6 +66,7 @@ public class NewLocation
     //Stores the listeners globally so that they can be accessed and deregistered from outside of the class
     private AreaSelectionListener areaSelectionListener;
     private StartLocationListener startLocationListener;
+    private Falling fallListener;
 
     public NewLocation(User Creator, Tutorial tutorial, TeachingTutorials plugin)
     {
@@ -278,8 +280,10 @@ public class NewLocation
             return;
         }
 
+        //Sets the world in the location object
         this.location.setWorld(world);
 
+        //Updates the stage at of the creation process
         this.stage = NewLocationProcess.generatingTerrain;
 
         //Generates the required area in the world
@@ -338,6 +342,10 @@ public class NewLocation
             //    display.Message();
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Error occurred whilst creating Bukkit.Location object to tp to: "+e.getMessage());
         }
+
+        //Registers the fall listener
+        fallListener = new Falling(getCreator().player, tpLocation, plugin);
+        fallListener.register();
 
         //Teleports player to the start location
         Creator.player.teleport(tpLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
@@ -416,6 +424,9 @@ public class NewLocation
                 //Remove the listeners
                 currentStage.terminateEarly();
 
+                //Unregisters the fall listener
+                fallListener.unregister();
+
                 //Delete the location in the DB
                 if(Location.deleteLocationByID(location.getLocationID()))
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Location with LocationID = "+location.getLocationID() +" was deleted");
@@ -459,6 +470,9 @@ public class NewLocation
 
         //Changes the player's mode
         this.Creator.currentMode = Mode.Idle;
+
+        //Unregisters the fall listener
+        fallListener.unregister();
 
         //Teleports the creator back to the lobby
         teleportToLobby();

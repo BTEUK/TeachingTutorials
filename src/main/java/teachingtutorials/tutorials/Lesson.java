@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.listeners.Falling;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
@@ -57,6 +58,9 @@ public class Lesson
     public float fDetailDifTotal;
     public float fTerraDifTotal;
 
+    //Listens out for player falling below the min Y level
+    private Falling fallListener;
+
     public Lesson(User player, TeachingTutorials plugin, boolean bCompulsory)
     {
         this.plugin = plugin;
@@ -82,6 +86,7 @@ public class Lesson
             display.Message();
         }
 
+        //Student is ready to go into a lesson
         else
         {
             //Checks to see whether a student has a lesson to finish as indicated by the database
@@ -90,6 +95,10 @@ public class Lesson
                 //Attempts to resume the lesson if the student has a lesson that they need to complete
                 if (resumeLesson())
                 { //If the lesson resumed successfully
+                    //Registers the fall listener
+                    fallListener = new Falling(getStudent().player, location.calculateBukkitStartLocation(), plugin);
+                    fallListener.register();
+
                     student.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
                     student.bInLesson = true; //Updates the user's "In Lesson" status in RAM
                     student.setInLesson(1); //Updates the DB
@@ -125,6 +134,10 @@ public class Lesson
                     //Creates a new lesson in the DB and fetches it's LessonID
                     addLessonToDB();
                     //There is currently no check to determine whether the DB creation worked
+
+                    //Registers the fall listener
+                    fallListener = new Falling(getStudent().player, location.calculateBukkitStartLocation(), plugin);
+                    fallListener.register();
 
                     //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
                     student.currentMode = Mode.Doing_Tutorial;
@@ -702,6 +715,9 @@ public class Lesson
         //Informs the console that the tutorial is now completed
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +student.player.getName() +" has completed a tutorial");
 
+        //Unregisters the fall listener
+        fallListener.unregister();
+
         //Teleport the player back to the lobby area
         teleportToLobby();
 
@@ -731,6 +747,9 @@ public class Lesson
                 student.player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
             }
         });
+
+        //Unregisters the fall listener
+        fallListener.unregister();
 
         //Teleports the player back to lobby
         teleportToLobby();

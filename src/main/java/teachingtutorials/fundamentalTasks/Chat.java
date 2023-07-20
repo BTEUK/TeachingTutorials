@@ -90,11 +90,9 @@ public class Chat extends Task implements Listener
             //This is what moves it onto the next task
 
             event.setCancelled(true);
-
-            return;
         }
 
-        if (szChat.matches(szTargetAnswer))
+        else if (szChat.equalsIgnoreCase(szTargetAnswer))
         {
             Display display = new Display(player, ChatColor.DARK_GREEN+"Correct answer !");
             display.ActionBar();

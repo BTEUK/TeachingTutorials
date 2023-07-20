@@ -21,8 +21,33 @@ public class Hologram
             @Override
             public void run()
             {
-                //Raises the height of the hologram
-                location.set(location.getX(), location.getY() + 2.1, location.getZ() + 4.5);
+                double[] xzAddition;
+                float fYaw = player.getLocation().getYaw();
+
+                //Calculates where to move the hologram to based on the player's location
+                if (fYaw < -135 || fYaw > 135)
+                {
+                    xzAddition = new double[]{0, -4.5};
+                }
+                else if (fYaw < -45)
+                {
+                    xzAddition = new double[]{4.5, 0};
+                }
+                else if (fYaw > 45)
+                {
+                    xzAddition = new double[]{-4.5, 0};
+                }
+                else
+                {
+                    xzAddition = new double[]{0, 4.5};
+                }
+
+                //Moves the hologram
+                location.set(location.getX() +xzAddition[0], location.getY(), location.getZ() +xzAddition[1]);
+
+                //Raises or lowers the hologram
+                int iHeight = location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
+                location.set(location.getX(), iHeight + 3.1, location.getZ());
 
                 //Creates the hologram
                 hologram = api.createHologram(location);

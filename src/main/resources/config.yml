@@ -19,3 +19,4 @@ Lobby_Z:
 Lobby_Pitch:
 Lobby_Yaw:
 Hologram_Max_Width: 40
+Min_Y: -100

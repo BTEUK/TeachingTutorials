@@ -28,10 +28,13 @@ public class Task
     TeachingTutorials plugin;
     protected Group parentGroup;
 
+    public boolean bActive;
+
     protected boolean bNewLocation;
 
     public void register()
     {
+        bActive = true;
     }
 
     public Task(int iTaskID)
@@ -65,7 +68,7 @@ public class Task
 
     public void unregister()
     {
-
+        bActive = false;
     }
 
     private static void fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player, String sql)

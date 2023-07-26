@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.fundamentalTasks.TpllListener;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Hologram;
 
@@ -29,7 +30,11 @@ public class Step
     private int iGroupInStepLocationCreation;
     private Group currentGroup;
 
+    //Handle multiple tasks being registered and the way they depend on ecahother
     private boolean selectionCompleteHold;
+    public ArrayList<TpllListener> handledTpllListeners = new ArrayList<>();
+    public boolean bTpllDistanceMessageQueued;
+    public boolean bPointWasHit = false;
 
     //Groups are completed asynchronously.
     //Tasks in groups are completed synchronously
@@ -97,6 +102,52 @@ public class Step
             }
         }, 10L);
 
+    }
+
+    public void calculateNearestTpllPointAfterWait()
+    {
+        bTpllDistanceMessageQueued = true;
+
+        //Calculates the tpll point closest to where they tplled to
+        this.plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+        {
+            public void run()
+            {
+                if (bPointWasHit)
+                {
+                    bPointWasHit = false;
+                }
+                else
+                {
+                    bTpllDistanceMessageQueued = false;
+
+                    float fShortestGeometricDistance;
+
+                    if (handledTpllListeners.size() > 0)
+                    {
+                        fShortestGeometricDistance = handledTpllListeners.get(0).fGeometricDistance;
+                        handledTpllListeners.remove(0);
+                    }
+                    else
+                    {
+                        //Should never be reached in reality because this function is only ever called from a tpll lister
+                        //immediately after it adds itself to this ArrayList
+                        return;
+                    }
+
+                    while (handledTpllListeners.size() > 0)
+                    {
+                        TpllListener handledTpllListener = handledTpllListeners.get(0);
+                        float fGeometricDistance =handledTpllListener.fGeometricDistance;
+                        if (fGeometricDistance < fShortestGeometricDistance)
+                            fShortestGeometricDistance = fGeometricDistance;
+                        handledTpllListeners.remove(0);
+                    }
+                    Display display = new Display(player, ChatColor.GOLD +"You were "+fShortestGeometricDistance +" metres away from a tpll target point");
+                    display.ActionBar();
+                }
+            }
+        }, 2L);
     }
 
     public void startStep()

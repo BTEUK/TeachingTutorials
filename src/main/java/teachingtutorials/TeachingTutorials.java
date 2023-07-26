@@ -390,6 +390,33 @@ public class TeachingTutorials extends JavaPlugin
                 switch (szTaskType)
                 {
                     case "tpll":
+                        //Checks the format of the details
+                        String[] szPrecisions = szFields[1].split(";");
+                        if (szPrecisions.length != 2)
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, you must have 2 floats separated by a ; with no spaces, line: "+(iLine+1));
+                            return;
+                        }
+                        try
+                        {
+                            float iPerfectDistance = Float.parseFloat(szPrecisions[0]);
+                            float iLimit =  Float.parseFloat(szPrecisions[1]);
+
+                            if (iLimit < iPerfectDistance)
+                            {
+                                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, the limit must be greater than or equal to the perfect distance, line: "+(iLine+1));
+                            }
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, the accuracies must be integers or floats, line: "+(iLine+1));
+                            return;
+                        }
+
+                        //Adds the task to the list
+                        task = new Task(szTaskType, szFields[1]);
+                        lastGroup.addTaskCreation(task);
+                        break;
                     case "selection":
                     case "place":
                     case "chat":
@@ -397,18 +424,21 @@ public class TeachingTutorials extends JavaPlugin
                         lastGroup.addTaskCreation(task);
                         break;
                     case "command":
+                        //Checks the format of the command details
                         if (!(szFields[1].equals("none") || szFields[1].equals("virtualBlocks") || szFields[1].equals("full")))
                         {
                             Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid command type, line: "+(iLine+1));
                             return;
                         }
+
+                        //Adds the task to the list
                         task = new Task(szTaskType, szFields[1]);
                         lastGroup.addTaskCreation(task);
                         break;
                     default:
                         Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid task type, line: "+(iLine+1));
-                }
-            }
+                } //End type switch
+            } //End task handler
         } //End iteration through lines
 
         //If it has got to this stage, then the details are all sorted and stored in the tutorial object

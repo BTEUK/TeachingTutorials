@@ -27,6 +27,12 @@ public class TpllListener extends Task implements Listener
     //Stores the target coords - the location a player should tpll to
     final double dTargetCoords[] = new double[2];
 
+    //Stores the required accuracies. Perfect distance first then limit distance
+    private float fAccuracies[];
+
+    //Stores the distance from the tpll command coordinates to the target coordinates once a tpll command is run during the active time of the listener
+    public float fGeometricDistance;
+
     private DifficultyListener difficultyListener;
 
     //Used in a lesson
@@ -42,6 +48,19 @@ public class TpllListener extends Task implements Listener
         this.dTargetCoords[0] = Double.parseDouble(cords[0]);
         this.dTargetCoords[1] = Double.parseDouble(cords[1]);
 
+        //Extracts the details - required accuracies
+        if (szDetails.equals("")) // Deals with pre 1.1.0 tutorials
+        {
+            this.fAccuracies = new float[]{0.25f, 1};
+        }
+        else
+        {
+            String[] szAccuracies = szDetails.split(";");
+            this.fAccuracies = new float[2];
+            this.fAccuracies[0] = Float.parseFloat(szAccuracies[0]);
+            this.fAccuracies[1] = Float.parseFloat(szAccuracies[1]);
+        }
+
         this.iOrder = iOrder;
         this.szDetails = szDetails;
 
@@ -50,6 +69,7 @@ public class TpllListener extends Task implements Listener
         this.bNewLocation = false;
     }
 
+    //Used when creating a new location
     public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
         super(plugin);
@@ -69,7 +89,29 @@ public class TpllListener extends Task implements Listener
     @Override
     public void register()
     {
+        super.register();
+
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+
+        //Displays the marker on the world
+        World world;
+        if (this.parentGroup.parentStep.parentStage.bLocationCreation)
+            world = this.parentGroup.parentStep.parentStage.newLocation.getLocation().getWorld();
+        else
+            world = this.parentGroup.parentStep.parentStage.lesson.location.getWorld();
+
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+            @Override
+            public void run()
+            {
+                if (bActive)
+                    player.spawnParticle(Particle.REDSTONE, Utils.convertToBukkitLocation(world, dTargetCoords[0], dTargetCoords[1]).add(0, 1, 0), 10, new Particle.DustOptions(Color.GREEN, 3));
+                else
+                {
+                    return;
+                }
+            }
+        }, 0L, 15L);
     }
 
     //Want the tutorials tpll process to occur first
@@ -145,22 +187,41 @@ public class TpllListener extends Task implements Listener
                 {
                     //Tpll accuracy checker
                     float fDistance = Utils.geometricDistance(latLong, dTargetCoords);
+                    fGeometricDistance = fDistance;
 
-                    if (fDistance <= 0.25)
+                    float fPerfect = fAccuracies[0];
+                    float fLimit = fAccuracies[1];
+
+                    if (fDistance <= fPerfect)
                     {
                         //Very accurate
                         Display display = new Display(player, ChatColor.DARK_GREEN+"Perfect! Well done");
                         display.ActionBar();
                         fPerformance = 1;
                         spotHit();
+                        parentGroup.parentStep.bPointWasHit = true;
                     }
-                    else if (fDistance <= 1.0) //Make the acceptable value configurable
+                    else if (fDistance <= fLimit)
                     {
                         //Pretty decent
                         Display display = new Display(player, ChatColor.GREEN+"Point hit");
                         display.ActionBar();
-                        fPerformance = (4F / 3F) * (1 - fDistance);
+                        fPerformance = (1F / fLimit-fPerfect) * (fLimit - fDistance);
                         spotHit();
+                        parentGroup.parentStep.bPointWasHit = true;
+                    }
+
+                    //Provide the step with a value for how far away it was and a reference to this
+                    this.parentGroup.parentStep.handledTpllListeners.add(this);
+
+                    //Once all tpll tasks have finished it will then look through them all and if any were completed
+                    //Then it will not bother outputting a distance message
+                    //If none are complete then it will output a distance message with how far they were from the nearest point
+
+                    //Only initiates the calculateNearestTpllPoint method if there is not already one queued
+                    if (!this.parentGroup.parentStep.bTpllDistanceMessageQueued)
+                    {
+                        this.parentGroup.parentStep.calculateNearestTpllPointAfterWait();
                     }
                 }
             }
@@ -172,7 +233,7 @@ public class TpllListener extends Task implements Listener
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering tpll listener");
 
         //Unregisters this task
-        HandlerList.unregisterAll(this);
+        unregister();
 
         //Marks the task as complete
         taskComplete();
@@ -181,6 +242,8 @@ public class TpllListener extends Task implements Listener
     @Override
     public void unregister()
     {
+        super.unregister();
+
         //Unregisters this task
         HandlerList.unregisterAll(this);
     }

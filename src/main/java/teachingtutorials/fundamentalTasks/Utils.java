@@ -1,6 +1,11 @@
 package teachingtutorials.fundamentalTasks;
 
+import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 public class Utils
 {
@@ -27,5 +32,36 @@ public class Utils
         float fDistance = (float) (iRadius * c); // in metres
 
         return fDistance;
+    }
+
+    //Converts lat/long to block coordinates
+    public static Location convertToBukkitLocation(World world, double dLatitude, double dLongitude)
+    {
+        Location location = null;
+
+        double[] xz = convertToMCCoordinates(dLatitude, dLongitude);
+
+        if (xz != null)
+        {
+            location = new Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]), xz[1]);
+        }
+        return location;
+    }
+
+    public static double[] convertToMCCoordinates(double dLatitude, double dLongitude)
+    {
+        double[] xz = null;
+
+        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
+        try
+        {
+            xz = projection.fromGeo(dLongitude, dLatitude);
+        }
+        catch (OutOfProjectionBoundsException e)
+        {
+            //Player has selected an area outside of the projection
+        }
+        return xz;
     }
 }

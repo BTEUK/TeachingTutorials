@@ -336,7 +336,7 @@ public class TeachingTutorials extends JavaPlugin
                 }
                 szFields = szLines[iLine].split(",");
                 //Field 1 is step name, field 2 is display type, field 3 is the instruction
-                if (!(szFields.length > 2))
+                if (szFields.length < 3)
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
@@ -345,7 +345,7 @@ public class TeachingTutorials extends JavaPlugin
 
                 //Compiles instructions if commas were part of the instruction and split
                 String szInstructions = szFields[2];
-                for (int k = 2 ; k < szFields.length ; k++)
+                for (int k = 3 ; k < szFields.length ; k++)
                 {
                     szInstructions = szInstructions +"," +szFields[k];
                 }
@@ -385,6 +385,12 @@ public class TeachingTutorials extends JavaPlugin
                 Task task;
 
                 szFields = szLines[iLine].split(",");
+
+                if (szFields.length != 2)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, you must specify the tpll accuracy, line: "+(iLine+1));
+                    return;
+                }
 
                 String szTaskType = szFields[0].replace("~", "");
                 switch (szTaskType)

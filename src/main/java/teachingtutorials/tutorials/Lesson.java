@@ -4,7 +4,6 @@ import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.TeachingTutorials;
@@ -34,6 +33,9 @@ public class Lesson
     private int iTutorialIndex;
     protected Tutorial tutorial;
     public Location location;
+
+    //Records whether the tutorial details were determined on lesson initialisation
+    private final boolean bTutorialDetailsAlreadyEntered;
 
     public int iStage;
     //The step that a user is currently at (1 indexed), used for "resuming" tutorials
@@ -68,6 +70,20 @@ public class Lesson
         this.bCompulsory = bCompulsory;
         this.tutorial = new Tutorial();
         this.iStep = 1;
+        this.bTutorialDetailsAlreadyEntered = false;
+    }
+
+    public Lesson(User player, TeachingTutorials plugin, Tutorial tutorial)
+    {
+        this.plugin = plugin;
+        this.student = player;
+
+        // We assume this is false and that the compulsory tutorial wouldn't be accessible from outside the main menu if it wasn't already done
+        this.bCompulsory = false;
+
+        this.tutorial = tutorial;
+        this.iStep = 1;
+        this.bTutorialDetailsAlreadyEntered = true;
     }
 
     public User getStudent()
@@ -86,7 +102,7 @@ public class Lesson
             display.Message();
         }
 
-        //Student is ready to go into a lesson
+        //Student is ready to go into a lesson and the tutorial must now be determined
         else
         {
             //Checks to see whether a student has a lesson to finish as indicated by the database
@@ -114,20 +130,10 @@ public class Lesson
                 }
             }
 
-//        //Checks to see whether it is in the "new location" mode
-//        else if (bNewLocation)
-//        {
-//            //Initiates a new location lesson
-//            createNewLocation();
-//
-//            //Updates the user's mode
-//            student.currentMode = Mode.Creating_New_Location;
-//        }
-
-            //If the user is ready to start a new tutorial and isn't creating a new location
+            //If the user is ready to start a new tutorial and the tutorial is in no way already specified
             else
             {
-                //Attempts to create a new lesson, will select a tutorial and start it
+                //Attempts to create a new lesson, will select a tutorial (if not already known) and start it
                 if (createNewLesson())
                 { //If the lesson was created successfully
 
@@ -217,6 +223,10 @@ public class Lesson
                 return false;
             }
         }
+        else if (bTutorialDetailsAlreadyEntered)
+        {
+            //No action needed, tutorial already
+        }
         else //Find an appropriate tutorial and sets the ID to that
         {
             if (!decideTutorial())
@@ -231,6 +241,7 @@ public class Lesson
         //Import the stages of the tutorial selected
         fetchStages();
 
+        //Selects a location
         if (selectLocation())
         {
             //Inform console of lesson start
@@ -252,7 +263,7 @@ public class Lesson
             //Set the current stage to the first stage
             this.iStage = 0;
 
-            //Signals for the next stage to begin
+            //Signals for the next stage (the first stage) to begin
             nextStage();
         }
         else

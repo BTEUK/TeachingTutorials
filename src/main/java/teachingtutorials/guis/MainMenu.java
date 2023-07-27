@@ -40,35 +40,37 @@ public class MainMenu
         FileConfiguration config = TeachingTutorials.getInstance().getConfig();
         boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial");
 
+        //The system has the compulsory tutorial feature enabled
         if (bCompulsoryTutorialEnabled)
         {
             if (u.bHasCompletedCompulsory)
             {
                 if (u.bInLesson)
-                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
+                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
                 else
-                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-                Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 2,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
-            }
-            else if (u.bInLesson)
-            {
-                Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+
+                Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 11,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
+                Utils.createItem(inventory, Material.BOOKSHELF, 1, 14, (ChatColor.GREEN +"Tutorial Library"), ChatColor.DARK_GREEN +"Browse all our available tutorials");
             }
             else
             {
-                Utils.createItem(inventory, Material.BOOK, 1, 26,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+                if (u.bInLesson)
+                    Utils.createItem(inventory, Material.BOOK, 1, 17,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+                else
+                    Utils.createItem(inventory, Material.BOOK, 1, 17,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
             }
         }
         else
         {
             if (u.bInLesson)
-                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
+                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
             else
-                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 26,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 14, (ChatColor.GREEN +"Tutorial Library"), ChatColor.DARK_GREEN +"Browse all our available tutorials");
         }
 
-
-
+        //Admin and creator menu
         if (u.player.hasPermission("TeachingTutorials.Admin") || u.player.hasPermission("TeachingTutorials.Creator"))
         {
             Utils.createItem(inventory, Material.LECTERN, 1, 19,(ChatColor.GREEN +"Creator Menu"));
@@ -99,7 +101,7 @@ public class MainMenu
         }
 
         //Redo compulsory tutorial
-        else if (slot == 1) //0 Indexed
+        else if (slot == 10) //0 Indexed
         {
             performEvent(EventType.COMPULSORY, user, plugin);
         }
@@ -108,6 +110,12 @@ public class MainMenu
         else if (slot == 18 && (player.hasPermission("TeachingTutorials.Admin") || player.hasPermission("TeachingTutorials.Creator")))
         {
             performEvent(EventType.ADMIN_MENU, user, plugin);
+        }
+
+        //Admin/creator menu
+        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Tutorial Library")))
+        {
+            performEvent(EventType.LIBRARY, user, plugin);
         }
     }
 
@@ -132,6 +140,10 @@ public class MainMenu
             case ADMIN_MENU:
                 player.closeInventory();
                 player.openInventory(AdminMenu.getGUI(user));
+                break;
+            case LIBRARY:
+                player.closeInventory();
+                player.openInventory(LibraryMenu.getGUI(user));
                 break;
         }
     }

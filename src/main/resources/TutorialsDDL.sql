@@ -202,7 +202,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Events` (
   `UUID` CHAR(36) NOT NULL,
-  `EventName` enum('COMPULSORY','CONTINUE','ADMIN_MENU') NOT NULL,
+  `EventName` enum('COMPULSORY','CONTINUE','ADMIN_MENU','LIBRARY') NOT NULL,
   `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

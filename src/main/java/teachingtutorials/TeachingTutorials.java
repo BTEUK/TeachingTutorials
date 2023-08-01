@@ -386,17 +386,17 @@ public class TeachingTutorials extends JavaPlugin
 
                 szFields = szLines[iLine].split(",");
 
-                if (szFields.length != 2)
-                {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, you must specify the tpll accuracy, line: "+(iLine+1));
-                    return;
-                }
-
                 String szTaskType = szFields[0].replace("~", "");
                 switch (szTaskType)
                 {
                     case "tpll":
                         //Checks the format of the details
+                        if (szFields.length != 2)
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, you must specify the tpll accuracy, line: "+(iLine+1));
+                            return;
+                        }
+
                         String[] szPrecisions = szFields[1].split(";");
                         if (szPrecisions.length != 2)
                         {

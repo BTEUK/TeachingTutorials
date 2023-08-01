@@ -64,10 +64,10 @@ public class MainMenu
         else
         {
             if (u.bInLesson)
-                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
+                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 16,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
             else
-                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 14, (ChatColor.GREEN +"Tutorial Library"), ChatColor.DARK_GREEN +"Browse all our available tutorials");
+                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 16,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+            Utils.createItem(inventory, Material.BOOKSHELF, 1, 12, (ChatColor.GREEN +"Tutorial Library"), ChatColor.DARK_GREEN +"Browse all our available tutorials");
         }
 
         //Admin and creator menu

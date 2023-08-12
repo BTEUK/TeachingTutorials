@@ -4,11 +4,17 @@ import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import teachingtutorials.utils.Display;
 
-public class Utils
+public class GeometricUtils
 {
+    final static GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
+
     public static float geometricDistance(LatLng testCoords, double[] dTargetCoords)
     {
         //Tpll accuracy checker
@@ -63,5 +69,34 @@ public class Utils
             //Player has selected an area outside of the projection
         }
         return xz;
+    }
+
+    public static boolean tpllPlayer(World world, double latitude, double longitude, Player player)
+    {
+        try
+        {
+            //Gets the minecraft coordinates of the earth location
+            double[] xz = projection.fromGeo(longitude, latitude);
+
+            //Creates a Bukkit Location object and sets the location
+            org.bukkit.Location tpLocation;
+            tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
+
+            //Sets yaw and pitch from the player's current yaw and pitch
+            Location playerCurrentLocation = player.getLocation();
+            tpLocation.setPitch(playerCurrentLocation.getPitch());
+            tpLocation.setYaw(playerCurrentLocation.getYaw());
+
+            //Teleports the player
+            player.teleport(tpLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
+
+            return true;
+        }
+        catch (OutOfProjectionBoundsException e)
+        {
+            Display display = new Display(player, ChatColor.RED +"Coordinates not on the earth");
+            display.Message();
+            return false;
+        }
     }
 }

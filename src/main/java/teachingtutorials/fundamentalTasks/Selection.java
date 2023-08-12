@@ -6,7 +6,6 @@ import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsExcepti
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -252,9 +251,9 @@ public class Selection extends Task implements Listener
 
             //If the point the user just found was target 1 then we want to check target 2
             if (bWasTarget1)
-                fOtherDistance = Utils.geometricDistance(selectionGeoCoords, dTargetCoords2);
+                fOtherDistance = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords2);
             else
-                fOtherDistance = Utils.geometricDistance(selectionGeoCoords, dTargetCoords1);
+                fOtherDistance = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords1);
 
             //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
             if (fOtherDistance <= 1.5)
@@ -305,8 +304,8 @@ public class Selection extends Task implements Listener
 
         LatLng selectionGeoCoords;
         selectionGeoCoords = new LatLng(longLat[1], longLat[0]);
-        fDistance[0] = Utils.geometricDistance(selectionGeoCoords, dTargetCoords1);
-        fDistance[1] = Utils.geometricDistance(selectionGeoCoords, dTargetCoords2);
+        fDistance[0] = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords1);
+        fDistance[1] = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords2);
 
         for (int i = 0 ; i < 2 ; i++)
         {

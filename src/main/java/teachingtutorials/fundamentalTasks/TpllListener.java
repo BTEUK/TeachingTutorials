@@ -105,7 +105,7 @@ public class TpllListener extends Task implements Listener
             public void run()
             {
                 if (bActive)
-                    player.spawnParticle(Particle.REDSTONE, Utils.convertToBukkitLocation(world, dTargetCoords[0], dTargetCoords[1]).add(0, 1, 0), 10, new Particle.DustOptions(Color.GREEN, 3));
+                    player.spawnParticle(Particle.REDSTONE, GeometricUtils.convertToBukkitLocation(world, dTargetCoords[0], dTargetCoords[1]).add(0, 1, 0), 10, new Particle.DustOptions(Color.GREEN, 3));
                 else
                 {
                     return;
@@ -143,6 +143,8 @@ public class TpllListener extends Task implements Listener
                 }
 
                 //Teleports the player to where they tplled to
+
+                //Gets the world
                 World world;
                 if (bNewLocation)
                     world = player.getWorld();
@@ -151,20 +153,10 @@ public class TpllListener extends Task implements Listener
                     Location location = parentGroup.parentStep.parentStage.lesson.location;
                     world = location.getWorld();
                 }
-                final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-                try
-                {
-                    double[] xz = projection.fromGeo(latLong.getLng(), latLong.getLat());
-                    org.bukkit.Location tpLocation;
-                    tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
-                    player.teleport(tpLocation);
-                }
-                catch (OutOfProjectionBoundsException e)
-                {
-                    Display display = new Display(player, ChatColor.RED +"Coordinates not on the earth");
-                    display.Message();
-                    return;
-                }
+
+                //Performs the tpll
+                if (!GeometricUtils.tpllPlayer(world, latLong.getLat(), latLong.getLng(), player))
+                    return; //Returns if the tpll was not in the bounds of the earth
 
                 //Checks whether it is a new location
                 if (bNewLocation)
@@ -186,7 +178,7 @@ public class TpllListener extends Task implements Listener
                 else
                 {
                     //Tpll accuracy checker
-                    float fDistance = Utils.geometricDistance(latLong, dTargetCoords);
+                    float fDistance = GeometricUtils.geometricDistance(latLong, dTargetCoords);
                     fGeometricDistance = fDistance;
 
                     float fPerfect = fAccuracies[0];

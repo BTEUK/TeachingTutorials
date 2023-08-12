@@ -18,6 +18,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.fundamentalTasks.GeometricUtils;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.utils.Display;
 import net.kyori.adventure.text.Component;
@@ -73,21 +74,12 @@ public class GlobalPlayerCommandProcess implements Listener
             }
 
             //Teleports the player to where they tplled to
+            //Gets the world
             World world = player.getWorld();
-            final GeographicProjection projection = bteGeneratorSettings.projection();
-            try
-            {
-                double[] xz = projection.fromGeo(latLong.getLng(), latLong.getLat());
-                org.bukkit.Location tpLocation;
-                tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
-                player.teleport(tpLocation);
-            }
-            catch (OutOfProjectionBoundsException e)
-            {
-                Display display = new Display(player, ChatColor.RED + "Coordinates not on the earth");
-                display.Message();
-                return;
-            }
+
+            //Performs the tpll
+            if (!GeometricUtils.tpllPlayer(world, latLong.getLat(), latLong.getLng(), player))
+                return; //Returns if the tpll was not in the bounds of the earth
         }
         else if (command.startsWith("/ll"))
         {

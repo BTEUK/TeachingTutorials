@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.fundamentalTasks.GeometricUtils;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.newlocation.elevation.ElevationManager;
 import teachingtutorials.tutorials.Location;
@@ -313,41 +314,14 @@ public class NewLocation
 
     private void teleportCreatorAndStartLesson(World world)
     {
-        double[] xz;
-
-        //Converts the tpll coordinates to minecraft coordinates
-        try
-        {
-            xz = projection.fromGeo(location.getStartCoordinates().getLng(), location.getStartCoordinates().getLat());
-        }
-        catch (OutOfProjectionBoundsException e)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Unable to convert lat,long coordinates of start location to minecraft coordinates");
-            return;
-        }
-
-        //Declares location object
-        org.bukkit.Location tpLocation;
-
-        //Start location must have been within the generated area to have got to this stage, so no out of bounds error should occur with the height
-        try
-        {
-            tpLocation = new org.bukkit.Location(world, xz[0], iHeights[(int) (xz[0]-((ixMin>>4)<<4))][(int) (xz[1]-((izMin>>4)<<4))], xz[1]);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Bukkit.Location object created for start location");
-        }
-        catch (Exception e)
-        {
-            tpLocation = new org.bukkit.Location(world, xz[0], 70, xz[1]);
-            //    Display display = new Display(Creator.player, ChatColor.DARK_AQUA +"Error teleporting to start location, attempting again");
-            //    display.Message();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Error occurred whilst creating Bukkit.Location object to tp to: "+e.getMessage());
-        }
+        //Finds the start location
+        org.bukkit.Location tpLocation = GeometricUtils.convertToBukkitLocation(world, location.getStartCoordinates().getLat(), location.getStartCoordinates().getLng());
 
         //Registers the fall listener
         fallListener = new Falling(getCreator().player, tpLocation, plugin);
         fallListener.register();
 
-        //Teleports player to the start location
+        //Teleports player to the start location - yaw and pitch are irrelevant here
         Creator.player.teleport(tpLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Creator teleported to the start location, starting lesson to get answers");
 

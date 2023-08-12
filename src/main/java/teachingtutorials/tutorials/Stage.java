@@ -176,7 +176,7 @@ public class Stage
         if (bLocationCreation)
             newLocation.nextStage();
         else
-            lesson.nextStage();
+            lesson.nextStage(1);
     }
 
     //Unregister all listeners under this stage

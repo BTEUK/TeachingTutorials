@@ -191,6 +191,8 @@ public class Place extends Task implements Listener
     @Override
     public void unregister()
     {
+        super.unregister();
+
         //Unregisters this task
         HandlerList.unregisterAll(this);
     }

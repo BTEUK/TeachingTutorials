@@ -39,7 +39,7 @@ public class Lesson
 
     public int iStage;
     //The step that a user is currently at (1 indexed), used for "resuming" tutorials
-    private int iStep;
+    private int iStepToStart;
     private Stage currentStage;
     ArrayList<Stage> Stages = new ArrayList<>();
 
@@ -69,7 +69,7 @@ public class Lesson
         this.student = player;
         this.bCompulsory = bCompulsory;
         this.tutorial = new Tutorial();
-        this.iStep = 1;
+        this.iStepToStart = 1;
         this.bTutorialDetailsAlreadyEntered = false;
     }
 
@@ -82,7 +82,7 @@ public class Lesson
         this.bCompulsory = false;
 
         this.tutorial = tutorial;
-        this.iStep = 1;
+        this.iStepToStart = 1;
         this.bTutorialDetailsAlreadyEntered = true;
     }
 
@@ -193,7 +193,7 @@ public class Lesson
         iStage = iStage - 1;
 
         //Continues the current stage
-        nextStage();
+        nextStage(iStepToStart);
 
         return true;
     }
@@ -264,7 +264,7 @@ public class Lesson
             this.iStage = 0;
 
             //Signals for the next stage (the first stage) to begin
-            nextStage();
+            nextStage(1);
         }
         else
         {
@@ -468,13 +468,13 @@ public class Lesson
     }
 
     //Moves the tutorial on to the next stage
-    protected void nextStage()
+    protected void nextStage(int iStepToStartStageOn)
     {
         this.iStage++;
         if (this.iStage <= Stages.size())
         {
             currentStage = Stages.get(this.iStage-1);
-            currentStage.startStage(iStep);
+            currentStage.startStage(iStepToStartStageOn); //
 
             //Save the positions of stage and step after each stage is started
             // savePositions(); - Optional. Not needed since there is a save after each step
@@ -832,7 +832,7 @@ public class Lesson
                 this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
                 this.tutorial.fetchByTutorialID();
                 this.iStage = resultSet.getInt("StageAt");
-                this.iStep = resultSet.getInt("StepAt");
+                this.iStepToStart = resultSet.getInt("StepAt");
 
                 //Fetches the location details during construction
                 this.location = new Location(resultSet.getInt("LocationID"));

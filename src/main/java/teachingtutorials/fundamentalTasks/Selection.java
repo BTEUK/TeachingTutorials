@@ -23,11 +23,13 @@ import teachingtutorials.utils.Display;
 public class Selection extends Task implements Listener
 {
     //Stores the target coords - the location a player should select as a point
-    final double dTargetCoords1[] = new double[2]; //Lat then long
-    final double dTargetCoords2[] = new double[2]; //Lat then long
+    final double dTargetCoords1[] = new double[3]; //Lat then long, then height
+    final double dTargetCoords2[] = new double[3]; //Lat then long, then height
 
-    double[] dSelectionPoint1 = new double[3]; //Lat then long
-    double[] dSelectionPoint2 = new double[3]; //Lat then long
+    double[] dSelectionPoint1 = new double[3]; //Lat then long, then height
+    double[] dSelectionPoint2 = new double[3]; //Lat then long, then height
+
+    //NOTE: Height is height of the block (i.e the blocks Y coordinates)
 
     //Y coordinates of the selected blocks
     public int[] iSelectedBlockCoordinates1 = new int[]{0, 0, 0};
@@ -53,8 +55,10 @@ public class Selection extends Task implements Listener
         String[] cords = szAnswers.split(",");
         this.dTargetCoords1[0] = Double.parseDouble(cords[0]);
         this.dTargetCoords1[1] = Double.parseDouble(cords[1]);
-        this.dTargetCoords2[0] = Double.parseDouble(cords[2]);
-        this.dTargetCoords2[1] = Double.parseDouble(cords[3]);
+        this.dTargetCoords1[2] = Double.parseDouble(cords[2]);
+        this.dTargetCoords2[0] = Double.parseDouble(cords[3]);
+        this.dTargetCoords2[1] = Double.parseDouble(cords[4]);
+        this.dTargetCoords2[2] = Double.parseDouble(cords[5]);
 
         this.iOrder = iOrder;
         this.szDetails = szDetails;
@@ -101,13 +105,13 @@ public class Selection extends Task implements Listener
             return;
         
         //Converts block coordinates to lat/long
-        double[] longLat;
+        double[] longLatOfSelectedBlock;
 
         final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
 
         try
         {
-            longLat = projection.toGeo(event.getClickedBlock().getX()+0.5d, event.getClickedBlock().getZ()+0.5d);
+            longLatOfSelectedBlock = projection.toGeo(event.getClickedBlock().getX()+0.5d, event.getClickedBlock().getZ()+0.5d);
         }
         catch (OutOfProjectionBoundsException e)
         {
@@ -129,15 +133,17 @@ public class Selection extends Task implements Listener
             {
                // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Designer made left click selection");
                 bSelection1Made = true;
-                dTargetCoords1[0] = longLat[1];
-                dTargetCoords1[1] = longLat[0];
+                dTargetCoords1[0] = longLatOfSelectedBlock[1];
+                dTargetCoords1[1] = longLatOfSelectedBlock[0];
+                dTargetCoords1[2] = event.getClickedBlock().getY();
             }
             else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
             {
                // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Designer made right click selection");
                 bSelection2Made = true;
-                dTargetCoords2[0] = longLat[1];
-                dTargetCoords2[1] = longLat[0];
+                dTargetCoords2[0] = longLatOfSelectedBlock[1];
+                dTargetCoords2[1] = longLatOfSelectedBlock[0];
+                dTargetCoords2[2] = event.getClickedBlock().getY();
             }
             else
             {
@@ -154,7 +160,7 @@ public class Selection extends Task implements Listener
 
                 //Set the answers - answers are stored in a format matching that of how they are decoded in the constructor of this class
                 LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
-                String szAnswers = dTargetCoords1[0] +"," +dTargetCoords1[1] +"," +dTargetCoords2[0] +"," +dTargetCoords2[1];
+                String szAnswers = dTargetCoords1[0] +"," +dTargetCoords1[1] +"," +dTargetCoords1[2] +"," +dTargetCoords2[0] +"," +dTargetCoords2[1] +"," +dTargetCoords2[2] ;
                 locationTask.setAnswers(szAnswers);
                 difficultyListener.setLocationTask(locationTask);
 
@@ -172,7 +178,7 @@ public class Selection extends Task implements Listener
         //Checks whether it is a left click or right click and stores the coordinates
         else
         {
-            boolean[] bCorrectPointSelectedAndBothSelectionsMade = wasCorrectPointAndBothSelectionsMade(event, longLat);
+            boolean[] bCorrectPointSelectedAndBothSelectionsMade = wasCorrectPointAndBothSelectionsMade(event, longLatOfSelectedBlock);
             if (bCorrectPointSelectedAndBothSelectionsMade[0])
             {
                 if (bCorrectPointSelectedAndBothSelectionsMade[1])
@@ -208,7 +214,7 @@ public class Selection extends Task implements Listener
         }
     }
 
-    public boolean[] wasCorrectPointAndBothSelectionsMade(PlayerInteractEvent event, double[] longLat)
+    public boolean[] wasCorrectPointAndBothSelectionsMade(PlayerInteractEvent event, double[] longLatOfSelectedBlock)
     {
         boolean bIsSelection1 = false;
         
@@ -217,15 +223,17 @@ public class Selection extends Task implements Listener
         {
             // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player made left click selection");
             bIsSelection1 = true;
-            dSelectionPoint1[0] = longLat[1];
-            dSelectionPoint1[1] = longLat[0];
+            dSelectionPoint1[0] = longLatOfSelectedBlock[1];
+            dSelectionPoint1[1] = longLatOfSelectedBlock[0];
+            dSelectionPoint1[2] = event.getClickedBlock().getY();
         }
         else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
         {
             // Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Player made right click selection");
             bIsSelection1 = false;
-            dSelectionPoint2[0] = longLat[1];
-            dSelectionPoint2[1] = longLat[0];
+            dSelectionPoint2[0] = longLatOfSelectedBlock[1];
+            dSelectionPoint2[1] = longLatOfSelectedBlock[0];
+            dSelectionPoint2[2] = event.getClickedBlock().getY();
         }
 
         //Returns whether a target point was found, and which one
@@ -233,7 +241,7 @@ public class Selection extends Task implements Listener
         boolean bWasTarget1;
         boolean bBothSelectionsMade = false;
 
-        boolean[] bPointFoundWhichTarget = isCorrectPointWhichTarget(longLat);
+        boolean[] bPointFoundWhichTarget = isCorrectPointWhichTarget(longLatOfSelectedBlock, event.getClickedBlock().getY());
         bPointFound = bPointFoundWhichTarget[0];
         bWasTarget1 = bPointFoundWhichTarget[1];
 
@@ -293,7 +301,7 @@ public class Selection extends Task implements Listener
         return true;
     }
 
-    private boolean[] isCorrectPointWhichTarget(double[] longLat)
+    private boolean[] isCorrectPointWhichTarget(double[] longLatOfSelectedBlock, int iSelectedHeight)
     {
         //Checks whether it is anywhere near one of the block they are supposed to select
         boolean bPointFound = false;
@@ -303,14 +311,21 @@ public class Selection extends Task implements Listener
         float[] fDistance = new float[2];
 
         LatLng selectionGeoCoords;
-        selectionGeoCoords = new LatLng(longLat[1], longLat[0]);
+        selectionGeoCoords = new LatLng(longLatOfSelectedBlock[1], longLatOfSelectedBlock[0]);
         fDistance[0] = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords1);
         fDistance[1] = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords2);
+
+        int iCorrectHeight;
 
         for (int i = 0 ; i < 2 ; i++)
         {
             //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
-            if (fDistance[i] <= 1.5)
+            if (i == 0)
+                iCorrectHeight = (int) dTargetCoords1[2];
+            else
+                iCorrectHeight = (int) dTargetCoords2[2];
+
+            if (fDistance[i] <= 1.5 && iCorrectHeight == iSelectedHeight)
             {
                 bPointFound = true;
 

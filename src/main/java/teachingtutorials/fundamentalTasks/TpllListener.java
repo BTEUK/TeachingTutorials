@@ -94,11 +94,7 @@ public class TpllListener extends Task implements Listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 
         //Displays the marker on the world
-        World world;
-        if (this.parentGroup.parentStep.parentStage.bLocationCreation)
-            world = this.parentGroup.parentStep.parentStage.newLocation.getLocation().getWorld();
-        else
-            world = this.parentGroup.parentStep.parentStage.lesson.location.getWorld();
+        World world = this.parentGroup.parentStep.parentStage.tutorialPlaythrough.getLocation().getWorld();
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
             @Override
@@ -145,14 +141,7 @@ public class TpllListener extends Task implements Listener
                 //Teleports the player to where they tplled to
 
                 //Gets the world
-                World world;
-                if (bNewLocation)
-                    world = player.getWorld();
-                else
-                {
-                    Location location = parentGroup.parentStep.parentStage.lesson.location;
-                    world = location.getWorld();
-                }
+                World world = this.parentGroup.parentStep.parentStage.tutorialPlaythrough.getLocation().getWorld();
 
                 //Performs the tpll
                 if (!GeometricUtils.tpllPlayer(world, latLong.getLat(), latLong.getLng(), player))

@@ -3,6 +3,7 @@ package teachingtutorials.fundamentalTasks;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,6 +16,7 @@ import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.VirtualBlock;
 import teachingtutorials.utils.WorldEdit;
 
 import java.util.ArrayList;
@@ -77,7 +79,7 @@ public class Command extends Task implements Listener
         //Sets up the necessary logic for if it is a virtual blocks command type
         if (commandType.equals(teachingtutorials.fundamentalTasks.commandType.virtualBlocks))
         {
-            scheduleVirtualBlocks(tasks);
+            calculateVirtualBlocks(tasks);
         }
 
         this.fDifficulty = fDifficulty;
@@ -105,7 +107,7 @@ public class Command extends Task implements Listener
         //Sets up the necessary logic for if it is a virtual blocks command type
         if (commandType.equals(teachingtutorials.fundamentalTasks.commandType.virtualBlocks))
         {
-            scheduleVirtualBlocks(tasks);
+            calculateVirtualBlocks(tasks);
         }
     }
 
@@ -178,17 +180,9 @@ public class Command extends Task implements Listener
                 case full:
                     break;
                 case virtualBlocks:
-                    //There is a schedule which every second checks to see if the command is done, and if so, will display the virtual blocks
-                    bDisplayVirtualBlocks = true;
+                    //Displays the virtual blocks
+                    displayVirtualBlocks();
 
-                    String szWorldName;
-                    if (this.bNewLocation)
-                        szWorldName = this.parentGroup.parentStep.parentStage.newLocation.getTutorialID() +"";
-                    else
-                        szWorldName = this.parentGroup.parentStep.parentStage.lesson.location.getWorld().getName();
-
-                    Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
-                    selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
                     event.setCancelled(true);
                     break;
                 case none:
@@ -212,17 +206,9 @@ public class Command extends Task implements Listener
                     case full:
                         break;
                     case virtualBlocks:
-                        //There is a schedule which every second checks to see if the command is done, and if so, will display the virtual blocks
-                        bDisplayVirtualBlocks = true;
+                        //Displays the virtual blocks
+                        displayVirtualBlocks();
 
-                        String szWorldName;
-                        if (this.bNewLocation)
-                            szWorldName = this.parentGroup.parentStep.parentStage.newLocation.getTutorialID() +"";
-                        else
-                            szWorldName = this.parentGroup.parentStep.parentStage.lesson.location.getWorld().getName();
-
-                        Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
-                        selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
                         event.setCancelled(true);
                         break;
                     case none:
@@ -272,7 +258,7 @@ public class Command extends Task implements Listener
     //----------------------Utils----------------------
     //-------------------------------------------------
 
-    private void scheduleVirtualBlocks(ArrayList<Task> tasks)
+    private void calculateVirtualBlocks(ArrayList<Task> tasks)
     {
         //Gets the selection task associated with this command (assumes it is the previous task in the group)
         if (this.iOrder == 1)
@@ -287,70 +273,49 @@ public class Command extends Task implements Listener
         }
         else
         {
+            //---------------------------------------------
+            //--------Calculate locations of blocks--------
+            //---------------------------------------------
+
             //If it's a virtual blocks command type, assume a selection task was the previous task
-//            //Gets the associated selection of this virtual blocks type command
-//            Selection selection = (Selection) tasks.get(this.iOrder - 2);
-//
-//            double[] dTargetCoords1 = selection.dTargetCoords1;
-//            double[] dTargetCoords2 = selection.dTargetCoords2;
-//
-//            //Converts block coordinates to lat/long
-//            double[] xz1;
-//            double[] xz2;
-//
-//            final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-//            try
-//            {
-//                xz1 = projection.fromGeo(dTargetCoords1[1], dTargetCoords1[0]);
-//                xz2 = projection.fromGeo(dTargetCoords2[1], dTargetCoords2[0]);
-//            }
-//            catch (OutOfProjectionBoundsException e)
-//            {
-//                //Player has selected an area outside of the projection
-//                return;
-//            }
-//
-//            finalXZ1 = xz1;
-//            finalXZ2 = xz2;
+            //Gets the associated selection of this virtual blocks type command
+            Selection selection = (Selection) tasks.get(this.iOrder - 2);
 
-            plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
+            double[] dTargetCoords1 = selection.dTargetCoords1;
+            double[] dTargetCoords2 = selection.dTargetCoords2;
+
+            World world = player.getWorld();
+            Location location1 = GeometricUtils.convertToBukkitLocation(world, dTargetCoords1[0], dTargetCoords1[1]);
+            Location location2 = GeometricUtils.convertToBukkitLocation(world, dTargetCoords2[0], dTargetCoords2[1]);
+            if (location1 == null || location2 == null)
+                return;
+
+//            The code for using the player selected points of the previous selection: (we now just use the answers)
+
+//            Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
+//            selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
+
+            int[] iBlockCoordinates1 = new int[]{location1.getBlockX(), (int) dTargetCoords1[2], location1.getBlockZ()};
+            int[] iBlockCoordinates2 = new int[]{location2.getBlockX(), (int) dTargetCoords2[2], location2.getBlockZ()};
+
+            selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, iBlockCoordinates1, iBlockCoordinates2, world.getName());
+
+            //Calculates the material of the blocks
+            BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommandArgs.replace(" ", ""));
+            //In future updates to the WE functionality, blockTypeCalculator will use statistics to produce better mixes
+            //And will produce a different material every time it is called
+
+            //Creates virtual block objects
+            Location blockLocation;
+            virtualBlocks = new VirtualBlock[selectionBlocks.size()];
+            for (int i = 0; i < virtualBlocks.length; i++)
             {
-                boolean bLessonActive;
-                @Override
-                public void run()
-                {
-                    //Fetches the status of the lesson or new location creation
-                    if (bNewLocation)
-                        bLessonActive = !parentGroup.parentStep.parentStage.newLocation.bCompleteOrFinished;
-                    else
-                        bLessonActive = !parentGroup.parentStep.parentStage.lesson.bCompleteOrFinished;
-
-                    //Have a command complete checker because this just repeats every second
-                    //Also check whether the lesson/new location creation is still active. If the user is finished with it then we need to stop displaying virtual blocks
-                    if (bDisplayVirtualBlocks)
-                    {
-                        if (bLessonActive)
-                        {
-                            if (selectionBlocks != null)
-                            {
-                                BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommandArgs.replace(" ", ""));
-                                for (Location location : selectionBlocks)
-                                {
-                                    player.sendBlockChange(location, material);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (Location location : selectionBlocks)
-                            {
-                                player.sendBlockChange(location, location.getBlock().getBlockData());
-                            }
-                            return;
-                        }
-                    }
-                }
-            }, 20, 10);
+                blockLocation = selectionBlocks.get(i);
+                virtualBlocks[i] = new VirtualBlock(this.parentGroup.parentStep.parentStage.tutorialPlaythrough, player, player.getWorld(),
+                        blockLocation.getBlockX(), blockLocation.getBlockY(), blockLocation.getBlockZ(),
+                        material.getMaterial());
+                //In the future, material will be reestablished for every block, allowing mixes
+            }
         }
     }
 }

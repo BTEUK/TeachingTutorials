@@ -18,6 +18,7 @@ import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.*;
 import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.User;
+import teachingtutorials.utils.VirtualBlock;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,6 +54,9 @@ public class TeachingTutorials extends JavaPlugin
     //A list of all ongoing location creations
     public ArrayList<NewLocation> newLocations;
 
+    //A list of all virtual blocks
+    public ArrayList<VirtualBlock> virtualBlocks;
+
     @Override
     public void onEnable()
     {
@@ -87,6 +91,7 @@ public class TeachingTutorials extends JavaPlugin
         players = new ArrayList<>();
         lessons = new ArrayList<>();
         newLocations = new ArrayList<>();
+        virtualBlocks = new ArrayList<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
@@ -180,6 +185,10 @@ public class TeachingTutorials extends JavaPlugin
             }
         }, 0L, 20L);
 
+        //---------------------------------------
+        //----------Sets up event check----------
+        //---------------------------------------
+
         //3 second timer - checks events
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
@@ -211,6 +220,24 @@ public class TeachingTutorials extends JavaPlugin
                 }
             }
         }, 0L, 60L);
+
+        //----------------------------------------
+        //--------Refreshes virtual blocks--------
+        //----------------------------------------
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                int i;
+                int iNumVirtualBlocks = virtualBlocks.size();
+                for (i = 0 ; i < iNumVirtualBlocks ; i++)
+                {
+                    virtualBlocks.get(i).sendUpdate();
+                }
+            }
+        }, 0, 10);
+
 
         //---------------------------------------
         //---------------Listeners---------------

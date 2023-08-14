@@ -16,6 +16,7 @@ import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.VirtualBlock;
 
 
 public class Place extends Task implements Listener
@@ -23,8 +24,6 @@ public class Place extends Task implements Listener
     //The minecraft coordinates of the intended block in x, y, z form
     private final int iTargetCoords[] = new int[3];
     private Material mTargetMaterial;
-
-    boolean bDisplayVirtualBlocks = false;
 
     private DifficultyListener difficultyListener;
 
@@ -53,7 +52,7 @@ public class Place extends Task implements Listener
 
         this.fDifficulty = fDifficulty;
 
-        scheduleVirtualBlocks();
+        calculateVirtualBlocks();
     }
 
     //Used in location creation
@@ -68,11 +67,11 @@ public class Place extends Task implements Listener
         this.iOrder = iOrder;
         this.szDetails = szDetails;
 
-        scheduleVirtualBlocks();
-
         //Listen out for difficulty - There will only be one difficulty listener per place task to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.tpll);
         difficultyListener.register();
+
+        calculateVirtualBlocks();
     }
 
     @Override
@@ -128,8 +127,8 @@ public class Place extends Task implements Listener
                 //SpotHit is then called from inside the difficulty listener once the difficulty has been established
                 //This is what moves it onto the next task
 
-                //Sets the displaying of the virtual blocks to true
-                bDisplayVirtualBlocks = true;
+                //Displays the virtual blocks
+                displayVirtualBlocks();
             }
             else
             {   //--Accuracy checker--
@@ -150,8 +149,8 @@ public class Place extends Task implements Listener
                     display.ActionBar();
                     fPerformance = 1; // Will be more comprehensive in future updates
 
-                    //Sets the displaying of the virtual blocks to true
-                    bDisplayVirtualBlocks = true;
+                    //Displays the virtual block
+                    displayVirtualBlocks();
 
                     spotHit();
                 }
@@ -179,7 +178,7 @@ public class Place extends Task implements Listener
 
     private void spotHit()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering tpll listener");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering place listener");
 
         //Unregisters this task
         HandlerList.unregisterAll(this);
@@ -188,6 +187,7 @@ public class Place extends Task implements Listener
         taskComplete();
     }
 
+    //Called when terminating early
     @Override
     public void unregister()
     {
@@ -205,38 +205,11 @@ public class Place extends Task implements Listener
         spotHit();
     }
 
-    private void scheduleVirtualBlocks()
+    public void calculateVirtualBlocks()
     {
-        //Gets the selection task associated with this command (assumes it is the previous task in the group)
-        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
-        {
-            boolean bLessonActive;
-            @Override
-            public void run()
-            {
-                //Fetches the status of the lesson or new location creation
-                if (bNewLocation)
-                    bLessonActive = !parentGroup.parentStep.parentStage.newLocation.bCompleteOrFinished;
-                else
-                    bLessonActive = !parentGroup.parentStep.parentStage.lesson.bCompleteOrFinished;
-
-                //Have a command complete checker because this just repeats every second
-                //Also check whether the lesson/new location creation is still active. If the user is finished with it then we need to stop displaying virtual blocks
-                if (bDisplayVirtualBlocks)
-                {
-                    Location location = new Location(player.getWorld(), iTargetCoords[0], iTargetCoords[1], iTargetCoords[2]);
-
-                    if (bLessonActive)
-                    {
-                        player.sendBlockChange(location, Bukkit.createBlockData(mTargetMaterial));
-                    }
-                    else
-                    {
-                        player.sendBlockChange(location, location.getBlock().getBlockData());
-                        return;
-                    }
-                }
-            }
-        }, 20, 10);
+        VirtualBlock virtualPlaceBlock = new VirtualBlock(this.parentGroup.parentStep.parentStage.tutorialPlaythrough, player, player.getWorld(),
+                                                        iTargetCoords[0], iTargetCoords[1], iTargetCoords[2],
+                                                        mTargetMaterial);
+        this.virtualBlocks = new VirtualBlock[]{virtualPlaceBlock};
     }
 }

@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.utils.Display;
 
@@ -20,7 +21,7 @@ public class Stage
 
     private Player player;
     private TeachingTutorials plugin;
-    public Lesson lesson; //Still want component objects to be able to access it. Or do I? yep, and all the children of that
+    public TutorialPlaythrough tutorialPlaythrough;
     public boolean bStageFinished;
 
     public ArrayList<Step> steps = new ArrayList<>();
@@ -28,7 +29,6 @@ public class Stage
     private Step currentStep;
 
     public int iNewLocationID;
-    public NewLocation newLocation;
 
     public final boolean bLocationCreation;
 
@@ -43,7 +43,7 @@ public class Stage
     {
         //Inherited properties from the lesson
         this.plugin = plugin;
-        this.lesson = lesson;
+        this.tutorialPlaythrough = lesson;
         this.player = player;
 
         //Fixed stage properties
@@ -78,7 +78,7 @@ public class Stage
         //New location specific
         this.player = player;
         this.iNewLocationID = iLocationID;
-        this.newLocation = newLocation;
+        this.tutorialPlaythrough = newLocation;
     }
 
     //---------------------------------------------------
@@ -93,7 +93,7 @@ public class Stage
         if (bLocationCreation)
             return iNewLocationID;
         else
-            return this.lesson.location.getLocationID();
+            return this.tutorialPlaythrough.getLocation().getLocationID();
     }
 
     public Player getPlayer()
@@ -139,10 +139,7 @@ public class Stage
 
         if (iCurrentStep <= steps.size())
         {
-            if (!bLocationCreation)
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+lesson.student.player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
-            else
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+newLocation.getCreator().player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+tutorialPlaythrough.getCreatorOrStudent().player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
 
             currentStep = steps.get(iCurrentStep-1);
             currentStep.startStep();
@@ -150,33 +147,23 @@ public class Stage
             if (bLocationCreation == false)
             {
                 //Save the positions of stage and step
-                lesson.savePositions();
+                ((Lesson) tutorialPlaythrough).savePositions();
             }
 
             //Update tracker scoreboard
             Bukkit.getScheduler().runTask(plugin, new Runnable() {
                 @Override
-                public void run() {
-                    if (bLocationCreation)
-                        TrackerScoreboard.updateScoreboard(player, newLocation.getTutorialName(), szName, currentStep.getName());
-                    else
-                        TrackerScoreboard.updateScoreboard(player, lesson.tutorial.szTutorialName, szName, currentStep.getName());
+                public void run()
+                {
+                    TrackerScoreboard.updateScoreboard(player, tutorialPlaythrough.getTutorial().szTutorialName, szName, currentStep.getName());
                 }
             });
         }
         else
         {
             bStageFinished = true;
-            endStage();
+            tutorialPlaythrough.nextStage(1);
         }
-    }
-
-    protected void endStage()
-    {
-        if (bLocationCreation)
-            newLocation.nextStage();
-        else
-            lesson.nextStage(1);
     }
 
     //Unregister all listeners under this stage
@@ -196,7 +183,7 @@ public class Stage
         try
         {
             //Compiles the command to fetch stages
-            sql = "Select * FROM Stages WHERE TutorialID = "+lesson.tutorial.getTutorialID() +" ORDER BY 'Order' ASC";
+            sql = "Select * FROM Stages WHERE TutorialID = "+lesson.getTutorial().getTutorialID() +" ORDER BY 'Order' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query

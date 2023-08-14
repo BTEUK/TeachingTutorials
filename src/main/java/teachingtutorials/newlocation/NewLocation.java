@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.fundamentalTasks.GeometricUtils;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.newlocation.elevation.ElevationManager;
@@ -24,6 +25,7 @@ import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
+import teachingtutorials.utils.VirtualBlock;
 import teachingtutorials.utils.plugins.Multiverse;
 import teachingtutorials.utils.plugins.WorldGuard;
 
@@ -35,23 +37,12 @@ enum NewLocationProcess
     startUp, inputtingAreaBounds, calculatingBounds, inputtingStartPosition, creatingLocationForDB, creatingNewWorld, generatingTerrain, inputtingAnswers
 }
 
-public class NewLocation
+public class NewLocation extends TutorialPlaythrough
 {
+    //World generation objects
     private final EarthGeneratorSettings bteGeneratorSettings;
     private final GeographicProjection projection;
     private ChunkDataLoader loader;
-
-    private User Creator;
-    private Tutorial tutorial;
-    private TeachingTutorials plugin;
-
-    private int iStageIndex;
-    private ArrayList<Stage> stages;
-
-    //Keeps track of the current stage
-    private Stage currentStage;
-
-    public boolean bCompleteOrFinished = false;
 
     //Records what stage the new location creation process is at
     private NewLocationProcess stage;
@@ -62,19 +53,16 @@ public class NewLocation
 
     private int[][] iHeights;
 
-    private Location location;
-
     //Stores the listeners globally so that they can be accessed and deregistered from outside of the class
     private AreaSelectionListener areaSelectionListener;
     private StartLocationListener startLocationListener;
-    private Falling fallListener;
 
-    public NewLocation(User Creator, Tutorial tutorial, TeachingTutorials plugin)
+    public NewLocation(User creator, Tutorial tutorial, TeachingTutorials plugin)
     {
         //Stage set first since the projection creation can take a while, hence the startUp phase
         this.stage = NewLocationProcess.startUp;
 
-        this.Creator = Creator;
+        this.creatorOrStudent = creator;
         this.tutorial = tutorial;
         this.plugin = plugin;
 
@@ -88,11 +76,6 @@ public class NewLocation
     public int getTutorialID()
     {
         return this.tutorial.getTutorialID();
-    }
-
-    public User getCreator()
-    {
-        return this.Creator;
     }
 
     public String getTutorialName()
@@ -109,10 +92,10 @@ public class NewLocation
     {
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Starting new location adding");
 
-        this.Creator.currentMode = Mode.Creating_New_Location;
+        this.creatorOrStudent.currentMode = Mode.Creating_New_Location;
 
         //Set up tpll listeners for area to generate and use and listen for when all points have been made
-        areaSelectionListener = new AreaSelectionListener(this.Creator, plugin, this);
+        areaSelectionListener = new AreaSelectionListener(this.creatorOrStudent, plugin, this);
         areaSelectionListener.register();
         //Unregisters when the command "/tutorials endarea" is ran
 
@@ -121,8 +104,8 @@ public class NewLocation
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Registered area selection listener");
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Registered endarea listener");
 
-        this.Creator.player.sendMessage(ChatColor.AQUA +"Use /tpll to draw an area in a circular order to generate the terrain for the location");
-        this.Creator.player.sendMessage(ChatColor.AQUA +"Run /tutorials endarea once you are done");
+        this.creatorOrStudent.player.sendMessage(ChatColor.AQUA +"Use /tpll to draw an area in a circular order to generate the terrain for the location");
+        this.creatorOrStudent.player.sendMessage(ChatColor.AQUA +"Run /tutorials endarea once you are done");
 
         //Stores the area bounds globally in this class
         this.areaBounds = areaSelectionListener.getBounds();
@@ -208,14 +191,14 @@ public class NewLocation
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Range in z: " +izMin +" to "+izMax);
 
         //Creates the listener for the start position coordinates
-        startLocationListener = new StartLocationListener(this.Creator, plugin, this, ixMin, ixMax, izMin, izMax, projection);
+        startLocationListener = new StartLocationListener(this.creatorOrStudent, plugin, this, ixMin, ixMax, izMin, izMax, projection);
         startLocationListener.register();
 
         this.stage = NewLocationProcess.inputtingStartPosition;
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Registered start location listener");
 
         //Prompts the creator to teleport (using tpll) to the start location of the tutorial
-        this.Creator.player.sendMessage(ChatColor.AQUA +"Use /tpll to teleport to the desired start location");
+        this.creatorOrStudent.player.sendMessage(ChatColor.AQUA +"Use /tpll to teleport to the desired start location");
     }
 
     //Called from the StartLocationListener once the start location has been dictated
@@ -248,13 +231,13 @@ public class NewLocation
             if (Multiverse.createVoidWorld(szWorldName))
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Created new world");
-                WorldGuard.setWorldPerms(Bukkit.getWorld(szWorldName), Creator.player);
+                WorldGuard.setWorldPerms(Bukkit.getWorld(szWorldName), creatorOrStudent.player);
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Set the world perms");
             }
             else
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create new world");
-                errorCreatingWorldMessage = new Display(Creator.player, ChatColor.RED +"Could not create the world");
+                errorCreatingWorldMessage = new Display(creatorOrStudent.player, ChatColor.RED +"Could not create the world");
                 errorCreatingWorldMessage.Message();
                 return;
             }
@@ -264,7 +247,7 @@ public class NewLocation
             if (e.getMessage().equals("That world is already loaded!"))
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create new world. World already loaded");
-                errorCreatingWorldMessage = new Display(Creator.player, ChatColor.RED +"Could not create the world. World already loaded");
+                errorCreatingWorldMessage = new Display(creatorOrStudent.player, ChatColor.RED +"Could not create the world. World already loaded");
                 errorCreatingWorldMessage.Message();
                 return;
             }
@@ -288,7 +271,7 @@ public class NewLocation
         this.stage = NewLocationProcess.generatingTerrain;
 
         //Generates the required area in the world
-        Display generatingArea = new Display(Creator.player, ChatColor.AQUA +"Generating the area");
+        Display generatingArea = new Display(creatorOrStudent.player, ChatColor.AQUA +"Generating the area");
         generatingArea.Message();
 
         //For the future, an idea could be to generate terrain as soon as 3 area selection points have been made
@@ -318,44 +301,24 @@ public class NewLocation
         org.bukkit.Location tpLocation = GeometricUtils.convertToBukkitLocation(world, location.getStartCoordinates().getLat(), location.getStartCoordinates().getLng());
 
         //Registers the fall listener
-        fallListener = new Falling(getCreator().player, tpLocation, plugin);
+        fallListener = new Falling(creatorOrStudent.player, tpLocation, plugin);
         fallListener.register();
 
         //Teleports player to the start location - yaw and pitch are irrelevant here
-        Creator.player.teleport(tpLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        creatorOrStudent.player.teleport(tpLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Creator teleported to the start location, starting lesson to get answers");
 
         //Imports the stages of the tutorial, with no answers loaded
-        this.stages = Stage.fetchStagesByTutorialIDWithoutLocationInformation(Creator.player, plugin, tutorial.getTutorialID(), location.getLocationID(), this);
+        this.stages = Stage.fetchStagesByTutorialIDWithoutLocationInformation(creatorOrStudent.player, plugin, tutorial.getTutorialID(), location.getLocationID(), this);
         //Mode of each stage is automatically set to be Creating_New_Location
 
         //Sets stage number to 0
         this.iStageIndex = 0;
 
         //Starts the first stage
-        nextStage();
+        nextStage(1);
 
         this.stage = NewLocationProcess.inputtingAnswers;
-    }
-
-    //Accessed after the end of each stage.
-    //Called from Stage.endStage() asynchronously
-    public void nextStage()
-    {
-        int iNumStages = stages.size();
-
-        //1 indexed
-        iStageIndex++;
-
-        if (iStageIndex <= iNumStages)
-        {
-            currentStage = stages.get(iStageIndex-1);
-            currentStage.startStage(1);
-        }
-        else
-        {
-            endLocation();
-        }
     }
 
     public void terminateEarly()
@@ -387,19 +350,8 @@ public class NewLocation
                 Multiverse.deleteWorld(location.getLocationID()+"");
                 break;
             case inputtingAnswers:
-                //Remove tracker scoreboard
-                Bukkit.getScheduler().runTask(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        getCreator().player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-                    }
-                });
-
-                //Remove the listeners
-                currentStage.terminateEarly();
-
-                //Unregisters the fall listener
-                fallListener.unregister();
+                //Performs common playthrough termination processes
+                super.commonEndPlaythrough();
 
                 //Delete the location in the DB
                 if(Location.deleteLocationByID(location.getLocationID()))
@@ -414,77 +366,25 @@ public class NewLocation
                 break;
         }
 
-        //Teleports the creator back to the lobby
-        teleportToLobby();
-
-        //Updates the status of the activity
-        bCompleteOrFinished = true;
-
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);
     }
 
-    private void endLocation()
+    protected void endPlaythrough()
     {
         //Informs the user of successful creation of a location
-        Display display = new Display(Creator.player, ChatColor.UNDERLINE+""+ChatColor.DARK_GREEN +"Location Created!");
+        Display display = new Display(creatorOrStudent.player, ChatColor.UNDERLINE+""+ChatColor.DARK_GREEN +"Location Created!");
         display.Message();
         display.ActionBar();
 
         //Informs the console of successful creation of a location
         Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_GREEN +"[TeachingTutorials] Location Created with LocationID: "+this.location.getLocationID());
 
-        //Remove tracker scoreboard
-        Bukkit.getScheduler().runTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                getCreator().player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-            }
-        });
-
-        //Changes the player's mode
-        this.Creator.currentMode = Mode.Idle;
-
-        //Unregisters the fall listener
-        fallListener.unregister();
-
-        //Teleports the creator back to the lobby
-        teleportToLobby();
-
-        //Updates the status of the activity
-        bCompleteOrFinished = true;
-
         //Removes the new location from the new locations list
         this.plugin.newLocations.remove(this);
-    }
 
-    private void teleportToLobby()
-    {
-        FileConfiguration config = this.plugin.getConfig();
-
-        String szLobbyTPType = config.getString("Lobby_TP_Type");
-
-        //If a server switch is to occur
-        if (szLobbyTPType.equals("Server"))
-        {
-            String szServerName = config.getString("Server_Name");
-
-            //Switches the player's server after 40 seconds
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    getCreator().player.performCommand("server " +szServerName);
-                }
-            }, 40L);
-        }
-
-        //If a player teleport is to occur
-        else if (szLobbyTPType.equals("LobbyLocation"))
-        {
-            User.teleportPlayerToLobby(Creator.player, plugin, 40L);
-        }
+        //Performs common playthrough completion processes
+        super.commonEndPlaythrough();
     }
 
     private void generateArea(World world) throws OutOfProjectionBoundsException
@@ -492,7 +392,7 @@ public class NewLocation
         //UK121Generation(world);
         TerraMinusMinusGeneration(world);
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Generated the area in the world");
-        Display generatingArea = new Display(Creator.player, ChatColor.AQUA +"Area generated");
+        Display generatingArea = new Display(creatorOrStudent.player, ChatColor.AQUA +"Area generated");
         generatingArea.Message();
 
         Bukkit.getScheduler().runTask(plugin, new Runnable() {

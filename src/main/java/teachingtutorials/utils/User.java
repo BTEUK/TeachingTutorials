@@ -127,18 +127,20 @@ public class User
                 Lesson lesson;
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] There are currently "+lessons.size() +" lessons taking place");
 
+                int i;
+
                 do
                 {
                     bAllRemoved = true;
 
-                    for (int i = 0 ; i < lessons.size() ; i++)
+                    for (i = 0 ; i < lessons.size() ; i++)
                     {
                         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Lesson "+i);
                         lesson = lessons.get(i);
-                        if (lesson.getStudent().equals(this))
+                        if (lesson.getCreatorOrStudent().equals(this))
                         {
                             bAllRemoved = false;
-                            //Saves the scores, saves the position, removes the listeners
+                            //Saves the scores, saves the position, removes the listeners, removes the virtual blocks (of the current task)
                             lesson.terminateEarly();
 
                             //If a lesson is removed from the list we must start the for-loop again
@@ -160,13 +162,13 @@ public class User
                 {
                     bAllRemoved = true;
 
-                    for (int i = 0 ; i < newLocations.size() ; i++)
+                    for (i = 0 ; i < newLocations.size() ; i++)
                     {
                         newLocation = newLocations.get(i);
-                        if (newLocation.getCreator().equals(this))
+                        if (newLocation.getCreatorOrStudent().equals(this))
                         {
                             bAllRemoved = false;
-                            //Removes the listeners
+                            //Removes the listeners, removes the virtual blocks (of the current task)
                             newLocation.terminateEarly();
 
                             //If a newLocation is removed from the list we must start the for-loop again

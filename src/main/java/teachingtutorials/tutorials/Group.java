@@ -85,7 +85,7 @@ public class Group
         }
         else
         {
-            tasks = Task.fetchTasks(plugin, parentStep.parentStage.getLocationID(), this, parentStep.parentStage.lesson.student.player);
+            tasks = Task.fetchTasks(plugin, parentStep.parentStage.getLocationID(), this, parentStep.parentStage.tutorialPlaythrough.getCreatorOrStudent().player);
         }
     }
 

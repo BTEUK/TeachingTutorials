@@ -177,10 +177,7 @@ public class Step
         Location instructionLocation;
         if (iStepInStage == 1 && parentStage.isFirstStage())
         {
-            if (parentStage.bLocationCreation)
-                instructionLocation = parentStage.newLocation.getLocation().calculateBukkitStartLocation();
-            else
-                instructionLocation = parentStage.lesson.location.calculateBukkitStartLocation();
+            instructionLocation = parentStage.tutorialPlaythrough.getLocation().calculateBukkitStartLocation();
         }
         else
             instructionLocation = player.getLocation();

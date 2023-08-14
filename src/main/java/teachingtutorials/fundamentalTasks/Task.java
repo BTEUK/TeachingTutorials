@@ -5,6 +5,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorials.Group;
+import teachingtutorials.tutorials.Lesson;
+import teachingtutorials.utils.VirtualBlock;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +34,8 @@ public class Task
 
     protected boolean bNewLocation;
 
+    protected VirtualBlock[] virtualBlocks;
+
     public void register()
     {
         bActive = true;
@@ -51,6 +55,7 @@ public class Task
     public Task(TeachingTutorials plugin)
     {
         this.plugin = plugin;
+        this.virtualBlocks = new VirtualBlock[0];
     }
 
     protected void taskComplete()
@@ -60,20 +65,41 @@ public class Task
             fFinalScore = fDifficulty*fPerformance;
 
             //Add scores to the totals
-            parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal = parentGroup.parentStep.parentStage.lesson.fTpllScoreTotal + fFinalScore;
-            parentGroup.parentStep.parentStage.lesson.fTpllDifTotal = parentGroup.parentStep.parentStage.lesson.fTpllDifTotal + fDifficulty;
+            ((Lesson) parentGroup.parentStep.parentStage.tutorialPlaythrough).fTpllScoreTotal = ((Lesson) parentGroup.parentStep.parentStage.tutorialPlaythrough).fTpllScoreTotal + fFinalScore;
+            ((Lesson) parentGroup.parentStep.parentStage.tutorialPlaythrough).fTpllDifTotal = ((Lesson) parentGroup.parentStep.parentStage.tutorialPlaythrough).fTpllDifTotal + fDifficulty;
         }
         parentGroup.taskFinished();
     }
 
+    //Called when terminating early
     public void unregister()
     {
+        removeVirtualBlocks();
         bActive = false;
     }
 
-    private static void fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player, String sql)
+    //Adds all of the virtual blocks of this task to the plugin's virtual blocks list
+    protected void displayVirtualBlocks()
     {
+        int i;
+        int iVirtualBlocks = virtualBlocks.length;
 
+        for (i = 0 ; i < iVirtualBlocks ; i++)
+        {
+            plugin.virtualBlocks.add(virtualBlocks[i]);
+        }
+    }
+
+    //Removes all of the virtual blocks of this task from the plugin's virtual blocks list
+    protected void removeVirtualBlocks()
+    {
+        int i;
+        int iVirtualBlocks = virtualBlocks.length;
+
+        for (i = 0 ; i < iVirtualBlocks ; i++)
+        {
+            plugin.virtualBlocks.remove(virtualBlocks[i]);
+        }
     }
 
     public void newLocationSpotHit()

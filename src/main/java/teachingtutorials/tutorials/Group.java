@@ -72,7 +72,18 @@ public class Group
         return this.taskNo;
     }
 
-    //Where to fetch tasks, where to initialise them etc
+    public void displayAllVirtualBlocks()
+    {
+        //Gets the tasks from the DB
+        fetchAndInitialiseTasks();
+
+        int iNumTasks = tasks.size();
+
+        for (int i = 0 ; i < iNumTasks ; i++)
+        {
+            tasks.get(i).displayVirtualBlocks();
+        }
+    }
 
     //Fetches the tasks from the database and initialises them, then adds them to a list which is sent here
     public void fetchAndInitialiseTasks()

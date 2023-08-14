@@ -79,7 +79,7 @@ public class Task
     }
 
     //Adds all of the virtual blocks of this task to the plugin's virtual blocks list
-    protected void displayVirtualBlocks()
+    public void displayVirtualBlocks()
     {
         int i;
         int iVirtualBlocks = virtualBlocks.length;

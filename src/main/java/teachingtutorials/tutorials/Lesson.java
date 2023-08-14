@@ -170,6 +170,15 @@ public class Lesson extends TutorialPlaythrough
         else
             creatorOrStudent.player.teleport(tpLocation);
 
+        //Redisplays all virtual blocks
+        for (int i = 0 ; i < iStageIndex ; i++)
+        {
+            if (i != iStageIndex - 1)
+                stages.get(i).displayAllVirtualBlocks(0);
+            else
+                stages.get(i).displayAllVirtualBlocks(iStepToStart);
+        }
+
         //Takes the stage position back for it to then be set forward again at the start of nextStage()
         iStageIndex = iStageIndex - 1;
 

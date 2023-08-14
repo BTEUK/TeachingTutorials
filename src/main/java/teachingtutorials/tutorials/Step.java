@@ -84,6 +84,18 @@ public class Step
         return selectionCompleteHold;
     }
 
+    public void displayAllVirtualBlocks()
+    {
+        //Gets the groups from the DB
+        fetchAndInitialiseGroups();
+
+        int iNumGroups = groups.size();
+        for (int i = 0 ; i < iNumGroups ; i++)
+        {
+            groups.get(i).displayAllVirtualBlocks();
+        }
+    }
+
     private void fetchAndInitialiseGroups()
     {
 //        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Fetching groups of step with ID: "+iStepID);

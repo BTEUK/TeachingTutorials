@@ -111,6 +111,24 @@ public class Stage
         return (iOrder == 1);
     }
 
+    public void displayAllVirtualBlocks(int iStepToStart)
+    {
+        //Gets the steps from the DB
+        fetchAndInitialiseSteps();
+
+        int iNumSteps;
+
+        if (iStepToStart == 0)
+            iNumSteps = steps.size();
+        else
+            iNumSteps = iStepToStart - 1;
+
+        for (int i = 0 ; i < iNumSteps ; i++)
+        {
+            steps.get(i).displayAllVirtualBlocks();
+        }
+    }
+
     private void fetchAndInitialiseSteps()
     {
         //Gets a list of all of the steps of the specified stage and loads each with the relevant data.

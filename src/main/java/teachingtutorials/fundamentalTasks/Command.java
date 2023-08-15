@@ -40,6 +40,8 @@ public class Command extends Task implements Listener
     //Blocks of the selection
     private ArrayList<Location> selectionBlocks = null;
 
+    private ArrayList<Task> tasksInGroup;
+
     //Used in a lesson
     public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
     {
@@ -104,11 +106,7 @@ public class Command extends Task implements Listener
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.command);
         difficultyListener.register();
 
-        //Sets up the necessary logic for if it is a virtual blocks command type
-        if (commandType.equals(teachingtutorials.fundamentalTasks.commandType.virtualBlocks))
-        {
-            calculateVirtualBlocks(tasks);
-        }
+        tasksInGroup = tasks;
     }
 
     @Override
@@ -180,6 +178,9 @@ public class Command extends Task implements Listener
                 case full:
                     break;
                 case virtualBlocks:
+                    //Calculates the list of virtual blocks
+                    calculateVirtualBlocks(tasksInGroup);
+
                     //Displays the virtual blocks
                     displayVirtualBlocks();
 

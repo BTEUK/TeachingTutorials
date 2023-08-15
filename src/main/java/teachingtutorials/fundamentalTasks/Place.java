@@ -4,13 +4,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
@@ -70,8 +69,6 @@ public class Place extends Task implements Listener
         //Listen out for difficulty - There will only be one difficulty listener per place task to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.tpll);
         difficultyListener.register();
-
-        calculateVirtualBlocks();
     }
 
     @Override
@@ -82,96 +79,117 @@ public class Place extends Task implements Listener
 
     //Want the tutorials place process to occur first
     @EventHandler(priority = EventPriority.LOWEST)
-    public void commandEvent(BlockPlaceEvent event)
+    public void interactEvent(PlayerInteractEvent event)
     {
-        fPerformance = 0F;
         //Checks that it is the correct player
         if (!event.getPlayer().getUniqueId().equals(player.getUniqueId()))
-        {
             return;
+        else if (!event.hasBlock())
+            return;
+        else if (!event.isBlockInHand())
+            return;
+        else if (!event.getAction().isRightClick())
+            return;
+
+        //It should now be a left click with a block against another block
+
+        //Gets the location of the new virtual block to be placed
+        Location newBlockLocation = event.getClickedBlock().getLocation().add(event.getBlockFace().getDirection());
+        Material newBlockMaterial = event.getItem().getType();
+
+        event.setCancelled(true);
+
+        blockPlaced(newBlockLocation, newBlockMaterial);
+    }
+
+    //Want the tutorials place process to occur first
+//    @EventHandler(priority = EventPriority.LOW)
+//    public void placeEvent(BlockPlaceEvent event)
+//    {
+//
+//    }
+
+    private void blockPlaced(Location newBlockLocation, Material newBlockMaterial)
+    {
+        fPerformance = 0F;
+
+        //Get the location of the placed block
+        int iBlockX = newBlockLocation.getBlockX();
+        int iBlockY = newBlockLocation.getBlockY();
+        int iBlockZ = newBlockLocation.getBlockZ();
+
+        //Checks whether it is a new location
+        if (bNewLocation)
+        {
+            //Store the material
+            mTargetMaterial = newBlockMaterial;
+
+            //Store the location
+            iTargetCoords[0] = iBlockX;
+            iTargetCoords[1] = iBlockY;
+            iTargetCoords[2] = iBlockZ;
+
+            //Set the answers in the LocationTask
+            LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
+            locationTask.setAnswers(iBlockX +"," +iBlockY +"," +iBlockZ +"," +mTargetMaterial);
+            difficultyListener.setLocationTask(locationTask);
+
+            //Data is added to database once difficulty is provided
+
+            //Prompt difficulty
+            Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]");
+            difficultyPrompt.Message();
+
+            //SpotHit is then called from inside the difficulty listener once the difficulty has been established
+            //This is what moves it onto the next task
+
+            //Calculates the list of virtual blocks
+            calculateVirtualBlocks();
+
+            //Displays the virtual blocks
+            displayVirtualBlocks();
         }
         else
-        {
-            event.setCancelled(true);
+        {   //--Accuracy checker--
 
-            //Get the material placed
-            Block blockPlaced = event.getBlockPlaced();
+            boolean bCorrectPosition;
+            boolean bCorrectMaterial;
 
-            //Get the location of the placed block
-            int iBlockX = blockPlaced.getX();
-            int iBlockY = blockPlaced.getY();
-            int iBlockZ = blockPlaced.getZ();
+            //Check material
+            bCorrectMaterial = newBlockMaterial.equals(mTargetMaterial);
 
-            //Checks whether it is a new location
-            if (bNewLocation)
+            //Check position
+            bCorrectPosition = (iBlockX == iTargetCoords[0] && iBlockY == iTargetCoords[1] && iBlockZ == iTargetCoords[2]);
+
+            if (bCorrectMaterial && bCorrectPosition)
             {
-                //Store the material
-                mTargetMaterial = blockPlaced.getType();
+                //Correct everything
+                Display display = new Display(player, ChatColor.GREEN +"Correct");
+                display.ActionBar();
+                fPerformance = 1; // Will be more comprehensive in future updates
 
-                //Store the location
-                iTargetCoords[0] = iBlockX;
-                iTargetCoords[1] = iBlockY;
-                iTargetCoords[2] = iBlockZ;
-
-                //Set the answers
-                LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
-                locationTask.setAnswers(iBlockX +"," +iBlockY +"," +iBlockZ +"," +blockPlaced.getType());
-                difficultyListener.setLocationTask(locationTask);
-
-                //Data is added to database once difficulty is provided
-
-                //Prompt difficulty
-                Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]");
-                difficultyPrompt.Message();
-
-                //SpotHit is then called from inside the difficulty listener once the difficulty has been established
-                //This is what moves it onto the next task
-
-                //Displays the virtual blocks
+                //Displays the virtual block
                 displayVirtualBlocks();
+
+                spotHit();
+            }
+            else if (bCorrectMaterial)
+            {
+                //Material correct, position wrong
+                Display display = new Display(player, ChatColor.GOLD +"Correct material, wrong position");
+                display.ActionBar();
+            }
+            else if (bCorrectPosition)
+            {
+                //Position correct, material wrong
+                Display display = new Display(player, ChatColor.GOLD +"Correct position, wrong material");
+                display.ActionBar();
             }
             else
-            {   //--Accuracy checker--
-
-                boolean bCorrectPosition;
-                boolean bCorrectMaterial;
-
-                //Check material
-                bCorrectMaterial = event.getBlockPlaced().getType().equals(mTargetMaterial);
-
-                //Check position
-                bCorrectPosition = (iBlockX == iTargetCoords[0] && iBlockY == iTargetCoords[1] && iBlockZ == iTargetCoords[2]);
-
-                if (bCorrectMaterial && bCorrectPosition)
-                {
-                    //Correct everything
-                    Display display = new Display(player, ChatColor.GREEN +"Correct");
-                    display.ActionBar();
-                    fPerformance = 1; // Will be more comprehensive in future updates
-
-                    //Displays the virtual block
-                    displayVirtualBlocks();
-
-                    spotHit();
-                }
-                else if (bCorrectMaterial)
-                {
-                    //Material correct, position wrong
-                    Display display = new Display(player, ChatColor.GOLD +"Correct material, wrong position");
-                    display.ActionBar();
-                }
-                else if (bCorrectPosition)
-                {
-                    //Position correct, material wrong
-                    Display display = new Display(player, ChatColor.GOLD +"Correct position, wrong material");
-                    display.ActionBar();
-                }
-                else
-                {
-                    //Nothing correct
-                    Display display = new Display(player, ChatColor.GOLD +"Incorrect position and material");
-                    display.ActionBar();
-                }
+            {
+                //Nothing correct
+                Display display = new Display(player, ChatColor.GOLD +"Incorrect position and material");
+                display.ActionBar();
             }
         }
     }

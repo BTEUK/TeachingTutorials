@@ -1,14 +1,18 @@
 package teachingtutorials.guis;
 
-/*
+/**
     Purpose = Displays a list of tutorials that a creator has made
  */
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Tutorial;
@@ -17,38 +21,40 @@ import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
-import java.util.ArrayList;
-
-public class CreatorTutorialsMenu
+public class CreatorTutorialsMenu extends Gui
 {
-    public static Inventory inventory;
-    public static String inventory_name;
-    public static int iRows;
-    public static TeachingTutorials plugin;
+    private static final Component inventoryName = Component.text("Your tutorials", Style.style(TextDecoration.BOLD, NamedTextColor.DARK_AQUA));
+    private final TeachingTutorials plugin;
+    private final User user;
 
-    public static void initialize()
+    private Tutorial[] tutorials;
+
+    /**
+     *
+     * @param plugin An instance of the plugin
+     * @param user The user for which the menu is being created for
+     * @param tutorials A list of all of the tutorials of the user requesting the menu
+     */
+    public CreatorTutorialsMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
     {
-        inventory_name = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Your tutorials";
+        super(getGUI(tutorials));
+        this.plugin = plugin;
+        this.user = user;
+        this.tutorials = tutorials;
+
+        setActions();
     }
 
-    public static String getInventoryName()
-    {
-        return inventory_name;
-    }
-
-    public static Inventory getGUI (User u)
+    private static Inventory getGUI (Tutorial[] allTutorials)
     {
         //Declare variables
         int i;
         int iTutorials;
         int iDiv;
         int iMod;
+        int iRows;
 
-        //Fetches user's tutorials
-        u.fetchAllTutorials();
-
-        //Stores user's tutorials locally
-        Tutorial[] allTutorials = u.getAllTutorials();
+        Inventory inventory;
 
         //Works out how many rows in the inventory are needed
         iTutorials = allTutorials.length;
@@ -69,154 +75,146 @@ public class CreatorTutorialsMenu
         inventory = Bukkit.createInventory(null, iRows * 9);
         inventory.clear();
 
-        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventory_name);
+        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventoryName);
 
-        //Inv slot 1 = the first one
+        //Inv slot 0 = the first one
 
         //Indicates that the creator has no tutorials if they don't own any
         if (allTutorials.length == 0)
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 5, ChatColor.BOLD +"" +ChatColor.GREEN +"You have no tutorials");
+            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, Component.text("You have no tutorials", NamedTextColor.GREEN));
+            inventory.setItem(5-1, noTutorials);
         }
 
         //Adds back button
-        Utils.createItem(inventory, Material.SPRUCE_DOOR, 1, iRows * 9, ChatColor.BOLD +"" +ChatColor.GREEN+"Back to creator menu");
+        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, Component.text("Back to creator menu", NamedTextColor.GREEN, TextDecoration.BOLD));
+        inventory.setItem((iRows * 9)-1, back);
 
         //Creates the menu options
-        for (i = 1 ; i <= allTutorials.length ; i++)
+        for (i = 0 ; i < allTutorials.length ; i++)
         {
+            ItemStack tutorial;
             //Sets tutorial name bold for tutorials in use
-            if (allTutorials[i-1].bInUse)
-                Utils.createItem(inventory, Material.WRITTEN_BOOK, 1, i,(ChatColor.BOLD +"" +ChatColor.GREEN +allTutorials[i-1].szTutorialName),
-                        ChatColor.DARK_GREEN+"In Use - Left click to remove from use",
-                        ChatColor.DARK_GREEN+"Right click to add a new location");
+            if (allTutorials[i].bInUse)
+                tutorial = Utils.createItem(Material.WRITTEN_BOOK, 1,
+                        Component.text(allTutorials[i].szTutorialName, NamedTextColor.GREEN, TextDecoration.BOLD),
+                        Component.text("In Use - Left click to remove from use", NamedTextColor.DARK_GREEN),
+                        Component.text("Right click to add a new location", NamedTextColor.DARK_GREEN));
             else
-                Utils.createItem(inventory, Material.BOOK, 1, i,(ChatColor.GREEN +allTutorials[i-1].szTutorialName),
-                        ChatColor.DARK_GREEN+"Not In Use - Left click to set in use",
-                        ChatColor.DARK_GREEN+"Right click to add a new location");
+                tutorial = Utils.createItem(Material.BOOK, 1,
+                        Component.text(allTutorials[i].szTutorialName, NamedTextColor.GREEN),
+                        Component.text("Not in Use - Left click to set in use", NamedTextColor.DARK_GREEN),
+                        Component.text("Right click to add a new location", NamedTextColor.DARK_GREEN));
+            inventory.setItem(i, tutorial);
         }
 
         toReturn.setContents(inventory.getContents());
         return toReturn;
     }
 
-    //Left click is for toggling whether a tutorial is in use or not
-    public static void leftClicked(Player player, int slot, TeachingTutorials plugin)
+    private void setActions()
     {
-        //Finds the correct user for this player from the plugins list of users
-        boolean bUserFound = false;
-
-        ArrayList<User> users = plugin.players;
-        int iLength = users.size();
+        //Declare variables
         int i;
-        User user = new User(player);
+        int iTutorials;
+        int iDiv;
+        int iMod;
+        int iRows;
 
-        for (i = 0 ; i < iLength ; i++)
+        //Works out how many rows in the inventory are needed
+        iTutorials = tutorials.length;
+        iDiv = iTutorials/9;
+        iMod = iTutorials%9;
+
+        if (iMod != 0 || iDiv == 0)
         {
-            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-            {
-                user = users.get(i);
-                bUserFound = true;
-                break;
+            iDiv = iDiv + 1;
+        }
+
+        //Enables an empty row and then a row for the back button
+        iRows = iDiv+2;
+
+        //------------------------------
+
+        //Inv slot 0 = the first one
+
+        //Adds back button
+        setAction((iRows * 9) - 1, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
             }
-        }
 
-        if (!bUserFound)
-        {
-            player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-            player.sendMessage(ChatColor.RED +"Try relogging");
-            return;
-        }
+            @Override
+            public void leftClick(User u) {
+                delete();
+                u.mainGui = new AdminMenu(plugin, user);
+                u.mainGui.open(u);
+            }
+        });
 
-        //Stores the list of the creator's tutorials locally
-        Tutorial[] tutorials = user.getAllTutorials();
+        //Creates the actions for clicking on the tutorials
+        for (i = 0 ; i < tutorials.length ; i++)
+        {
+            int iSlot = i;
 
-        //Slot 0 indexed
-        if (slot+1 == iRows*9)
-        {
-            //Back button
-            player.closeInventory();
-            player.openInventory(AdminMenu.getGUI(user));
+            setAction(i, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    rightClicked(u, iSlot);
+                }
+
+                @Override
+                public void leftClick(User u) {
+                    leftClicked(u, iSlot);
+                }
+            });
         }
-        else if (slot+1 > tutorials.length)
+    }
+
+    //Left click is for toggling whether a tutorial is in use or not
+    private void leftClicked(User u, int iSlot)
+    {
+        if (tutorials[iSlot].toggleInUse())
         {
-            //Do nothing, they've clicked on a blank space
+            delete();
+            this.refresh();
+            u.mainGui.open(u);
         }
         else
         {
-            if (tutorials[slot].toggleInUse())
-            {
-                player.closeInventory();
-                player.openInventory(CreatorTutorialsMenu.getGUI(user));
-            }
-            else
-            {
-                Display display = new Display(player, ChatColor.RED +"There are no locations for this tutorial");
-                display.Message();
-            }
+            Display display = new Display(u.player, ChatColor.RED +"There are no locations for this tutorial");
+            display.Message();
         }
     }
 
     //Right click is for creating a new location
-    public static void rightClicked(Player player, int slot, TeachingTutorials plugin)
+    private void rightClicked(User u, int iSlot)
     {
-        //Finds the correct user for this player from the plugins list of users
-        boolean bUserFound = false;
-
-        ArrayList<User> users = plugin.players;
-        int iLength = users.size();
-        int i;
-        User user = new User(player);
-
-        for (i = 0 ; i < iLength ; i++)
+        //Only starts the new location process if the creator is idle
+        if (user.currentMode.equals(Mode.Idle))
         {
-            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-            {
-                user = users.get(i);
-                bUserFound = true;
-                break;
-            }
-        }
+            delete();
+            u.mainGui = null;
 
-        if (!bUserFound)
+            //Creates a NewLocation object
+            NewLocation newLocation = new NewLocation(user, tutorials[iSlot], plugin);
+
+            //Launches them into the new location adding process
+            newLocation.launchNewLocationAdding();
+        }
+        else
         {
-            player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-            player.sendMessage(ChatColor.RED +"Try relogging");
-            return;
+            Display display = new Display(user.player, (ChatColor.RED +"Complete or pause your current tutorial or location creation first"));
+            display.Message();
         }
+    }
 
-        Tutorial[] tutorials = user.getAllTutorials();
-
-        //Slot 0 indexed
-
-        if (slot+1 == iRows*9)
-        {
-            //Back button
-            player.closeInventory();
-            player.openInventory(AdminMenu.getGUI(user));
-        }
-        else if (slot+1 > tutorials.length)
-        {
-            //Do nothing, they've clicked on a blank space
-        }
-        else //They've right clicked on an actual tutorial
-        {
-            //Only starts the new location process if the creator is idle
-            if (user.currentMode.equals(Mode.Idle))
-            {
-                player.closeInventory();
-
-                //Creates a NewLocation object
-                NewLocation newLocation = new NewLocation(user, tutorials[slot], plugin);
-
-                //Launches them into the new location adding process
-                newLocation.launchNewLocationAdding();
-            }
-            else
-            {
-                Display display = new Display(user.player, (ChatColor.RED +"Complete or pause your current tutorial or location creation first"));
-                display.Message();
-            }
-        }
+    @Override
+    public void refresh() {
+        this.clearGui();
+        this.getInventory().setContents(getGUI(tutorials).getContents());
+        this.setActions();
+        this.open(user);
     }
 }

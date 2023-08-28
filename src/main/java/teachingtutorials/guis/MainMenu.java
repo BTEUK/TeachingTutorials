@@ -1,150 +1,229 @@
 package teachingtutorials.guis;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.compulsory.Compulsory;
 import teachingtutorials.tutorials.Lesson;
+import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
-public class MainMenu
+public class MainMenu extends Gui
 {
-    public static Inventory inventory;
-    public static String inventory_name;
-    public static int inv_rows = 3 * 9;
+    private static final Component inventoryName = Component.text("Tutorials Menu", Style.style(TextDecoration.BOLD, NamedTextColor.DARK_AQUA));
+    private static final int iNumRows = 3 * 9;
+    private final TeachingTutorials plugin;
+    private final User user;
 
-    public static void initialize()
+    public MainMenu(TeachingTutorials plugin, User user)
     {
-        inventory_name = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Tutorial Menu";
+        super(iNumRows, inventoryName);
+        this.plugin = plugin;
+        this.user = user;
 
-        inventory = Bukkit.createInventory(null, inv_rows);
+        createGui();
     }
 
-    public static String getInventoryName()
+    private void createGui()
     {
-        return inventory_name;
-    }
-
-    public static Inventory getGUI (User u)
-    {
-        Inventory toReturn = Bukkit.createInventory(null, inv_rows, inventory_name);
-
-        inventory.clear();
-
         FileConfiguration config = TeachingTutorials.getInstance().getConfig();
         boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial");
+
+        //Continue learning menu button
+        ItemStack continueLearning_CompulsoryComplete;
+        if (user.bInLesson)
+            continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
+                    Component.text("Continue learning", NamedTextColor.GREEN),
+                    Component.text("Continue your lesson", NamedTextColor.DARK_GREEN));
+        else
+            continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
+                    Component.text("Continue learning", NamedTextColor.GREEN),
+                    Component.text("Start another tutorial", NamedTextColor.DARK_GREEN));
+
+        //Tutorial library
+        ItemStack tutorialLibrary = Utils.createItem(Material.BOOKSHELF, 1,
+                Component.text("Tutorial Library", NamedTextColor.GREEN),
+                Component.text("Browse all of our available tutorials", NamedTextColor.DARK_GREEN));
 
         //The system has the compulsory tutorial feature enabled
         if (bCompulsoryTutorialEnabled)
         {
-            if (u.bHasCompletedCompulsory)
+            if (user.bHasCompletedCompulsory)
             {
-                if (u.bInLesson)
-                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
-                else
-                    Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 17,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
+                //Restart compulsory tutorial
+                ItemStack restartCompulsory = Utils.createItem(Material.ENCHANTED_BOOK, 1,
+                        Component.text("Restart Compulsory Tutorial", NamedTextColor.GREEN));
+                super.setItem(11 - 1, restartCompulsory, new guiAction() {
+                    @Override
+                    public void rightClick(User u)
+                    {
+                        leftClick(u);
+                    }
+                    @Override
+                    public void leftClick(User u)
+                    {
+                        //Deletes this gui
+                        delete();
 
-                Utils.createItem(inventory, Material.ENCHANTED_BOOK, 1, 11,(ChatColor.GREEN +"Restart Compulsory Tutorial"));
-                Utils.createItem(inventory, Material.BOOKSHELF, 1, 14, (ChatColor.GREEN +"Tutorial Library"), ChatColor.DARK_GREEN +"Browse all our available tutorials");
+                        performEvent(EventType.COMPULSORY, u, plugin);
+                    }
+                });
+
+                //Library
+                super.setItem(14 - 1, tutorialLibrary, new guiAction() {
+                    @Override
+                    public void rightClick(User u) {
+                        leftClick(u);
+                    }
+                    @Override
+                    public void leftClick(User u) {
+                        //Deletes this gui
+                        delete();
+
+                        performEvent(EventType.LIBRARY, u, plugin);
+                    }
+                });
+
+                //Continue learning
+                super.setItem(17 - 1, continueLearning_CompulsoryComplete, new guiAction() {
+                    @Override
+                    public void rightClick(User u)
+                    {
+                        leftClick(u);
+                    }
+                    @Override
+                    public void leftClick(User u)
+                    {
+                        //Deletes this gui
+                        delete();
+
+                        performEvent(EventType.CONTINUE, u, plugin);
+                    }
+                });
             }
-            else
+            else // They have not completed the compulsory tutorial
             {
-                if (u.bInLesson)
-                    Utils.createItem(inventory, Material.BOOK, 1, 17,(ChatColor.GREEN +"Continue Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+                ItemStack continue_CompulsoryNotComplete;
+                if (user.bInLesson)
+                {
+                    continue_CompulsoryNotComplete = Utils.createItem(Material.BOOK, 1,
+                            Component.text("Continue Compulsory Tutorial", NamedTextColor.GREEN),
+                            Component.text("Gain the applicant rank", NamedTextColor.DARK_GREEN));
+                }
                 else
-                    Utils.createItem(inventory, Material.BOOK, 1, 17,(ChatColor.GREEN +"Start Compulsory Tutorial"), ChatColor.DARK_GREEN+"Gain the applicant rank");
+                {
+                    continue_CompulsoryNotComplete = Utils.createItem(Material.BOOK, 1,
+                            Component.text("Start Compulsory Tutorial", NamedTextColor.GREEN),
+                            Component.text("Gain the applicant rank", NamedTextColor.DARK_GREEN));
+                }
+                super.setItem(14 - 1, continue_CompulsoryNotComplete, new guiAction() {
+                    @Override
+                    public void rightClick(User u) {
+                        leftClick(u);
+                    }
+                    @Override
+                    public void leftClick(User u) {
+                        //Deletes this gui
+                        delete();
+
+                        performEvent(EventType.COMPULSORY, u, plugin);
+                    }
+                });
             }
         }
         else
         {
-            if (u.bInLesson)
-                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 16,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Continue your lesson");
-            else
-                Utils.createItem(inventory, Material.WRITABLE_BOOK, 1, 16,(ChatColor.GREEN +"Continue Learning"), ChatColor.DARK_GREEN+"Start the next tutorial");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 12, (ChatColor.GREEN +"Tutorial Library"), ChatColor.DARK_GREEN +"Browse all our available tutorials");
+            //Continue learning, compulsory complete
+            super.setItem(16 - 1, continueLearning_CompulsoryComplete, new guiAction() {
+                @Override
+                public void rightClick(User u)
+                {
+                    leftClick(u);
+                }
+                @Override
+                public void leftClick(User u)
+                {
+                    //Deletes this gui
+                    delete();
+
+                    performEvent(EventType.CONTINUE, u, plugin);
+                }
+            });
+
+            //Library
+            super.setItem(12 - 1, tutorialLibrary, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+                @Override
+                public void leftClick(User u) {
+                    //Deletes this gui
+                    delete();
+
+                    performEvent(EventType.LIBRARY, u, plugin);
+                }
+            });
         }
 
         //Admin and creator menu
-        if (u.player.hasPermission("TeachingTutorials.Admin") || u.player.hasPermission("TeachingTutorials.Creator"))
+        if (user.player.hasPermission("TeachingTutorials.Admin") || user.player.hasPermission("TeachingTutorials.Creator"))
         {
-            Utils.createItem(inventory, Material.LECTERN, 1, 19,(ChatColor.GREEN +"Creator Menu"));
-        }
-
-        toReturn.setContents(inventory.getContents());
-
-        return toReturn;
-    }
-
-    public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
-    {
-        //Identifies the user from the list of users based on the player
-        User user = User.identifyUser(plugin, player);
-        if (user == null)
-            return;
-
-        //Compulsory tutorial
-        if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Start Compulsory Tutorial") || clicked.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GREEN +"Continue Compulsory Tutorial"))
-        {
-            performEvent(EventType.COMPULSORY, user, plugin);
-        }
-
-        //Continue learning
-        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Continue Learning")))
-        {
-            performEvent(EventType.CONTINUE, user, plugin);
-        }
-
-        //Redo compulsory tutorial
-        else if (slot == 10) //0 Indexed
-        {
-            performEvent(EventType.COMPULSORY, user, plugin);
-        }
-
-        //Admin/creator menu
-        else if (slot == 18 && (player.hasPermission("TeachingTutorials.Admin") || player.hasPermission("TeachingTutorials.Creator")))
-        {
-            performEvent(EventType.ADMIN_MENU, user, plugin);
-        }
-
-        //Admin/creator menu
-        else if (clicked.getItemMeta().getDisplayName().equalsIgnoreCase((ChatColor.GREEN +"Tutorial Library")))
-        {
-            performEvent(EventType.LIBRARY, user, plugin);
+            //Admin and creator menu
+            super.setItem(19 - 1, Utils.createItem(Material.LECTERN, 1,
+                    Component.text("Creator Menu", NamedTextColor.GREEN)), new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+                @Override
+                public void leftClick(User u) {
+                    //Deletes this gui
+                    delete();
+                    performEvent(EventType.ADMIN_MENU, u, plugin);
+                }
+            });
         }
     }
 
     public static void performEvent(EventType event, User user, TeachingTutorials plugin)
     {
-        Player player = user.player;
-
-        switch (event)
-        {
-            case COMPULSORY:
-                player.closeInventory();
+        switch (event) {
+            case COMPULSORY -> {
                 //Starts the compulsory tutorial
                 Compulsory compulsory = new Compulsory(plugin, user);
                 compulsory.startLesson();
-                break;
-            case CONTINUE:
-                player.closeInventory();
+            }
+            case CONTINUE -> {
                 //Creates a lesson with the user
                 Lesson lesson = new Lesson(user, plugin, false);
                 lesson.startLesson();
-                break;
-            case ADMIN_MENU:
-                player.closeInventory();
-                player.openInventory(AdminMenu.getGUI(user));
-                break;
-            case LIBRARY:
-                player.closeInventory();
-                player.openInventory(LibraryMenu.getGUI(user));
-                break;
+            }
+            case ADMIN_MENU ->
+            {
+                user.mainGui = new AdminMenu(plugin, user);
+                user.mainGui.open(user);
+            }
+            case LIBRARY ->
+            {
+                user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations());
+                user.mainGui.open(user);
+            }
         }
+    }
+
+    @Override
+    public void refresh()
+    {
+        this.clearGui();
+        this.createGui();
+
+        this.open(user);
     }
 }

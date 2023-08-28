@@ -161,6 +161,51 @@ public class Tutorial
         return tutorials;
     }
 
+    /**
+     *
+     * @return All in use tutorials which have at least one location
+     */
+    public static Tutorial[] getInUseTutorialsWithLocations()
+    {
+        int iAvailableTutorials;
+        int iNumInUseTutorials;
+        int i;
+
+        //Fetches all in use tutorials
+        Tutorial[] allInUseTutorials = Tutorial.fetchAll(true);
+        iNumInUseTutorials = allInUseTutorials.length;
+
+        //Boolean array storing whether each tutorial has at least one location
+        boolean[] tutorialHasLocation = new boolean[iNumInUseTutorials];
+
+        //Counts the amount of in use tutorials with at least one location
+        iAvailableTutorials = 0;
+        for (i = 0 ; i < iNumInUseTutorials ; i++)
+        {
+            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID()).length != 0);
+
+            if (tutorialHasLocation[i])
+            {
+                iAvailableTutorials++;
+            }
+        }
+
+        //A list of all tutorials which are in use and have at least one location
+        Tutorial[] allAvailableTutorials = new Tutorial[iAvailableTutorials];
+
+        //Compiles a list of just tutorials with locations
+        iAvailableTutorials = 0;
+        for (i = 0 ; i < iNumInUseTutorials ; i++)
+        {
+            if (tutorialHasLocation[i])
+            {
+                allAvailableTutorials[iAvailableTutorials] = allInUseTutorials[i];
+                iAvailableTutorials++;
+            }
+        }
+        return allAvailableTutorials;
+    }
+
     //Fetches all tutorials created by a user
     public static Tutorial[] fetchAllForUser(UUID uuid)
     {

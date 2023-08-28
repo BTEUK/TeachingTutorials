@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.guis.*;
-import teachingtutorials.listeners.InventoryClicked;
+import teachingtutorials.listeners.InventoryClickedOrClosed;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinLeaveEvent;
 import teachingtutorials.listeners.GlobalPlayerCommandProcess;
@@ -153,11 +153,6 @@ public class TeachingTutorials extends JavaPlugin
         //--------------Create GUIs--------------
         //---------------------------------------
 
-        MainMenu.initialize();
-        AdminMenu.initialize();
-        CompulsoryTutorialMenu.initialize();
-        CreatorTutorialsMenu.initialize();
-
         //Create menu item
         menu = new ItemStack(Material.EMERALD);
         ItemMeta meta = menu.getItemMeta();
@@ -209,7 +204,7 @@ public class TeachingTutorials extends JavaPlugin
                     user = User.identifyUser(instance, event.player);
                     if (user != null)
                     {
-                        MainMenu.performEvent(event.eventType, user, TeachingTutorials.getInstance());
+                        MainMenu.performEvent(event.eventType, user, instance);
 
                         //We only want the event to be removed if the player was on the server and the event took place
                         //There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
@@ -248,7 +243,7 @@ public class TeachingTutorials extends JavaPlugin
 
         //Handles menus
         new PlayerInteract(this);
-        new InventoryClicked(this);
+        new InventoryClickedOrClosed(this);
 
         //Handles tpll, ll and /tutorials
         new GlobalPlayerCommandProcess(this);

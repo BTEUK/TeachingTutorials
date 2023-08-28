@@ -115,7 +115,13 @@ public class GlobalPlayerCommandProcess implements Listener
             //Open the menu
             User user = User.identifyUser(plugin, player);
             if (user != null)
-                player.openInventory(MainMenu.getGUI(user));
+            {
+                if (user.mainGui != null)
+                    user.mainGui.delete();
+
+                user.mainGui = new MainMenu(plugin, user);
+                user.mainGui.open(user);
+            }
         }
     }
 }

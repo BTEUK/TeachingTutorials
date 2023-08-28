@@ -5,8 +5,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.*;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.Gui;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Lesson;
 import teachingtutorials.tutorials.Tutorial;
@@ -38,6 +38,9 @@ public class User
 
     //Holds a list of all the tutorials a user has created
     private Tutorial[] allTutorials;
+
+    //Main gui, includes everything that is part of the navigator.
+    public Gui mainGui;
 
     //--------------------------------------------------
     //-------------------Constructors-------------------

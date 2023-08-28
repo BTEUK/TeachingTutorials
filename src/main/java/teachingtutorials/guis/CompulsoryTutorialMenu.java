@@ -1,9 +1,11 @@
 package teachingtutorials.guis;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
@@ -11,40 +13,38 @@ import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
-import java.util.ArrayList;
 
-public class CompulsoryTutorialMenu
+public class CompulsoryTutorialMenu extends Gui
 {
-    public static Inventory inventory;
-    public static String inventory_name;
-    public static int iRows;
-    public static TeachingTutorials plugin;
+    private static final Component inventoryName = Component.text("Select Compulsory Tutorial", Style.style(TextDecoration.BOLD, NamedTextColor.DARK_AQUA));
+    private final TeachingTutorials plugin;
+    private final User user;
 
-    private static Tutorial[] tutorials;
+    private Tutorial[] tutorials;
 
     private static final Material compulsoryBlock = Material.LECTERN;
     private static final Material nonCompulsoryBlock = Material.BOOKSHELF;
 
-    public static void initialize()
+    public CompulsoryTutorialMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
     {
-        inventory_name = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Select Compulsory Tutorial";
+        super(getGUI(tutorials));
+        this.plugin = plugin;
+        this.user = user;
+        this.tutorials = tutorials;
+
+        setActions();
     }
 
-    public static String getInventoryName()
-    {
-        return inventory_name;
-    }
-
-    public static Inventory getGUI ()
+    private static Inventory getGUI (Tutorial[] tutorials)
     {
         //Declare variables
         int i;
         int iTutorials;
         int iDiv;
         int iMod;
+        int iRows;
 
-        //Admins can only select from tutorials which have been set by creators as in use
-        tutorials = Tutorial.fetchAll(true);
+        Inventory inventory;
 
         //Works out how many rows in the inventory are needed
         iTutorials = tutorials.length;
@@ -63,26 +63,37 @@ public class CompulsoryTutorialMenu
         inventory = Bukkit.createInventory(null, iRows * 9);
         inventory.clear();
 
-        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventory_name);
+        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventoryName);
 
         //Indicates that the creator has no tutorials if they don't own any
         if (iTutorials == 0)
         {
-            Utils.createItem(inventory, Material.BARRIER, 1, 5, ChatColor.BOLD +"" +ChatColor.GREEN +"There are no in-use tutorials on the system");
+            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, Component.text("There are no in-use tutorials on the system", NamedTextColor.GREEN));
+            inventory.setItem(5-1, noTutorials);
         }
 
         //Adds back button
-        Utils.createItem(inventory, Material.SPRUCE_DOOR, 1, iRows * 9, ChatColor.BOLD +"" +ChatColor.GREEN+"Back to creator menu");
+        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, Component.text("Back to creator menu", NamedTextColor.GREEN, TextDecoration.BOLD));
+        inventory.setItem((iRows * 9)-1, back);
 
-        //Inv slot 1 = the first one
+        //Inv slot 0 = the first one
         //Add the tutorials to the gui
-        for (i = 1 ; i <= tutorials.length ; i++)
+        for (i = 0 ; i < tutorials.length ; i++)
         {
-            if (tutorials[i-1].bCompulsory)
-                Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN +""+ChatColor.BOLD +tutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
+            ItemStack tutorial;
+            if (tutorials[i].bCompulsory)
+            {
+                tutorial = Utils.createItem(compulsoryBlock, 1,
+                        Component.text(tutorials[i].szTutorialName, NamedTextColor.GREEN, TextDecoration.BOLD),
+                        Component.text(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName(), NamedTextColor.DARK_GREEN));
+            }
             else
-                Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN +tutorials[i-1].szTutorialName),
-                        ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
+            {
+                tutorial = Utils.createItem(nonCompulsoryBlock, 1,
+                        Component.text(tutorials[i].szTutorialName, NamedTextColor.GREEN),
+                        Component.text(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName(), NamedTextColor.DARK_GREEN));
+            }
+            inventory.setItem(i, tutorial);
         }
 
         toReturn.setContents(inventory.getContents());
@@ -90,52 +101,72 @@ public class CompulsoryTutorialMenu
         return toReturn;
     }
 
-    public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
+    private void setActions()
     {
-        //Slot 0 indexed
+        //Declare variables
+        int i;
+        int iTutorials;
+        int iDiv;
+        int iMod;
+        int iRows;
 
-        //When player clicks on one of the tutorials
-        if (clicked.getType().equals(compulsoryBlock) || clicked.getType().equals(nonCompulsoryBlock))
+        //Works out how many rows in the inventory are needed
+        iTutorials = tutorials.length;
+        iDiv = iTutorials/9;
+        iMod = iTutorials%9;
+
+        if (iMod != 0 || iDiv == 0)
         {
-            //Toggles whether this tutorial is compulsory or not - ID is used to identify the tutorial
-            tutorials[slot].toggleCompulsory();
-
-            //Refreshes the display
-            player.closeInventory();
-            player.openInventory(CompulsoryTutorialMenu.getGUI());
-            return;
+            iDiv = iDiv + 1;
         }
 
-        if (slot+1 == iRows*9)
+        //Enables an empty row and then a row for the back button
+        iRows = iDiv+2;
+
+        //Adds back button
+        setAction((iRows * 9) - 1, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+
+            @Override
+            public void leftClick(User u) {
+                delete();
+                u.mainGui = new AdminMenu(plugin, user);
+                u.mainGui.open(u);
+            }
+        });
+
+        //Inv slot 0 = the first one
+        //Adds the actions of each slot
+        for (i = 0 ; i < tutorials.length ; i++)
         {
-            //Finds the correct user for this player from the plugins list of users
-            boolean bUserFound = false;
-
-            ArrayList<User> users = plugin.players;
-            int iLength = users.size();
-            int i;
-            User user = new User(player);
-
-            for (i = 0 ; i < iLength ; i++)
-            {
-                if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-                {
-                    user = users.get(i);
-                    bUserFound = true;
-                    break;
+            int iSlot = i;
+            setAction(iSlot, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
                 }
-            }
 
-            if (!bUserFound)
-            {
-                player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-                player.sendMessage(ChatColor.RED +"Try relogging");
-                return;
-            }
+                @Override
+                public void leftClick(User u)
+                {
+                    //Toggles whether the tutorial is compulsory
+                    tutorials[iSlot].toggleCompulsory();
 
-            //Back button
-            player.closeInventory();
-            player.openInventory(AdminMenu.getGUI(user));
+                    //Refreshes the display
+                    refresh();
+                }
+            });
         }
+    }
+
+    @Override
+    public void refresh() {
+        this.clearGui();
+        this.getInventory().setContents(getGUI(tutorials).getContents());
+        this.setActions();
+        this.open(user);
     }
 }

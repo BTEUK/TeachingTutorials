@@ -1,8 +1,10 @@
 package teachingtutorials.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -23,26 +25,20 @@ public class Utils {
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
-    public static ItemStack createItem(Inventory inv, Material material, int amount, int invSlot, String displayName, String... loreString) {
-
+    public static ItemStack createItem(Material material, int amount, Component displayName, Component... loreString)
+    {
         ItemStack item;
 
-        List<String> lore = new ArrayList<String>();
-
         item = new ItemStack(material);
+        item.setAmount(amount);
 
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(Utils.chat(displayName));
-        for (String s : loreString) {
-            lore.add(Utils.chat(s));
-        }
-        meta.setLore(lore);
+        meta.displayName(displayName);
+        List<Component> lore = new ArrayList<>(Arrays.asList(loreString));
+        meta.lore(lore);
         item.setItemMeta(meta);
 
-        inv.setItem(invSlot - 1,  item);
-
         return item;
-
     }
 
     public static ItemStack createPlayerSkull(Inventory inv, Player p, int amount, int invSlot, String displayName, String... loreString) {

@@ -2,14 +2,9 @@ package teachingtutorials.guis;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorials.Tutorial;
-import teachingtutorials.utils.User;
-import teachingtutorials.utils.Utils;
-
-import java.util.UUID;
 
 public class LocationCreationMenu
 {

@@ -5,13 +5,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.User;
-
-import java.util.ArrayList;
 
 public class PlayerInteract implements Listener
 {
@@ -27,35 +24,34 @@ public class PlayerInteract implements Listener
     @EventHandler
     public void interactEvent(PlayerInteractEvent e)
     {
-        Player player;
-
-        player = e.getPlayer();
+        //Extract the player
+        Player player = e.getPlayer();
 
         //Get the user
-        User user;
+        User user = User.identifyUser(plugin, player);
 
-        ArrayList<User> users = plugin.players;
-        int iLength = users.size();
-        int i;
-
-        for (i = 0 ; i < iLength ; i++)
+        if (user == null)
         {
-            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
+            plugin.getLogger().severe("User " + e.getPlayer().getName() + " can not be found!");
+            e.getPlayer().sendMessage(ChatColor.RED +"User can not be found, please relog!");
+            return;
+        }
+
+        if (e.getItem() != null)
+        {
+            if (player.getInventory().getItemInMainHand().equals(TeachingTutorials.menu))
             {
-                user = users.get(i);
+                e.setCancelled(true);
+                //Check if the mainGui is not null.
+                //If not then open it after refreshing its contents.
+                //If no gui exists open the navigator.
 
-                if (player.getOpenInventory().getType() != InventoryType.CRAFTING && e.getPlayer().getOpenInventory().getType() != InventoryType.CREATIVE)
-                {
-                    return;
-                }
-
-                if (player.getInventory().getItemInMainHand().equals(TeachingTutorials.menu))
-                {
-                    e.setCancelled(true);
-                    player.openInventory(MainMenu.getGUI(user));
-                }
-                break;
+                if (user.mainGui != null)
+                    user.mainGui.refresh();
+                else
+                    user.mainGui = new MainMenu(plugin, user);
+                user.mainGui.open(user);
             }
-        } //End for
+        }
     }
 }

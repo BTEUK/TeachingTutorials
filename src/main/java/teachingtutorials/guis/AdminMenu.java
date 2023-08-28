@@ -1,112 +1,122 @@
 package teachingtutorials.guis;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
-import java.util.ArrayList;
-
-public class AdminMenu
+public class AdminMenu extends Gui
 {
-    public static Inventory inventory;
-    public static String inventory_name;
-    public static int inv_rows = 3 * 9;
-    public static TeachingTutorials plugin;
+    private static final Component inventoryName = Component.text("Admin and Creator Menu", Style.style(TextDecoration.BOLD, NamedTextColor.DARK_AQUA));
+    private static final int iNumRows = 3 * 9;
+    private final TeachingTutorials plugin;
+    private final User user;
 
-    public static void initialize()
+    public AdminMenu(TeachingTutorials plugin, User user)
     {
-        inventory_name = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Admin and Creator Menu";
+        super(iNumRows, inventoryName);
+        this.plugin = plugin;
+        this.user = user;
 
-        inventory = Bukkit.createInventory(null, inv_rows);
+        createGui();
     }
 
-    public static String getInventoryName()
+    private void createGui()
     {
-        return inventory_name;
-    }
+        ItemStack setCompulsory = Utils.createItem(Material.IRON_DOOR, 1,
+                Component.text("Set Compulsory Tutorial", NamedTextColor.GREEN),
+                Component.text("Admins only", NamedTextColor.DARK_GREEN));
 
-    public static Inventory getGUI (User u)
-    {
-        Inventory toReturn = Bukkit.createInventory(null, inv_rows, inventory_name);
+        ItemStack myTutorials = Utils.createItem(Material.BOOKSHELF, 1,
+                Component.text("My Tutorials", NamedTextColor.GREEN),
+                Component.text("View the tutorials you have created", NamedTextColor.DARK_GREEN),
+                Component.text("Add locations", NamedTextColor.DARK_GREEN),
+                Component.text("Set a tutorial as in use or not in use", NamedTextColor.DARK_GREEN));
 
-        inventory.clear();
+        ItemStack createTutorial = Utils.createItem(Material.WRITABLE_BOOK, 1,
+                Component.text("Create Tutorial", NamedTextColor.GREEN),
+                Component.text("Create a new tutorial in game (coming soon)", NamedTextColor.DARK_GREEN));
 
-        //Inv slot 1 = the first one
+        int iSlotMyTutorials;
 
         //Menu for admins
-        if (u.player.hasPermission("TeachingTutorials.Admin"))
+        if (user.player.hasPermission("TeachingTutorials.Admin"))
         {
-            Utils.createItem(inventory, Material.IRON_BARS, 1, 12,(ChatColor.GREEN +"Set Compulsory Tutorial"), ChatColor.DARK_GREEN+"Admins only");
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 14,(ChatColor.GREEN +"My Tutorials"), ChatColor.DARK_GREEN+"View the tutorials you have created", ChatColor.DARK_GREEN+"Add locations", ChatColor.DARK_GREEN+"Set tutorials as in use");
-            Utils.createItem(inventory, Material.KNOWLEDGE_BOOK, 1, 16,(ChatColor.GREEN +"Create Tutorial"), ChatColor.DARK_GREEN+"Create a new tutorial in game");
+            setItem(12 - 1, setCompulsory, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+                @Override
+                public void leftClick(User u) {
+                    delete();
+                    u.mainGui = new CompulsoryTutorialMenu(plugin, u, Tutorial.fetchAll(true));
+                    u.mainGui.open(u);
+                }
+            });
+
+            iSlotMyTutorials = 14 - 1;
         }
         //Menu for creators only
         else
         {
-            Utils.createItem(inventory, Material.BOOKSHELF, 1, 12,(ChatColor.GREEN +"My Tutorials"), ChatColor.DARK_GREEN+"View the tutorials you have created", ChatColor.DARK_GREEN+"Add locations", ChatColor.DARK_GREEN+"Set tutorials as in use");
-            Utils.createItem(inventory, Material.KNOWLEDGE_BOOK, 1, 16,(ChatColor.GREEN +"Create Tutorial"), ChatColor.DARK_GREEN+"Create a new tutorial in game");
+            iSlotMyTutorials = 12 - 1;
         }
 
-        Utils.createItem(inventory, Material.SPRUCE_DOOR, 1, 27, ChatColor.BOLD +"" +ChatColor.GREEN+"Back to main menu");
+        setItem(iSlotMyTutorials, myTutorials, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                delete();
+                u.mainGui = new CreatorTutorialsMenu(plugin, u, Tutorial.fetchAllForUser(u.player.getUniqueId()));
+                u.mainGui.open(u);
+            }
+        });
 
-        toReturn.setContents(inventory.getContents());
+        setItem(16 - 1, createTutorial, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+//                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+//                delete();
+//                u.mainGui = new TutorialCreationMenu(plugin, u);
+//                u.mainGui.open(u);
+            }
+        });
 
-        return toReturn;
+        setItem(27 - 1, Utils.createItem(Material.SPRUCE_DOOR, 1,
+                Component.text("Back to main menu", NamedTextColor.GREEN, TextDecoration.BOLD)),
+                new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                delete();
+                u.mainGui = new MainMenu(plugin, u);
+                u.mainGui.open(u);
+            }
+        });
     }
 
-    public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
+    @Override
+    public void refresh()
     {
-        //Slot 0 indexed
+        this.clearGui();
+        this.createGui();
 
-        //Setting the compulsory tutorial
-        if (clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN +"Set Compulsory Tutorial"))
-        {
-            player.closeInventory();
-            player.openInventory(CompulsoryTutorialMenu.getGUI());
-            return;
-        }
-
-        //Finds the correct user for this player from the plugins list of users
-        boolean bUserFound = false;
-
-        ArrayList<User> users = plugin.players;
-        int iLength = users.size();
-        int i;
-        User user = new User(player);
-
-        for (i = 0 ; i < iLength ; i++)
-        {
-            if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-            {
-                user = users.get(i);
-                bUserFound = true;
-                break;
-            }
-        }
-
-        if (!bUserFound)
-        {
-            player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-            player.sendMessage(ChatColor.RED +"Try relogging");
-            return;
-        }
-
-        else if (clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN +"My Tutorials"))
-        {
-            player.closeInventory();
-            player.openInventory(CreatorTutorialsMenu.getGUI(user));
-        }
-        else if (slot+1 == 27)
-        {
-            player.closeInventory();
-            player.openInventory(MainMenu.getGUI(user));
-        }
-
+        this.open(user);
     }
 }

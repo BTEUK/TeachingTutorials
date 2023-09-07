@@ -21,13 +21,17 @@ public class Step
     private String szName;
     private String szStepInstructions;
     private String szInstructionDisplayType;
-    private Hologram instructions;
     private Player player;
     private TeachingTutorials plugin;
     public Stage parentStage;
     public boolean bStepFinished;
     protected int iStepID;
     protected int iStepInStage;
+
+    //Stores the location specific step data
+    private LocationStep locationStep;
+
+    private Hologram instructions;
 
     private int iGroupInStepLocationCreation;
     private Group currentGroup;
@@ -44,7 +48,7 @@ public class Step
 
     private StepEditorMenu menu;
 
-    //Used for creating a step in a lesson
+    //Used for creating a step for a lesson
     public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions, String szInstructionDisplayType)
     {
         this.player = player;
@@ -54,17 +58,24 @@ public class Step
         this.iStepID = iStepID;
         this.iStepInStage = iStepInStage;
         this.szName = szStepName;
-        this.szStepInstructions = szStepInstructions;
         this.szInstructionDisplayType = szInstructionDisplayType;
         this.selectionCompleteHold = false;
 
-        //Creates the menu
         if (parentStage.bLocationCreation)
         {
+            //Creates the menu
             User user = parentStage.tutorialPlaythrough.getCreatorOrStudent();
             menu = new StepEditorMenu(plugin, user, this);
             user.mainGui.delete();
             user.mainGui = menu;
+
+            //Initialises location step
+            this.locationStep = new LocationStep();
+        }
+        else
+        {
+            //Gets the location specific data
+            this.locationStep = LocationStep.getFromStepAndLocation(this.iStepID, this.parentStage.tutorialPlaythrough.getLocation().getLocationID());
         }
     }
 
@@ -72,8 +83,8 @@ public class Step
     public Step(String szName, String szInstructionDisplayType, String szInstructions)
     {
         this.szName = szName;
-        this.szStepInstructions = szInstructions;
         this.szInstructionDisplayType = szInstructionDisplayType;
+        this.szStepInstructions = szInstructions;
         this.selectionCompleteHold = false;
     }
 
@@ -82,10 +93,12 @@ public class Step
     {
         return szName;
     }
-    public String getInstructions()
+
+  /*  public String getInstructions()
     {
         return szStepInstructions;
     }
+  */
 
     public String getInstructionDisplayType()
     {

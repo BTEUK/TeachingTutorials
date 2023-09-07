@@ -6,8 +6,10 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.TpllListener;
+import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Hologram;
+import teachingtutorials.utils.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,7 +32,7 @@ public class Step
     private int iGroupInStepLocationCreation;
     private Group currentGroup;
 
-    //Handle multiple tasks being registered and the way they depend on ecahother
+    //Handle multiple tasks being registered and the way they depend on each other
     private boolean selectionCompleteHold;
     public ArrayList<TpllListener> handledTpllListeners = new ArrayList<>();
     public boolean bTpllDistanceMessageQueued;
@@ -39,6 +41,8 @@ public class Step
     //Groups are completed asynchronously.
     //Tasks in groups are completed synchronously
     public ArrayList<Group> groups = new ArrayList<>();
+
+    private StepEditorMenu menu;
 
     //Used for creating a step in a lesson
     public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions, String szInstructionDisplayType)
@@ -53,6 +57,15 @@ public class Step
         this.szStepInstructions = szStepInstructions;
         this.szInstructionDisplayType = szInstructionDisplayType;
         this.selectionCompleteHold = false;
+
+        //Creates the menu
+        if (parentStage.bLocationCreation)
+        {
+            User user = parentStage.tutorialPlaythrough.getCreatorOrStudent();
+            menu = new StepEditorMenu(plugin, user, this);
+            user.mainGui.delete();
+            user.mainGui = menu;
+        }
     }
 
     //Used for adding a step to the DB

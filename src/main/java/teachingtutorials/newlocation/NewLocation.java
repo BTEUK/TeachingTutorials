@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.fundamentalTasks.GeometricUtils;
+import teachingtutorials.guis.MainMenu;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.newlocation.elevation.ElevationManager;
 import teachingtutorials.tutorials.Location;
@@ -352,6 +353,7 @@ public class NewLocation extends TutorialPlaythrough
             case inputtingAnswers:
                 //Performs common playthrough termination processes
                 super.commonEndPlaythrough();
+                creatorOrStudent.mainGui = new MainMenu(plugin, creatorOrStudent);
 
                 //Delete the location in the DB
                 if(Location.deleteLocationByID(location.getLocationID()))

@@ -21,33 +21,30 @@ public class Hologram
             @Override
             public void run()
             {
-                double[] xzAddition;
+                //Calculates the direction of the hologram from the player
+                double[] xzAddition = new double[2];
                 float fYaw = player.getLocation().getYaw();
 
-                //Calculates where to move the hologram to based on the player's location
-                if (fYaw < -135 || fYaw > 135)
-                {
-                    xzAddition = new double[]{0, -4.5};
-                }
-                else if (fYaw < -45)
-                {
-                    xzAddition = new double[]{4.5, 0};
-                }
-                else if (fYaw > 45)
-                {
-                    xzAddition = new double[]{-4.5, 0};
-                }
-                else
-                {
-                    xzAddition = new double[]{0, 4.5};
-                }
+                xzAddition[0] = -4.5 * Math.sin(fYaw);
+                xzAddition[1] = 4.5 * Math.cos(fYaw);
 
                 //Moves the hologram
                 location.set(location.getX() +xzAddition[0], location.getY(), location.getZ() +xzAddition[1]);
 
-                //Raises or lowers the hologram
-                int iHeight = location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
-                location.set(location.getX(), iHeight + 3.1, location.getZ());
+                //Raises or lowers the hologram to be clear of the ground around the location
+                int iMaxHeight = location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
+                int iHeight;
+                for (int i = - 1 ; i <= 1 ; i++)
+                {
+                    for (int j = - 1 ; j <= 1 ; j++)
+                    {
+                        iHeight = location.getWorld().getHighestBlockYAt(location.getBlockX() + i, location.getBlockZ() + j);
+                        if (iHeight > iMaxHeight)
+                            iMaxHeight = iHeight;
+                    }
+                }
+
+                location.set(location.getX(), iMaxHeight + 3.1, location.getZ());
 
                 //Creates the hologram
                 hologram = api.createHologram(location);

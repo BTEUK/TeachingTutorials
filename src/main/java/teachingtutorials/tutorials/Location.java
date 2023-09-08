@@ -1,8 +1,5 @@
 package teachingtutorials.tutorials;
 
-import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
-import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -15,7 +12,6 @@ import java.sql.Statement;
 public class Location
 {
     private int iLocationID;
-    private LatLng startCoordinates;
     private int iTutorialID;
     private float fDifficulty;
     private World world;
@@ -25,9 +21,8 @@ public class Location
     //--------------------------------------------------
 
     //Used for creating a new location
-    public Location(LatLng latlong, int iTutorialID)
+    public Location(int iTutorialID, boolean bNew)
     {
-        this.startCoordinates = latlong;
         this.iTutorialID = iTutorialID;
     }
 
@@ -56,17 +51,14 @@ public class Location
 
     public World getWorld()
     {
+        if (world == null)
+            world = Bukkit.getWorld(iLocationID+"");
         return world;
     }
 
     public int getTutorialID()
     {
         return iTutorialID;
-    }
-
-    public LatLng getStartCoordinates()
-    {
-        return startCoordinates;
     }
 
     //---------------------------------------------------
@@ -76,33 +68,6 @@ public class Location
     public void setWorld(World world)
     {
         this.world = world;
-    }
-
-    //---------------------------------------------------
-    //-----------------------Utils-----------------------
-    //---------------------------------------------------
-
-    public org.bukkit.Location calculateBukkitStartLocation()
-    {
-        double[] xz;
-        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-
-        //Converts the longitude and latitude start coordinates of the location to minecraft coordinates
-        try
-        {
-            xz = projection.fromGeo(this.getStartCoordinates().getLng(), this.getStartCoordinates().getLat());
-            //Declares location object
-            org.bukkit.Location tpLocation;
-
-            tpLocation = new org.bukkit.Location(world, xz[0], world.getHighestBlockYAt((int) xz[0], (int) xz[1]) + 1, xz[1]);
-            return tpLocation;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Unable to convert lat,long coordinates of start location to minecraft coordinates");
-            return null;
-        }
     }
 
     //---------------------------------------------------
@@ -130,12 +95,7 @@ public class Location
 
             //Stores the information
             this.fDifficulty = resultSet.getFloat("Difficulty");;
-            double dLatitude = resultSet.getDouble("Latitude");
-            double dLongitude = resultSet.getDouble("Longitude");
             this.iTutorialID = resultSet.getInt("TutorialID");
-
-            //Puts the start coordinates into the LatLng object
-            this.startCoordinates = new LatLng(dLatitude, dLongitude);
         }
         catch (Exception e)
         {
@@ -199,7 +159,7 @@ public class Location
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO Locations (TutorialID, Latitude, Longitude) VALUES (" +iTutorialID +", " +startCoordinates.getLat() +", " +startCoordinates.getLng() +")";
+            sql = "INSERT INTO Locations (TutorialID) VALUES (" +iTutorialID+")";
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             iCount = SQL.executeUpdate(sql);
 

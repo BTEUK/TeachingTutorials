@@ -12,7 +12,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
@@ -26,7 +25,6 @@ import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
-import teachingtutorials.utils.VirtualBlock;
 import teachingtutorials.utils.plugins.Multiverse;
 import teachingtutorials.utils.plugins.WorldGuard;
 
@@ -203,13 +201,13 @@ public class NewLocation extends TutorialPlaythrough
     }
 
     //Called from the StartLocationListener once the start location has been dictated
-    public void lessonStart(LatLng latLong)
+    public void lessonStart(LatLng startTP)
     {
         //Updates the stage
         this.stage = NewLocationProcess.creatingLocationForDB;
 
         //Creates a new location object
-        this.location = new Location(latLong, this.getTutorialID());
+        this.location = new Location(this.getTutorialID(), true);
 
         //Adds the location to the database
         if (location.insertNewLocation())
@@ -281,7 +279,7 @@ public class NewLocation extends TutorialPlaythrough
             @Override
             public void run() {
                 try {
-                    generateArea(world);
+                    generateArea(world, startTP);
                 }
                 catch (OutOfProjectionBoundsException e)
                 {
@@ -296,10 +294,10 @@ public class NewLocation extends TutorialPlaythrough
         });
     }
 
-    private void teleportCreatorAndStartLesson(World world)
+    private void teleportCreatorAndStartLesson(World world, LatLng startTP)
     {
         //Finds the start location
-        org.bukkit.Location tpLocation = GeometricUtils.convertToBukkitLocation(world, location.getStartCoordinates().getLat(), location.getStartCoordinates().getLng());
+        org.bukkit.Location tpLocation = GeometricUtils.convertToBukkitLocation(world, startTP.getLat(), startTP.getLng());
 
         //Registers the fall listener
         fallListener = new Falling(creatorOrStudent.player, tpLocation, plugin);
@@ -389,7 +387,7 @@ public class NewLocation extends TutorialPlaythrough
         super.commonEndPlaythrough();
     }
 
-    private void generateArea(World world) throws OutOfProjectionBoundsException
+    private void generateArea(World world, LatLng startTP) throws OutOfProjectionBoundsException
     {
         //UK121Generation(world);
         TerraMinusMinusGeneration(world);
@@ -400,7 +398,7 @@ public class NewLocation extends TutorialPlaythrough
         Bukkit.getScheduler().runTask(plugin, new Runnable() {
             @Override
             public void run() {
-                teleportCreatorAndStartLesson(world);
+                teleportCreatorAndStartLesson(world, startTP);
             }
         });
     }

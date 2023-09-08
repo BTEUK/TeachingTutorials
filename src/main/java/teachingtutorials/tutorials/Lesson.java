@@ -92,10 +92,6 @@ public class Lesson extends TutorialPlaythrough
                 //Attempts to resume the lesson if the student has a lesson that they need to complete
                 if (resumeLesson())
                 { //If the lesson resumed successfully
-                    //Registers the fall listener
-                    fallListener = new Falling(creatorOrStudent.player, location.calculateBukkitStartLocation(), plugin);
-                    fallListener.register();
-
                     creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
                     creatorOrStudent.bInLesson = true; //Updates the user's "In Lesson" status in RAM
                     creatorOrStudent.setInLesson(1); //Updates the DB
@@ -121,10 +117,6 @@ public class Lesson extends TutorialPlaythrough
                     //Creates a new lesson in the DB and fetches it's LessonID
                     addLessonToDB();
                     //There is currently no check to determine whether the DB creation worked
-
-                    //Registers the fall listener
-                    fallListener = new Falling(creatorOrStudent.player, location.calculateBukkitStartLocation(), plugin);
-                    fallListener.register();
 
                     //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
                     creatorOrStudent.currentMode = Mode.Doing_Tutorial;
@@ -160,16 +152,6 @@ public class Lesson extends TutorialPlaythrough
                 +", Tutorial ID = " +this.tutorial.getTutorialID()
                 +" and LocationID = "+this.location.getLocationID());
 
-        //Teleports the player to the location's world
-        org.bukkit.Location tpLocation = location.calculateBukkitStartLocation();
-        if (tpLocation == null)
-        {
-            creatorOrStudent.player.sendMessage(ChatColor.RED +"Could not teleport you to the start location");
-            return false;
-        }
-        else
-            creatorOrStudent.player.teleport(tpLocation);
-
         //Redisplays all virtual blocks
         for (int i = 0 ; i < iStageIndex ; i++)
         {
@@ -181,6 +163,10 @@ public class Lesson extends TutorialPlaythrough
 
         //Takes the stage position back for it to then be set forward again at the start of nextStage()
         iStageIndex = iStageIndex - 1;
+
+        //Registers the fall listener
+        fallListener = new Falling(creatorOrStudent.player, plugin);
+        fallListener.register();
 
         //Continues the current stage
         nextStage(iStepToStart);
@@ -240,18 +226,12 @@ public class Lesson extends TutorialPlaythrough
                     +", Tutorial ID = " +this.tutorial.getTutorialID()
                     +" and LocationID = "+this.location.getLocationID());
 
-            //Teleports the student to the start location of the location
-            org.bukkit.Location tpLocation = location.calculateBukkitStartLocation();
-            if (tpLocation == null)
-            {
-                creatorOrStudent.player.sendMessage(ChatColor.RED +"Could not teleport you to the start location");
-                return false;
-            }
-            else
-                creatorOrStudent.player.teleport(tpLocation);
-
             //Set the current stage to the first stage
             this.iStageIndex = 0;
+
+            //Registers the fall listener
+            fallListener = new Falling(creatorOrStudent.player, plugin);
+            fallListener.register();
 
             //Signals for the next stage (the first stage) to begin
             nextStage(1);

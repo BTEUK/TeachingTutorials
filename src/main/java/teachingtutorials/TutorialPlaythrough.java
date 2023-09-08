@@ -46,6 +46,11 @@ public abstract class TutorialPlaythrough
         return creatorOrStudent;
     }
 
+    public void setFallListenerSafeLocation(org.bukkit.Location location)
+    {
+        fallListener.setSafeLocation(location);
+    }
+
     // Moves the tutorial on to the next stage
     // Accessed after the end of each stage (Called from Stage.endStage() asynchronously)
     // or at the start of the playthrough

@@ -1,5 +1,7 @@
 package teachingtutorials.tutorials;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -59,24 +61,15 @@ public class Step
         this.iStepInStage = iStepInStage;
         this.szName = szStepName;
         this.szInstructionDisplayType = szInstructionDisplayType;
+        this.szStepInstructions = szStepInstructions;
         this.selectionCompleteHold = false;
 
         if (parentStage.bLocationCreation)
-        {
-            //Creates the menu
-            User user = parentStage.tutorialPlaythrough.getCreatorOrStudent();
-            menu = new StepEditorMenu(plugin, user, this);
-            user.mainGui.delete();
-            user.mainGui = menu;
-
             //Initialises location step
-            this.locationStep = new LocationStep();
-        }
+            this.locationStep = new LocationStep(parentStage.getLocationID(), iStepID);
         else
-        {
             //Gets the location specific data
             this.locationStep = LocationStep.getFromStepAndLocation(this.iStepID, this.parentStage.tutorialPlaythrough.getLocation().getLocationID());
-        }
     }
 
     //Used for adding a step to the DB
@@ -94,11 +87,10 @@ public class Step
         return szName;
     }
 
-  /*  public String getInstructions()
+    public String getInstructions()
     {
         return szStepInstructions;
     }
-  */
 
     public String getInstructionDisplayType()
     {
@@ -187,6 +179,10 @@ public class Step
         }, 2L);
     }
 
+    /**
+     * Starts the player on this step. Sends them the title of the step, registers the fall listener
+     * teleports them to the start, displays the instructions and initialises the groups of tasks
+     */
     public void startStep()
     {
         //Display step title
@@ -208,16 +204,27 @@ public class Step
             display.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
         }
 
-        //TP to location?
+        if (!parentStage.bLocationCreation)
+        {
+            //TP to start location, and store this location for later use
+            Location startLocation = locationStep.teleportPlayerToStartOfStep(player, parentStage.tutorialPlaythrough.getLocation().getWorld(), plugin);
 
-        //Displays the step instructions
+            //Updates the fall listener
+            parentStage.tutorialPlaythrough.setFallListenerSafeLocation(startLocation);
+        }
+
+        //Displays the step instructions - location is based on the start location for now
         Location instructionLocation;
         if (iStepInStage == 1 && parentStage.isFirstStage())
         {
-            instructionLocation = parentStage.tutorialPlaythrough.getLocation().calculateBukkitStartLocation();
+            instructionLocation = locationStep.getStartLocation(parentStage.tutorialPlaythrough.getLocation().getWorld());
         }
         else
-            instructionLocation = player.getLocation();
+        {
+            instructionLocation = locationStep.getStartLocation(parentStage.tutorialPlaythrough.getLocation().getWorld());
+            if (instructionLocation == null)
+                instructionLocation = player.getLocation();
+        }
 
         switch (szInstructionDisplayType)
         {
@@ -244,6 +251,13 @@ public class Step
             iGroupInStepLocationCreation = 1;
             currentGroup.initialRegister();
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
+
+            //Creates the menu, assigns it to the user
+            User user = parentStage.tutorialPlaythrough.getCreatorOrStudent();
+            menu = new StepEditorMenu(plugin, user, this, this.locationStep);
+            if (user.mainGui != null)
+                user.mainGui.delete();
+            user.mainGui = menu;
         }
         else
         {
@@ -273,10 +287,6 @@ public class Step
             if (iGroupInStepLocationCreation == groups.size()) //If the current group is the last group
             {
                 bAllGroupsFinished = true;
-
-                //Remove hologram
-                if (szInstructionDisplayType.equals("hologram"))
-                    instructions.removeHologram();
             }
             else
             {
@@ -308,6 +318,39 @@ public class Step
                 instructions.removeHologram();
 
             this.bStepFinished = true;
+
+            if (parentStage.bLocationCreation)
+            {
+                if (locationStep.isLocationSet())
+                    tryNextStep();
+                else
+                {
+                    Display display = new Display(player, Component.text("You must now set the step's start location. Use the learning menu", NamedTextColor.RED));
+                    display.Message();
+
+                    //We wait and then perform the code in the if statement above once the location has been set, via tryNextStep()
+                }
+            }
+            else
+            {
+                parentStage.nextStep();
+            }
+        }
+    }
+
+    /**
+     * Will move the player on to the next step if the current step is finished.
+     * This is used if the creator finished the step answer submissions before setting the start location.
+     * This method has one use: it is called directly after the start location is set
+     */
+    public void tryNextStep()
+    {
+        if (!parentStage.bLocationCreation)
+            return;
+
+        if (bStepFinished)
+        {
+            locationStep.storeDetailsInDB();
             parentStage.nextStep();
         }
     }
@@ -318,12 +361,14 @@ public class Step
         if (szInstructionDisplayType.equals("hologram"))
             instructions.removeHologram();
 
+        //Unregisters the current task listener
         if (parentStage.bLocationCreation)
         {
             currentGroup.terminateEarly();
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Unregistered group "+iGroupInStepLocationCreation);
         }
 
+        //Unregisters the task listeners
         else
         {
             int i;

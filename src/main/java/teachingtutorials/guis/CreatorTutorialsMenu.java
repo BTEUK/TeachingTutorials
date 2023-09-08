@@ -177,9 +177,7 @@ public class CreatorTutorialsMenu extends Gui
     {
         if (tutorials[iSlot].toggleInUse())
         {
-            delete();
             this.refresh();
-            u.mainGui.open(u);
         }
         else
         {

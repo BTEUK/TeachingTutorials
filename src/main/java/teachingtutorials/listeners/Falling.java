@@ -23,6 +23,17 @@ public class Falling implements Listener
         this.plugin = plugin;
     }
 
+    public Falling (Player player, TeachingTutorials plugin)
+    {
+        this.player = player;
+        this.plugin = plugin;
+    }
+
+    public void setSafeLocation(Location location)
+    {
+        this.safeLocation = location;
+    }
+
     @EventHandler
     public void onClick(PlayerMoveEvent event)
     {

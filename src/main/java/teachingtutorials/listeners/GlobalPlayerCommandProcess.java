@@ -44,6 +44,9 @@ public class GlobalPlayerCommandProcess implements Listener
     @EventHandler(priority = EventPriority.LOW)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
+        if (event.isCancelled())
+            return;
+
         //Extracts the player to a local variable
         Player player = event.getPlayer();
 
@@ -116,11 +119,12 @@ public class GlobalPlayerCommandProcess implements Listener
             User user = User.identifyUser(plugin, player);
             if (user != null)
             {
-                if (user.mainGui != null)
-                    user.mainGui.delete();
-
-                user.mainGui = new MainMenu(plugin, user);
                 user.mainGui.open(user);
+//                if (user.mainGui != null)
+//                    user.mainGui.delete();
+//
+//                user.mainGui = new MainMenu(plugin, user);
+//                user.mainGui.open(user);
             }
         }
     }

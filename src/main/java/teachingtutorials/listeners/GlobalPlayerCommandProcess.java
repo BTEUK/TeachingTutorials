@@ -1,7 +1,6 @@
 package teachingtutorials.listeners;
 
 import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
@@ -119,12 +118,20 @@ public class GlobalPlayerCommandProcess implements Listener
             User user = User.identifyUser(plugin, player);
             if (user != null)
             {
-                user.mainGui.open(user);
-//                if (user.mainGui != null)
-//                    user.mainGui.delete();
-//
-//                user.mainGui = new MainMenu(plugin, user);
-//                user.mainGui.open(user);
+                //Check if the mainGui is not null.
+                if (user.mainGui != null)
+                    //If not then open it after refreshing its contents.
+                    user.mainGui.refresh();
+
+                    //If no gui exists open the learning menu
+                else
+                {
+                    //Creates a new main menu
+                    user.mainGui = new MainMenu(plugin, user);
+
+                    //Opens the gui
+                    user.mainGui.open(user);
+                }
             }
         }
     }

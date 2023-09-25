@@ -68,10 +68,9 @@ public class MainMenu extends Gui
                     @Override
                     public void leftClick(User u)
                     {
-                        //Deletes this gui
-                        delete();
-
-                        performEvent(EventType.COMPULSORY, u, plugin);
+                        if (performEvent(EventType.COMPULSORY, u, plugin))
+                            //Deletes this gui
+                            delete();
                     }
                 });
 
@@ -83,10 +82,9 @@ public class MainMenu extends Gui
                     }
                     @Override
                     public void leftClick(User u) {
-                        //Deletes this gui
-                        delete();
-
-                        performEvent(EventType.LIBRARY, u, plugin);
+                        if (performEvent(EventType.LIBRARY, u, plugin))
+                            //Deletes this gui
+                            delete();
                     }
                 });
 
@@ -100,10 +98,9 @@ public class MainMenu extends Gui
                     @Override
                     public void leftClick(User u)
                     {
-                        //Deletes this gui
-                        delete();
-
-                        performEvent(EventType.CONTINUE, u, plugin);
+                        if (performEvent(EventType.CONTINUE, u, plugin))
+                            //Deletes this gui
+                            delete();
                     }
                 });
             }
@@ -129,10 +126,9 @@ public class MainMenu extends Gui
                     }
                     @Override
                     public void leftClick(User u) {
-                        //Deletes this gui
-                        delete();
-
-                        performEvent(EventType.COMPULSORY, u, plugin);
+                        if (performEvent(EventType.COMPULSORY, u, plugin))
+                            //Deletes this gui
+                            delete();
                     }
                 });
             }
@@ -149,10 +145,9 @@ public class MainMenu extends Gui
                 @Override
                 public void leftClick(User u)
                 {
-                    //Deletes this gui
-                    delete();
-
-                    performEvent(EventType.CONTINUE, u, plugin);
+                    if (performEvent(EventType.CONTINUE, u, plugin))
+                        //Deletes this gui
+                        delete();
                 }
             });
 
@@ -164,10 +159,9 @@ public class MainMenu extends Gui
                 }
                 @Override
                 public void leftClick(User u) {
-                    //Deletes this gui
-                    delete();
-
-                    performEvent(EventType.LIBRARY, u, plugin);
+                    if (performEvent(EventType.LIBRARY, u, plugin))
+                        //Deletes this gui
+                        delete();
                 }
             });
         }
@@ -184,36 +178,42 @@ public class MainMenu extends Gui
                 }
                 @Override
                 public void leftClick(User u) {
-                    //Deletes this gui
-                    delete();
-                    performEvent(EventType.ADMIN_MENU, u, plugin);
+                    if (performEvent(EventType.ADMIN_MENU, u, plugin))
+                        //Deletes this gui
+                        delete();
                 }
             });
         }
     }
 
-    public static void performEvent(EventType event, User user, TeachingTutorials plugin)
+    public static boolean performEvent(EventType event, User user, TeachingTutorials plugin)
     {
         switch (event) {
             case COMPULSORY -> {
                 //Starts the compulsory tutorial
                 Compulsory compulsory = new Compulsory(plugin, user);
-                compulsory.startLesson();
+                return compulsory.startLesson();
             }
             case CONTINUE -> {
                 //Creates a lesson with the user
                 Lesson lesson = new Lesson(user, plugin, false);
-                lesson.startLesson();
+                return lesson.startLesson();
             }
             case ADMIN_MENU ->
             {
                 user.mainGui = new AdminMenu(plugin, user);
                 user.mainGui.open(user);
+                return true;
             }
             case LIBRARY ->
             {
                 user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations());
                 user.mainGui.open(user);
+                return true;
+            }
+            default ->
+            {
+                return false;
             }
         }
     }
@@ -225,5 +225,12 @@ public class MainMenu extends Gui
         this.createGui();
 
         this.open(user);
+    }
+
+    @Override
+    public void delete()
+    {
+        super.delete();
+        user.mainGui = null;
     }
 }

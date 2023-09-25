@@ -73,7 +73,7 @@ public class Lesson extends TutorialPlaythrough
     }
 
     //Used for kicking the lesson off, determines whether it needs to create a new lesson or resume a previous lesson
-    public void startLesson()
+    public boolean startLesson()
     {
         //Checks to see whether a user is actually free to start a new lesson
         //(Not already doing a tutorial, creating a tutorial, creating a location etc.)
@@ -81,6 +81,7 @@ public class Lesson extends TutorialPlaythrough
         {
             Display display = new Display(creatorOrStudent.player, ChatColor.DARK_AQUA +"Complete your current tutorial first");
             display.Message();
+            return false;
         }
 
         //Student is ready to go into a lesson and the tutorial must now be determined
@@ -98,12 +99,14 @@ public class Lesson extends TutorialPlaythrough
 
                     //Adds this lesson to the list of lessons ongoing on the server
                     this.plugin.lessons.add(this);
+                    return true;
                 }
                 else
                 { //If the lesson failed to resume
                     Display display = new Display(creatorOrStudent.player, ChatColor.RED +"Could not resume lesson, speak to staff");
                     display.Message();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not resume lesson for player: "+creatorOrStudent.player.getName());
+                    return false;
                 }
             }
 
@@ -125,12 +128,16 @@ public class Lesson extends TutorialPlaythrough
 
                     //Adds this lesson to the list of lessons ongoing on the server
                     this.plugin.lessons.add(this);
+
+                    return true;
                 }
                 else
                 { //If the lesson failed to be created
                     Display display = new Display(creatorOrStudent.player, ChatColor.RED +"Could not create lesson, speak to staff");
                     display.Message();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create lesson for player: "+creatorOrStudent.player.getName());
+
+                    return false;
                 }
             }
         }

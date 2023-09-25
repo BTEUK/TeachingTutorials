@@ -67,7 +67,7 @@ public class Place extends Task implements Listener
         this.szDetails = szDetails;
 
         //Listen out for difficulty - There will only be one difficulty listener per place task to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.tpll);
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.tpll);
         difficultyListener.register();
     }
 

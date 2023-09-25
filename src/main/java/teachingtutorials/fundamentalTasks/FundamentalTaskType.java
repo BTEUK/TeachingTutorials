@@ -1,6 +1,6 @@
 package teachingtutorials.fundamentalTasks;
 
-public enum FundamentalTask
+public enum FundamentalTaskType
 {
     tpll, selection, command, place, chat
 }

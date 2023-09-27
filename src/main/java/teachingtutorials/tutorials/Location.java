@@ -207,6 +207,12 @@ public class Location
             iCount = SQL.executeUpdate(sql);
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationTasks were deleted");
 
+            //Removes the location specific step details
+            sql = "Delete FROM LocationSteps WHERE LocationID = " +iLocationID;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
+            iCount = SQL.executeUpdate(sql);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationSteps were deleted");
+
             //Removes the location
             sql = "Delete FROM Locations WHERE LocationID = " +iLocationID;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);

@@ -1,13 +1,16 @@
 package teachingtutorials.tutorials;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.TpllListener;
+import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
 import teachingtutorials.utils.Display;
-import teachingtutorials.utils.Hologram;
+import teachingtutorials.utils.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,20 +20,25 @@ import java.util.ArrayList;
 public class Step
 {
     private String szName;
-    private String szStepInstructions;
-    private String szInstructionDisplayType;
-    private Hologram instructions;
+    private Display.DisplayType instructionDisplayType;
     private Player player;
     private TeachingTutorials plugin;
     public Stage parentStage;
+
+    /**
+     * Notes whether all tasks have been completed/set or not
+     */
     public boolean bStepFinished;
     protected int iStepID;
     protected int iStepInStage;
 
+    //Stores the location specific step data
+    private LocationStep locationStep;
+
     private int iGroupInStepLocationCreation;
     private Group currentGroup;
 
-    //Handle multiple tasks being registered and the way they depend on ecahother
+    //Handle multiple tasks being registered and the way they depend on each other
     private boolean selectionCompleteHold;
     public ArrayList<TpllListener> handledTpllListeners = new ArrayList<>();
     public boolean bTpllDistanceMessageQueued;
@@ -40,8 +48,10 @@ public class Step
     //Tasks in groups are completed synchronously
     public ArrayList<Group> groups = new ArrayList<>();
 
-    //Used for creating a step in a lesson
-    public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szStepInstructions, String szInstructionDisplayType)
+    private StepEditorMenu menu;
+
+    //Used for creating a step for a lesson
+    public Step(int iStepID, int iStepInStage, String szStepName, Player player, TeachingTutorials plugin, Stage parentStage, String szInstructionDisplayType)
     {
         this.player = player;
         this.plugin = plugin;
@@ -50,17 +60,22 @@ public class Step
         this.iStepID = iStepID;
         this.iStepInStage = iStepInStage;
         this.szName = szStepName;
-        this.szStepInstructions = szStepInstructions;
-        this.szInstructionDisplayType = szInstructionDisplayType;
+        setInstructionDisplayType(szInstructionDisplayType);
         this.selectionCompleteHold = false;
+
+        if (parentStage.bLocationCreation)
+            //Initialises location step
+            this.locationStep = new LocationStep(parentStage.getLocationID(), iStepID, getInstructionDisplayType().equals(Display.DisplayType.hologram));
+        else
+            //Gets the location specific data
+            this.locationStep = LocationStep.getFromStepAndLocation(this.iStepID, this.parentStage.tutorialPlaythrough.getLocation().getLocationID(), getInstructionDisplayType().equals(Display.DisplayType.hologram));
     }
 
     //Used for adding a step to the DB
-    public Step(String szName, String szInstructionDisplayType, String szInstructions)
+    public Step(String szName, String szInstructionDisplayType)
     {
         this.szName = szName;
-        this.szStepInstructions = szInstructions;
-        this.szInstructionDisplayType = szInstructionDisplayType;
+        setInstructionDisplayType(szInstructionDisplayType);
         this.selectionCompleteHold = false;
     }
 
@@ -69,14 +84,23 @@ public class Step
     {
         return szName;
     }
-    public String getInstructions()
+
+    public void setInstructionDisplayType(String szInstructionDisplayType)
     {
-        return szStepInstructions;
+        Display.DisplayType displayType;
+        try {
+            displayType = Display.DisplayType.valueOf(szInstructionDisplayType);
+        }
+        catch (IllegalArgumentException e) {
+            Bukkit.getConsoleSender().sendMessage("The step instruction display type was not properly specified ("+szInstructionDisplayType +"), reverting to chat");
+            displayType = Display.DisplayType.chat;
+        }
+        this.instructionDisplayType = displayType;
     }
 
-    public String getInstructionDisplayType()
+    public Display.DisplayType getInstructionDisplayType()
     {
-        return szInstructionDisplayType;
+        return this.instructionDisplayType;
     }
 
     public boolean getSelectionCompleteHold()
@@ -106,13 +130,13 @@ public class Step
         selectionCompleteHold = true;
 
         //Changes the hold back to false in 0.5 seconds
-        this.plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+        this.plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+        {
             public void run()
             {
                 selectionCompleteHold = false;
             }
         }, 10L);
-
     }
 
     public void calculateNearestTpllPointAfterWait()
@@ -161,6 +185,10 @@ public class Step
         }, 2L);
     }
 
+    /**
+     * Starts the player on this step. Sends them the title of the step, registers the fall listener,
+     * teleports them to the start, displays the instructions and initialises the groups of tasks
+     */
     public void startStep()
     {
         //Display step title
@@ -182,44 +210,12 @@ public class Step
             display.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
         }
 
-        //TP to location?
-
-        //Displays the step instructions
-        Location instructionLocation;
-        if (iStepInStage == 1 && parentStage.isFirstStage())
-        {
-            instructionLocation = parentStage.tutorialPlaythrough.getLocation().calculateBukkitStartLocation();
-        }
-        else
-            instructionLocation = player.getLocation();
-
-        switch (szInstructionDisplayType)
-        {
-            case "hologram":
-                display = new Display(player, szStepInstructions);
-                instructions = display.Hologram(ChatColor.AQUA +"" +ChatColor.UNDERLINE +ChatColor.BOLD +szName, instructionLocation);
-                break;
-            case "chat":
-            default:
-                display = new Display(player, szStepInstructions);
-                display.Message();
-                break;
-        }
-
         //Fetches the details of groups and stores them in memory
         fetchAndInitialiseGroups();
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +groups.size() +" groups fetched");
 
-        //If a location is being created, groups are made synchronous rather than asynchronous
-        if (parentStage.bLocationCreation)
-        {
-            //Register the start of the first group
-            currentGroup = groups.get(0);
-            iGroupInStepLocationCreation = 1;
-            currentGroup.initialRegister();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
-        }
-        else
+        //Player is a student doing a tutorial
+        if (!parentStage.bLocationCreation)
         {
             //Register the start of all groups
             int i;
@@ -230,6 +226,33 @@ public class Step
                 groups.get(i).initialRegister();
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+(i+1));
             }
+
+            //TP to start location, and store this location for later use
+            Location startLocation = locationStep.teleportPlayerToStartOfStep(player, parentStage.tutorialPlaythrough.getLocation().getWorld(), plugin);
+
+            //Updates the fall listener
+            parentStage.tutorialPlaythrough.setFallListenerSafeLocation(startLocation);
+
+            //Displays the step instructions
+            this.locationStep.displayInstructions(getInstructionDisplayType(), player, szName, parentStage.tutorialPlaythrough.getLocation().getWorld());
+        }
+
+        //Player is a creator creating a new location for a tutorial
+        else
+        {
+            //Register the start of the first group
+            //If a location is being created, groups are made synchronous rather than asynchronous
+            currentGroup = groups.get(0);
+            iGroupInStepLocationCreation = 1;
+            currentGroup.initialRegister();
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+iGroupInStepLocationCreation +" of step");
+
+            //Creates the menu, assigns it to the user
+            User user = parentStage.tutorialPlaythrough.getCreatorOrStudent();
+            menu = new StepEditorMenu(plugin, user, this, this.locationStep);
+            if (user.mainGui != null)
+                user.mainGui.delete();
+            user.mainGui = menu;
         }
     }
 
@@ -247,10 +270,6 @@ public class Step
             if (iGroupInStepLocationCreation == groups.size()) //If the current group is the last group
             {
                 bAllGroupsFinished = true;
-
-                //Remove hologram
-                if (szInstructionDisplayType.equals("hologram"))
-                    instructions.removeHologram();
             }
             else
             {
@@ -277,27 +296,97 @@ public class Step
 
         if (bAllGroupsFinished == true)
         {
-            //Remove hologram
-            if (szInstructionDisplayType.equals("hologram"))
-                instructions.removeHologram();
-
+            //Marks the step's tasks as all finished
             this.bStepFinished = true;
-            parentStage.nextStep();
+
+            //Player has just finished setting the answers for this step
+            if (parentStage.bLocationCreation)
+            {
+                //Checks whether the additional information is set - start location and instructions etc
+                if (locationStep.isOtherInformationSet())
+                    tryNextStep();
+                else
+                {
+                    Display display = new Display(player, Component.text("You must now set the step's start location and instructions. Use the learning menu", NamedTextColor.RED));
+                    display.Message();
+
+                    //Sets the player's menu as the step editor menu
+                    this.parentStage.tutorialPlaythrough.getCreatorOrStudent().mainGui = menu;
+
+                    //Opens the step editor menu
+                    menu.open(this.parentStage.tutorialPlaythrough.getCreatorOrStudent());
+
+                    //We wait and then perform the code in the if statement above once the location has been set, via tryNextStep()
+                }
+            }
+            else
+            {
+                //Remove hologram
+                if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
+                    locationStep.removeInstructionsHologram();
+                parentStage.nextStep();
+            }
+        }
+    }
+
+    /**
+     * Will move the player on to the next step if the current step is finished - answers AND additional information set
+     * <p> </p>
+     * <p> This method has two uses: it is called directly after any additional step information is set.
+     * It is called when the answers have just finished being set.
+     * </p>
+     */
+    public void tryNextStep()
+    {
+        //Blocks any processes occurring if the method has wrongly been called from outside of location creation
+        if (!parentStage.bLocationCreation)
+            return;
+
+        if (bStepFinished)
+        {
+            if (locationStep.isOtherInformationSet())
+            {
+                //Remove hologram
+                if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
+                    locationStep.removeInstructionsHologram();
+
+                //Deletes menu
+                menu.delete();
+                menu = null;
+
+                locationStep.storeDetailsInDB();
+                parentStage.nextStep();
+            }
+            else
+            {
+                Display display = new Display(player, ChatColor.GREEN +"Continue to set the additional information, use the learning menu");
+                display.Message();
+            }
+        }
+        else
+        {
+            Display display = new Display(player, ChatColor.GREEN +"Continue to set the answers");
+            display.Message();
         }
     }
 
     public void terminateEarly()
     {
         //Remove holograms
-        if (szInstructionDisplayType.equals("hologram"))
-            instructions.removeHologram();
+        if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
+            this.locationStep.removeInstructionsHologram();
 
+        //Unregisters the current task listener
         if (parentStage.bLocationCreation)
         {
             currentGroup.terminateEarly();
+            menu.delete();
+            menu = null;
+
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Unregistered group "+iGroupInStepLocationCreation);
         }
 
+        //Unregisters the task listeners
         else
         {
             int i;
@@ -329,7 +418,7 @@ public class Step
             resultSet = SQL.executeQuery(sql);
             while (resultSet.next())
             {
-                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), resultSet.getString("StepName") ,player, plugin, stage, resultSet.getString("StepInstructions"), resultSet.getString("InstructionDisplay"));
+                Step step = new Step(resultSet.getInt("StepID"), resultSet.getInt("StepInStage"), resultSet.getString("StepName") ,player, plugin, stage, resultSet.getString("InstructionDisplay"));
                 steps.add(step);
             }
         }
@@ -345,5 +434,3 @@ public class Step
         return steps;
     }
 }
-
-

@@ -9,7 +9,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.FundamentalTask;
+import teachingtutorials.fundamentalTasks.FundamentalTaskType;
 import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
@@ -21,10 +21,10 @@ public class DifficultyListener implements Listener
     Player player;
     LocationTask locationTask;
     Task task;
-    FundamentalTask taskType;
+    FundamentalTaskType taskType;
     boolean bReadyForDifficulty;
 
-    public DifficultyListener(TeachingTutorials plugin, Player player, Task task, FundamentalTask taskType)
+    public DifficultyListener(TeachingTutorials plugin, Player player, Task task, FundamentalTaskType taskType)
     {
         this.plugin = plugin;
         this.player = player;

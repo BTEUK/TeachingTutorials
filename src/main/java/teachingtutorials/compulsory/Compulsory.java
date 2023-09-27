@@ -12,8 +12,8 @@ public class Compulsory extends Lesson
         super(user, plugin, true);
     }
 
-    public void startLesson()
+    public boolean startLesson()
     {
-        super.startLesson();
+        return super.startLesson();
     }
 }

@@ -58,8 +58,6 @@ public class GeometricUtils
     {
         double[] xz = null;
 
-        final GeographicProjection projection = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection();
-
         try
         {
             xz = projection.fromGeo(dLongitude, dLatitude);
@@ -69,6 +67,21 @@ public class GeometricUtils
             //Player has selected an area outside of the projection
         }
         return xz;
+    }
+
+    public static double[] convertToGeometricCoordinates(double X, double Z)
+    {
+        double[] longLat = null;
+
+        try
+        {
+            longLat = projection.toGeo(X, Z);
+        }
+        catch (OutOfProjectionBoundsException e)
+        {
+            //Player has selected an area outside of the projection
+        }
+        return longLat;
     }
 
     public static boolean tpllPlayer(World world, double latitude, double longitude, Player player)

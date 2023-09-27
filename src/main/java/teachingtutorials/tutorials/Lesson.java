@@ -73,7 +73,7 @@ public class Lesson extends TutorialPlaythrough
     }
 
     //Used for kicking the lesson off, determines whether it needs to create a new lesson or resume a previous lesson
-    public void startLesson()
+    public boolean startLesson()
     {
         //Checks to see whether a user is actually free to start a new lesson
         //(Not already doing a tutorial, creating a tutorial, creating a location etc.)
@@ -81,6 +81,7 @@ public class Lesson extends TutorialPlaythrough
         {
             Display display = new Display(creatorOrStudent.player, ChatColor.DARK_AQUA +"Complete your current tutorial first");
             display.Message();
+            return false;
         }
 
         //Student is ready to go into a lesson and the tutorial must now be determined
@@ -92,22 +93,20 @@ public class Lesson extends TutorialPlaythrough
                 //Attempts to resume the lesson if the student has a lesson that they need to complete
                 if (resumeLesson())
                 { //If the lesson resumed successfully
-                    //Registers the fall listener
-                    fallListener = new Falling(creatorOrStudent.player, location.calculateBukkitStartLocation(), plugin);
-                    fallListener.register();
-
                     creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
                     creatorOrStudent.bInLesson = true; //Updates the user's "In Lesson" status in RAM
                     creatorOrStudent.setInLesson(1); //Updates the DB
 
                     //Adds this lesson to the list of lessons ongoing on the server
                     this.plugin.lessons.add(this);
+                    return true;
                 }
                 else
                 { //If the lesson failed to resume
                     Display display = new Display(creatorOrStudent.player, ChatColor.RED +"Could not resume lesson, speak to staff");
                     display.Message();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not resume lesson for player: "+creatorOrStudent.player.getName());
+                    return false;
                 }
             }
 
@@ -122,10 +121,6 @@ public class Lesson extends TutorialPlaythrough
                     addLessonToDB();
                     //There is currently no check to determine whether the DB creation worked
 
-                    //Registers the fall listener
-                    fallListener = new Falling(creatorOrStudent.player, location.calculateBukkitStartLocation(), plugin);
-                    fallListener.register();
-
                     //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
                     creatorOrStudent.currentMode = Mode.Doing_Tutorial;
                     creatorOrStudent.bInLesson = true;
@@ -133,12 +128,16 @@ public class Lesson extends TutorialPlaythrough
 
                     //Adds this lesson to the list of lessons ongoing on the server
                     this.plugin.lessons.add(this);
+
+                    return true;
                 }
                 else
                 { //If the lesson failed to be created
                     Display display = new Display(creatorOrStudent.player, ChatColor.RED +"Could not create lesson, speak to staff");
                     display.Message();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create lesson for player: "+creatorOrStudent.player.getName());
+
+                    return false;
                 }
             }
         }
@@ -160,16 +159,6 @@ public class Lesson extends TutorialPlaythrough
                 +", Tutorial ID = " +this.tutorial.getTutorialID()
                 +" and LocationID = "+this.location.getLocationID());
 
-        //Teleports the player to the location's world
-        org.bukkit.Location tpLocation = location.calculateBukkitStartLocation();
-        if (tpLocation == null)
-        {
-            creatorOrStudent.player.sendMessage(ChatColor.RED +"Could not teleport you to the start location");
-            return false;
-        }
-        else
-            creatorOrStudent.player.teleport(tpLocation);
-
         //Redisplays all virtual blocks
         for (int i = 0 ; i < iStageIndex ; i++)
         {
@@ -181,6 +170,10 @@ public class Lesson extends TutorialPlaythrough
 
         //Takes the stage position back for it to then be set forward again at the start of nextStage()
         iStageIndex = iStageIndex - 1;
+
+        //Registers the fall listener
+        fallListener = new Falling(creatorOrStudent.player, plugin);
+        fallListener.register();
 
         //Continues the current stage
         nextStage(iStepToStart);
@@ -240,18 +233,12 @@ public class Lesson extends TutorialPlaythrough
                     +", Tutorial ID = " +this.tutorial.getTutorialID()
                     +" and LocationID = "+this.location.getLocationID());
 
-            //Teleports the student to the start location of the location
-            org.bukkit.Location tpLocation = location.calculateBukkitStartLocation();
-            if (tpLocation == null)
-            {
-                creatorOrStudent.player.sendMessage(ChatColor.RED +"Could not teleport you to the start location");
-                return false;
-            }
-            else
-                creatorOrStudent.player.teleport(tpLocation);
-
             //Set the current stage to the first stage
             this.iStageIndex = 0;
+
+            //Registers the fall listener
+            fallListener = new Falling(creatorOrStudent.player, plugin);
+            fallListener.register();
 
             //Signals for the next stage (the first stage) to begin
             nextStage(1);

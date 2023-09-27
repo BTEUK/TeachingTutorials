@@ -103,7 +103,7 @@ public class Command extends Task implements Listener
         this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
 
         //Listen out for difficulty - There will only be one difficulty listener per command to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.command);
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.command);
         difficultyListener.register();
 
         tasksInGroup = tasks;

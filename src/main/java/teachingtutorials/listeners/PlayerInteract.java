@@ -42,15 +42,21 @@ public class PlayerInteract implements Listener
             if (player.getInventory().getItemInMainHand().equals(TeachingTutorials.menu))
             {
                 e.setCancelled(true);
-                //Check if the mainGui is not null.
-                //If not then open it after refreshing its contents.
-                //If no gui exists open the navigator.
 
+                //Check if the mainGui is not null.
                 if (user.mainGui != null)
+                    //If not then open it after refreshing its contents.
                     user.mainGui.refresh();
+
+                //If no gui exists open the learning menu
                 else
+                {
+                    //Creates a new main menu
                     user.mainGui = new MainMenu(plugin, user);
-                user.mainGui.open(user);
+
+                    //Opens the gui
+                    user.mainGui.open(user);
+                }
             }
         }
     }

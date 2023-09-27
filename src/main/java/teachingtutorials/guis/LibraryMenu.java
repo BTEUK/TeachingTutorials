@@ -145,13 +145,13 @@ public class LibraryMenu extends Gui
                 @Override
                 public void leftClick(User u)
                 {
-                    delete();
-
                     //Creates a NewLocation object
                     Lesson newLesson = new Lesson(user, plugin, tutorials[iSlot]);
 
                     //Launches them into the new location adding process
-                    newLesson.startLesson();
+                    if (newLesson.startLesson())
+                        delete();
+                        user.mainGui = null;
                 }
             });
         }

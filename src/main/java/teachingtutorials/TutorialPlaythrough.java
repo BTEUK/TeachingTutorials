@@ -46,6 +46,12 @@ public abstract class TutorialPlaythrough
         return creatorOrStudent;
     }
 
+    public void setFallListenerSafeLocation(org.bukkit.Location location)
+    {
+        //Raises the safe location by 1 block to ensure players do not tp inside blocks as used to happen sometimes
+        fallListener.setSafeLocation(location.add(0, 1, 0));
+    }
+
     // Moves the tutorial on to the next stage
     // Accessed after the end of each stage (Called from Stage.endStage() asynchronously)
     // or at the start of the playthrough

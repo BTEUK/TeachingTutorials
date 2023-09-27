@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -87,5 +88,71 @@ public class Utils {
             }
         }
         return 0;
+    }
+
+    //Gives a player an item, it will be set in their main hand, if it does not already exist there.
+
+    //If the main hand is empty, set it there.
+    //If then main hand is slot 8 and includes the navigator, find the first empty slot available and set it there.
+    //If no empty slots are available set it to slot 7.
+    //If the main hand has an item swap the current item to an empty slot in the inventory.
+    //If no empty slots are available overwrite it.
+
+    public static void giveItem(Player p, ItemStack item, String name) {
+        int emptySlot = getEmptyHotbarSlot(p);
+
+        boolean hasItemAlready = p.getInventory().containsAtLeast(item, 1);
+
+        //If we already have the item switch to current slot.
+        if (hasItemAlready)
+        {
+            //Switch item to current slot.
+            int slot = p.getInventory().first(item);
+
+            p.getInventory().setItem(slot, p.getInventory().getItemInMainHand());
+            p.getInventory().setItemInMainHand(item);
+            p.sendMessage(Component.text("Set ", NamedTextColor.GREEN).append(Component.text(name, NamedTextColor.DARK_AQUA).append(Component.text(" to main hand.", NamedTextColor.GREEN))));
+        }
+        else if (emptySlot >= 0)
+        {
+            //The current slot is empty. This also implies no navigator, and thus the item does not yet exist in the inventory.
+            //Set item to empty slot.
+            p.getInventory().setItem(emptySlot, item);
+            p.sendMessage(Component.text("Set ", NamedTextColor.GREEN).append(Component.text(name, NamedTextColor.DARK_AQUA).append(Component.text(" to slot " + (emptySlot + 1), NamedTextColor.GREEN))));
+
+        }
+        else
+        {
+            //Player has no empty slots and is holding the navigator and learning menu, set to item to slot 6.
+            p.getInventory().setItem(6, item);
+            p.sendMessage(Component.text("Set ", NamedTextColor.GREEN).append(Component.text(name, NamedTextColor.DARK_AQUA).append(Component.text(" to slot 8", NamedTextColor.GREEN))));
+
+        }
+    }
+
+    //Return an empty hotbar slot, if no empty slot exists return -1.
+    public static int getEmptyHotbarSlot(Player p) {
+
+        //If main hand is empty return that slot.
+        ItemStack heldItem = p.getInventory().getItemInMainHand();
+        if (heldItem.getType() == Material.AIR) {
+            return p.getInventory().getHeldItemSlot();
+        }
+
+        //Check if hotbar has an empty slot.
+        for (int i = 0; i < 9; i++) {
+
+            ItemStack item = p.getInventory().getItem(i);
+
+            if (item == null) {
+                return i;
+            }
+            if (item.getType() == Material.AIR) {
+                return i;
+            }
+        }
+
+        //No slot could be found, return -1.
+        return -1;
     }
 }

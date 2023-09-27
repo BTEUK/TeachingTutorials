@@ -85,12 +85,7 @@ public abstract class Gui implements GuiInterface {
 
     public void delete() {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            UUID u = openInventories.get(p.getUniqueId());
-            if (u != null) {
-                if (u.equals(getUuid())) {
-                    p.closeInventory();
-                }
-            }
+            openInventories.remove(p.getUniqueId(), getUuid());
         }
         inventoriesByUUID.remove(getUuid());
     }

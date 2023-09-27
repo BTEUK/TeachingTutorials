@@ -86,7 +86,7 @@ public class Selection extends Task implements Listener
         this.bSelection2Made = false;
 
         //Listen out for difficulty - There will only be one difficulty listener per selection to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.selection);
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.selection);
         difficultyListener.register();
     }
 

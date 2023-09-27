@@ -17,6 +17,7 @@ import teachingtutorials.listeners.GlobalPlayerCommandProcess;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.*;
 import teachingtutorials.utils.DBConnection;
+import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.VirtualBlock;
 
@@ -357,22 +358,15 @@ public class TeachingTutorials extends JavaPlugin
                     return;
                 }
                 szFields = szLines[iLine].split(",");
-                //Field 1 is step name, field 2 is display type, field 3 is the instruction
-                if (szFields.length < 3)
+                //Field 1 is step name, field 2 is display type
+                if (szFields.length < 2)
                 {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 szType = "Step";
 
-                //Compiles instructions if commas were part of the instruction and split
-                String szInstructions = szFields[2];
-                for (int k = 3 ; k < szFields.length ; k++)
-                {
-                    szInstructions = szInstructions +"," +szFields[k];
-                }
-
-                Step step = new Step(szFields[0].replace("(",""), szFields[1], szInstructions);
+                Step step = new Step(szFields[0].replace("(",""), szFields[1]);
                 lastStage.steps.add(step);
                 lastStep = step;
             }
@@ -569,10 +563,9 @@ public class TeachingTutorials extends JavaPlugin
                 Step step = steps.get(j);
                 try
                 {
-                    String szStepInstructions = step.getInstructions().replace("\'", "\'\'");
-                    String szInstructionType = step.getInstructionDisplayType();
+                    Display.DisplayType instructionDisplayType = step.getInstructionDisplayType();
 
-                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, StepInstructions, InstructionDisplay) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+", '" +szStepInstructions +"' ,'" +szInstructionType +"')";
+                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, InstructionDisplay) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+",'" +instructionDisplayType +"')";
                     Bukkit.getConsoleSender().sendMessage(sql);
                     SQL.executeUpdate(sql);
 
@@ -671,10 +664,6 @@ public class TeachingTutorials extends JavaPlugin
 
     private boolean createTables()
     {
-        //Is assumed true and if any of the tables fail to create will change to false
-        boolean bSuccess = true;
-//        int iCount = -1;
-
         sql = "";
 
         FileReader fileReader = null;
@@ -712,16 +701,6 @@ public class TeachingTutorials extends JavaPlugin
 
                 //Executes the update and returns how many rows were changed
                 SQL.executeUpdate(statements[i]);
-
-//                //If only 1 record was changed, success is set to true - FCKING IDIOT
-//                if (iCount == 1)
-//                {
-//                }
-//                else
-//                {
-//                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - Failed to execute table, iCount = "+iCount +"\n");
-//                    bSuccess = false;
-//                }
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Executed command\n");
             }
         }
@@ -758,7 +737,7 @@ public class TeachingTutorials extends JavaPlugin
             }
             dbConnection.disconnect();
         }
-        return (bSuccess);
+        return true;
     }
 
     private String readAll(BufferedReader br)

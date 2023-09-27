@@ -47,7 +47,7 @@ public class Chat extends Task implements Listener
         this.szDetails = szDetails;
 
         //Listen out for difficulty - There will only be one difficulty listener per chat to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.chat);
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.chat);
         difficultyListener.register();
     }
 

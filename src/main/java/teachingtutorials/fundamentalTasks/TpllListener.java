@@ -1,8 +1,5 @@
 package teachingtutorials.fundamentalTasks;
 
-import net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
-import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
 import org.bukkit.*;
@@ -15,7 +12,6 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
-import teachingtutorials.tutorials.Location;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
 
@@ -82,7 +78,7 @@ public class TpllListener extends Task implements Listener
         this.szDetails = szDetails;
 
         //Listen out for difficulty - There will only be one difficulty listener per tpll command to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTask.tpll);
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.tpll);
         difficultyListener.register();
     }
 

@@ -50,4 +50,9 @@ public class Display
         Hologram hologram = new Hologram(location, player, szTitle, szText);
         return hologram;
     }
+
+    public enum DisplayType
+    {
+        hologram, chat, action_bar
+    }
 }

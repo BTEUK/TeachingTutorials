@@ -1,7 +1,6 @@
 package teachingtutorials.utils;
 
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
-import me.filoghost.holographicdisplays.api.Position;
 import me.filoghost.holographicdisplays.api.hologram.VisibilitySettings;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,66 +16,109 @@ public class Hologram
     {
         //Performs the hologram creation synchronously
         Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), () -> {
-            //Calculates the direction of the hologram from the player
-            double[] xzAddition = new double[2];
-            float fYaw = player.getLocation().getYaw();
-
-            xzAddition[0] = -4.5 * Math.sin((fYaw*Math.PI)/180);
-            xzAddition[1] = 4.5 * Math.cos((fYaw*Math.PI)/180);
-
-            //Moves the hologram
-            location.set(location.getX() +xzAddition[0], location.getY(), location.getZ() +xzAddition[1]);
-
-            //Raises or lowers the hologram to be clear of the ground around the location
-            int iMaxHeight = location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
-            int iHeight;
-            for (int i = - 1 ; i <= 1 ; i++)
-            {
-                for (int j = - 1 ; j <= 1 ; j++)
-                {
-                    iHeight = location.getWorld().getHighestBlockYAt(location.getBlockX() + i, location.getBlockZ() + j);
-                    if (iHeight > iMaxHeight)
-                        iMaxHeight = iHeight;
-                }
-            }
-
-            location.set(location.getX(), iMaxHeight + 3.1, location.getZ());
-
             //Creates the hologram
             hologram = api.createHologram(location);
 
-            Position position = hologram.getPosition();
-
-            //Inserts the text
+            //Inserts the title
             hologram.getLines().appendText(szTitle);
             String[] szWords = szText.split(" ");
 
+            //At the start of the for loop, represents the current line being compiled before
+            // the current word has been added
             String szLine = "";
+
+            //Represents the current line after the current word has been added
             String szLineNew;
+
+            //Represents the current line after the current word has been added
+            // but also after the text has been stripped of colour codes
             String szDisplayedText;
 
+            //The maximum width a hologram line can be
+            final int iMax_Width = TeachingTutorials.getInstance().getConfig().getInt("Hologram_Max_Width");
+
+            boolean bCreateNewLineAfter;
+            bCreateNewLineAfter = false;
+
+            //Used when a new line is manually specified and the start of the next line needs to be stored to added to the szLine at the end of the loop after the new line is added
+            String szStartOfNextLine = "";
+
+            //Goes through each word in the text
             for (int iWord = 0; iWord < szWords.length ; iWord++)
             {
-                szLineNew = szLine + szWords[iWord] +" ";
-                szDisplayedText = szLineNew.replace("&[A-Fa-f0-9]", "");
-                if (szDisplayedText.length() > TeachingTutorials.getInstance().getConfig().getInt("Hologram_Max_Width") + 1) //Line is Hologram_Max_Width without the space
+                //TODO: what if two line seperators together or in one word?
+                //-Expand algorithm time
+                //Checks to see if the word contains a new line separator
+                if (szWords[iWord].contains(System.lineSeparator()))
                 {
-                    //Indicates that the line just added had one, >40 characters long word, so must display on a new line
-                    if (szLine.equals(""))
+                    int iIndexOfLine = szWords[iWord].indexOf(System.lineSeparator());
+                    if (iIndexOfLine == 0)
                     {
-                        //Adds the line to the hologram, removing the trailing space
-                        hologram.getLines().appendText(szLineNew.substring(0, szLineNew.length() - 1));
+                        hologram.getLines().appendText(szLine);
+                        szLine = "";
                     }
-                    else //Indicates that the line already had some words in it so display those
+                    else if (iIndexOfLine == (szWords[iWord].length() - 1))
                     {
-                        //Adds the line to the hologram, removing the trailing space
+                        bCreateNewLineAfter = true;
+                    }
+                    else
+                    {
+                        bCreateNewLineAfter = true;
+                        String[] twoWords = szWords[iWord].split(System.lineSeparator());
+                        szWords[iWord] = twoWords[0];
+                        szStartOfNextLine = twoWords[1];
+                    }
+                }
+
+                //Adds the word to the new line being compiled
+                szLineNew = szLine + szWords[iWord].replaceFirst(System.lineSeparator(), "");
+
+                //Strips the text of colour codes so that the length can be accurately measured
+                szDisplayedText = szLineNew.replace("&[A-Fa-f0-9]", "");
+
+                //Checks to see whether the new line exceeds the maximum width
+                if (szDisplayedText.length() > iMax_Width) //Line is Hologram_Max_Width without the space
+                {
+                    //If the new line is too big, needs to deal with it
+
+                    //Unless the new line is purely one word (aka the old one was blank)
+                    //How does the old one get blank? - if the same thing happened previously, see below
+
+                    //Indicates that the previous line had one > Max_Width characters long word,
+                    // so the new word must display on a new line
+                    if (szLine == "")
+                        //szLine remains as ""
+                        hologram.getLines().appendText(szLineNew);
+
+                    //Indicates that the line already had some words in it so display those
+                    //Adding the new one to it takes it over the maximum
+                    else
+                    {
+                        //Adds the previous line to the hologram, removing the trailing space
                         hologram.getLines().appendText(szLine.substring(0, szLine.length() - 1));
+
+                        //Adds the new line if it is over max characters long
+                        if (szWords[iWord].replace("&[A-Fa-f0-9]", "").length() > iMax_Width)
+                        {
+                            hologram.getLines().appendText(szWords[iWord]);
+                            szLine = "";
+                        }
+
+                        //If this is the last word, can immediately append it on a new line
+                        else if (iWord == szWords.length - 1)
+                                hologram.getLines().appendText(szWords[iWord]);
+
+                        else
+                            //Sends the line with the new word just added into the next loop, adds the space
+                            szLine = szWords[iWord] + " ";
                     }
-                    szLine = szWords[iWord] +" ";
-                    if (iWord == szWords.length - 1)
-                    {
-                        hologram.getLines().appendText(szWords[iWord]);
-                    }
+                }
+
+                //If this is the last worst, but the length didn't max out, we can append the new line
+                else if (bCreateNewLineAfter)
+                {
+                    hologram.getLines().appendText(szLineNew);
+                    szLine = szStartOfNextLine + " ";
                 }
                 else if (iWord == szWords.length - 1)
                 {
@@ -84,16 +126,12 @@ public class Hologram
                 }
                 else
                 {
-                    szLine = szLineNew;
+                    //Sends the line with the new word just added into the next loop, adds the space
+                    szLine = szLineNew + " ";
                 }
-            }
 
-            Bukkit.getConsoleSender().sendMessage(hologram.getLines().size() +"");
-            //Shifts the hologram up if it is too tall
-            if (hologram.getLines().size() > 7)
-            {
-                position = position.add(0, 0.2 * (hologram.getLines().size() - 7) , 0);
-                hologram.setPosition(position);
+                bCreateNewLineAfter = false;
+                szStartOfNextLine = "";
             }
 
             //Sets the visibility

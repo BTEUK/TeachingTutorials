@@ -24,6 +24,7 @@ public class Step
     private Player player;
     private TeachingTutorials plugin;
     public Stage parentStage;
+    private VideoLinkCommandListener videoLinkListener;
 
     /**
      * Notes whether all tasks have been completed/set or not
@@ -69,6 +70,9 @@ public class Step
         else
             //Gets the location specific data
             this.locationStep = LocationStep.getFromStepAndLocation(this.iStepID, this.parentStage.tutorialPlaythrough.getLocation().getLocationID(), getInstructionDisplayType().equals(Display.DisplayType.hologram));
+
+        //Initialises the video link listener
+        videoLinkListener = new VideoLinkCommandListener(this.plugin, this.player, this.locationStep);
     }
 
     //Used for adding a step to the DB
@@ -217,6 +221,9 @@ public class Step
         //Player is a student doing a tutorial
         if (!parentStage.bLocationCreation)
         {
+            //Registers the video link listener
+            videoLinkListener.register();
+
             //Register the start of all groups
             int i;
             int iGroups = groups.size();
@@ -321,9 +328,14 @@ public class Step
             }
             else
             {
+                //Unregisters the video link listener
+                videoLinkListener.unregister();
+
                 //Remove hologram
                 if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
                     locationStep.removeInstructionsHologram();
+
+                //Calls stage to start the next step
                 parentStage.nextStep();
             }
         }
@@ -372,9 +384,8 @@ public class Step
 
     public void terminateEarly()
     {
-        //Remove holograms
-        if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
-            this.locationStep.removeInstructionsHologram();
+        //Unregisters the video link listener
+        videoLinkListener.unregister();
 
         //Unregisters the current task listener
         if (parentStage.bLocationCreation)
@@ -398,6 +409,10 @@ public class Step
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Unregistered group "+(i+1));
             }
         }
+
+        //Remove holograms
+        if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
+            this.locationStep.removeInstructionsHologram();
     }
 
     public static ArrayList<Step> fetchStepsByStageID(Player player, TeachingTutorials plugin, Stage stage)

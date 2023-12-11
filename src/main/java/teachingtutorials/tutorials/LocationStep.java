@@ -1,5 +1,9 @@
 package teachingtutorials.tutorials;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -33,6 +37,7 @@ public class LocationStep// extend step?
     private double dHologramLocationY;
     private double dHologramLocationZ;
     private Hologram instructions;
+    private String szVideoWalkthroughLink;
 
     private boolean bLocationSet;
     private boolean bInstructionsSet;
@@ -43,6 +48,7 @@ public class LocationStep// extend step?
         this.iLocationID = iLocationID;
         this.iStepID = iStepID;
         this.szInstructions = "";
+        this.szVideoWalkthroughLink = "";
 
         bLocationSet = false;
         bInstructionsSet = false;
@@ -107,6 +113,7 @@ public class LocationStep// extend step?
                 locationStep.dHologramLocationX = resultSet.getDouble("InstructionsX");
                 locationStep.dHologramLocationY = resultSet.getDouble("InstructionsY");
                 locationStep.dHologramLocationZ = resultSet.getDouble("InstructionsZ");
+                locationStep.szVideoWalkthroughLink = resultSet.getString("VideoWalkthroughLink");
             }
         }
         catch(SQLException se)
@@ -135,7 +142,7 @@ public class LocationStep// extend step?
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO LocationSteps (Location, Step, Latitude, Longitude, StartYaw, StartPitch, Instructions, InstructionsX, InstructionsY, InstructionsZ) VALUES ("
+            sql = "INSERT INTO LocationSteps (Location, Step, Latitude, Longitude, StartYaw, StartPitch, Instructions, InstructionsX, InstructionsY, InstructionsZ, VideoWalkthroughLink) VALUES ("
                     + iLocationID +", "
                     + iStepID +", "
                     + dStartLatitude +", "
@@ -145,7 +152,8 @@ public class LocationStep// extend step?
                     + szInstructions +"', "
                     + dHologramLocationX +", "
                     + dHologramLocationY +", "
-                    + dHologramLocationZ
+                    + dHologramLocationZ +", '"
+                    + szVideoWalkthroughLink +"'"
                     +")";
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             iCount = SQL.executeUpdate(sql);
@@ -319,5 +327,25 @@ public class LocationStep// extend step?
         //Instructions may be blank at this point, but this is fine and is displayed blank on the hologram
 
         this.bInstructionsSet = true;
+    }
+
+    public void setVideoLink(String szLink)
+    {
+        this.szVideoWalkthroughLink = szLink;
+    }
+
+    public void displayVideoLink(Player player)
+    {
+        TextComponent linkMessage;
+
+        if (szVideoWalkthroughLink.equals(""))
+            linkMessage = Component.text("There is no video available for this step, sorry", NamedTextColor.GREEN);
+        else
+        {
+            linkMessage = Component.text("Click here to access a video walk-through for this step !", NamedTextColor.GREEN);
+            ClickEvent openLinkEvent = ClickEvent.clickEvent(ClickEvent.Action.OPEN_URL, this.szVideoWalkthroughLink);
+            linkMessage = linkMessage.clickEvent(openLinkEvent);
+        }
+        player.sendMessage(linkMessage);
     }
 }

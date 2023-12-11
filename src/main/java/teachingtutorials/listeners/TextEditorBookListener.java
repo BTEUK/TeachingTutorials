@@ -27,13 +27,29 @@ public class TextEditorBookListener implements Listener
     private String szStepName;
     private ItemStack book;
 
+    private boolean bWasInstructions; //If not then it was video link
+
+    //Used for creating an instructions editor book
     public TextEditorBookListener(TeachingTutorials plugin, User user, LocationStep locationStep, StepEditorMenu stepEditorMenu, Display.DisplayType displayType, String szStepName, ItemStack book)
     {
+        this.bWasInstructions = true;
         this.plugin = plugin;
         this.user = user;
         this.locationStep = locationStep;
         this.stepEditorMenu = stepEditorMenu;
         this.displayType = displayType;
+        this.szStepName = szStepName;
+        this.book = book;
+    }
+
+    //Used for creating a video link editor book
+    public TextEditorBookListener(TeachingTutorials plugin, User user, LocationStep locationStep, StepEditorMenu stepEditorMenu, String szStepName, ItemStack book)
+    {
+        this.bWasInstructions = false;
+        this.plugin = plugin;
+        this.user = user;
+        this.locationStep = locationStep;
+        this.stepEditorMenu = stepEditorMenu;
         this.szStepName = szStepName;
         this.book = book;
     }
@@ -66,8 +82,11 @@ public class TextEditorBookListener implements Listener
         //Removes the end space, the space after the last page is added in the loop but then needs to be removed
         szNewContent = szNewContent.substring(0, szNewContent.length() - 1);
 
-        //Edits the step instructions
-        locationStep.setInstruction(szNewContent, displayType, user.player, szStepName);
+        //Edits the step instructions or video link
+        if (bWasInstructions)
+            locationStep.setInstruction(szNewContent, displayType, user.player, szStepName);
+        else
+            locationStep.setVideoLink(szNewContent);
 
         //Saves the instructions in the book
         BookMeta bookMeta = (BookMeta) book.getItemMeta();
@@ -85,7 +104,8 @@ public class TextEditorBookListener implements Listener
         user.player.getInventory().getItemInMainHand().setAmount(0);
 
         //Informs the menu that some instructions were edited
-        stepEditorMenu.instructionsEdited();
+        if (bWasInstructions)
+            stepEditorMenu.instructionsEdited();
     }
 
     private void unregister()

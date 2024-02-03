@@ -40,7 +40,7 @@ public class LocationTask extends Task
 
         try
         {
-            sql = "INSERT INTO LocationTasks (LocationID, TaskID, Answers, TpllDifficulty, WEDifficulty, ColouringDifficulty, DetailingDifficulty, TerraDifficulty) " +
+            sql = "INSERT INTO `LocationTasks` (`LocationID`, `TaskID`, `Answers`, `TpllDifficulty`, `WEDifficulty`, `ColouringDifficulty`, `DetailingDifficulty`, `TerraDifficulty`) " +
                     "VALUES (" +iLocationID+", " +iTaskID+", '" +szAnswers+"'";
 
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();

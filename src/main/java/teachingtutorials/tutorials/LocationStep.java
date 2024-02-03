@@ -84,7 +84,7 @@ public class LocationStep// extend step?
      * //Accesses the DB and fetches the information about the step location
      * @param iStepID The step ID of the step
      * @param iLocationID The location that is being played
-     * @return
+     * @return A LocationStep object with the details of the LocationStep for the inputted step and location
      */
     public static LocationStep getFromStepAndLocation(int iStepID, int iLocationID, boolean bHologramNeeded)
     {
@@ -97,7 +97,7 @@ public class LocationStep// extend step?
         try
         {
             //Compiles the command to fetch the location step
-            sql = "Select * FROM LocationSteps WHERE Step = "+iStepID +" AND Location = " +iLocationID;
+            sql = "SELECT * FROM `LocationSteps` WHERE `Step` = "+iStepID +" AND `Location` = " +iLocationID;
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -142,7 +142,7 @@ public class LocationStep// extend step?
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO LocationSteps (Location, Step, Latitude, Longitude, StartYaw, StartPitch, Instructions, InstructionsX, InstructionsY, InstructionsZ, VideoWalkthroughLink) VALUES ("
+            sql = "INSERT INTO `LocationSteps` (`Location`, `Step`, `Latitude`, `Longitude`, `StartYaw`, `StartPitch`, `Instructions`, `InstructionsX`, `InstructionsY`, `InstructionsZ`, `VideoWalkthroughLink`) VALUES ("
                     + iLocationID +", "
                     + iStepID +", "
                     + dStartLatitude +", "

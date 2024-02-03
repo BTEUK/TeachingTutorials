@@ -84,7 +84,7 @@ public class User
         try
         {
             //Compiles the command to add the new user
-            sql = "SELECT * FROM Lessons, Scores WHERE `Lessons`.`UUID` = '"+player.getUniqueId() +"' " +
+            sql = "SELECT * FROM `Lessons`, `Scores` WHERE `Lessons`.`UUID` = '"+player.getUniqueId() +"' " +
                     "AND `Scores`.`Category` = '" + category.toString() + "' "+
                     "AND `Lessons`.`LessonID` = `Scores`.`LessonID` " +
                     "ORDER BY `Scores`.`LessonID` DESC";
@@ -301,7 +301,7 @@ public class User
         try
         {
             //Compiles the command to select all data about the user
-            sql = "SELECT * FROM Players WHERE `UUID` = '"+player.getUniqueId()+"'";
+            sql = "SELECT * FROM `Players` WHERE `UUID` = '"+player.getUniqueId()+"'";
             System.out.println(sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -316,7 +316,7 @@ public class User
             //If no result is found for the user, insert a new user into the database
             else
             {
-                sql = "INSERT INTO Players (UUID) VALUES ('"+ player.getUniqueId() +"')";
+                sql = "INSERT INTO `Players` (`UUID`) VALUES ('"+ player.getUniqueId() +"')";
                 SQL.executeUpdate(sql);
                 this.bHasCompletedCompulsory = false;
                 this.bInLesson = false;
@@ -357,7 +357,7 @@ public class User
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            szSql = "UPDATE Players SET CompletedCompulsory = 1 WHERE UUID = '"+ this.player.getUniqueId()+"'";
+            szSql = "UPDATE `Players` SET `CompletedCompulsory` = 1 WHERE `UUID` = '"+ this.player.getUniqueId()+"'";
             SQL.executeUpdate(szSql);
         }
         catch (Exception e)
@@ -377,9 +377,9 @@ public class User
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             if (this.bInLesson)
-                szSql = "UPDATE Players SET InLesson = 0 WHERE `UUID` = '"+player.getUniqueId() +"' ";
+                szSql = "UPDATE `Players` SET `InLesson` = 0 WHERE `UUID` = '"+player.getUniqueId() +"' ";
             else
-                szSql = "UPDATE Players SET InLesson = 1 WHERE `UUID` = '"+player.getUniqueId() +"' ";
+                szSql = "UPDATE `Players` SET `InLesson` = 1 WHERE `UUID` = '"+player.getUniqueId() +"' ";
 
             SQL.executeUpdate(szSql);
         }
@@ -400,7 +400,7 @@ public class User
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
-            szSql = "UPDATE Players SET InLesson = " +i +" WHERE `UUID` = '"+player.getUniqueId() +"' ";
+            szSql = "UPDATE `Players` SET `InLesson` = " +i +" WHERE `UUID` = '"+player.getUniqueId() +"' ";
 
             SQL.executeUpdate(szSql);
         }

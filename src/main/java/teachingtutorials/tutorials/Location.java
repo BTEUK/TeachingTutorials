@@ -83,7 +83,7 @@ public class Location
         try
         {
             //Compiles the command to fetch location
-            sql = "Select * FROM Locations WHERE Locations.LocationID = " +iLocationID;
+            sql = "SELECT * FROM `Locations` WHERE `Locations`.`LocationID` = " +iLocationID;
 
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -115,7 +115,7 @@ public class Location
         try
         {
             //Compiles the command to fetch all the locations for the tutorial
-            sql = "Select * FROM Locations WHERE TutorialID = " +iTutorialID;
+            sql = "SELECT * FROM `Locations` WHERE `TutorialID` = " +iTutorialID;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -159,7 +159,7 @@ public class Location
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO Locations (TutorialID) VALUES (" +iTutorialID+")";
+            sql = "INSERT INTO `Locations` (`TutorialID`) VALUES (" +iTutorialID+")";
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             iCount = SQL.executeUpdate(sql);
 
@@ -169,7 +169,7 @@ public class Location
             }
 
             //Gets the LocationID of the newly inserted location
-            sql = "Select LAST_INSERT_ID()";
+            sql = "SELECT LAST_INSERT_ID()";
             resultSet = SQL.executeQuery(sql);
             resultSet.next();
             iLocationID = resultSet.getInt(1);
@@ -202,19 +202,19 @@ public class Location
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Removes the answers
-            sql = "Delete FROM LocationTasks WHERE LocationID = " +iLocationID;
+            sql = "DELETE FROM `LocationTasks` WHERE `LocationID` = " +iLocationID;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
             iCount = SQL.executeUpdate(sql);
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationTasks were deleted");
 
             //Removes the location specific step details
-            sql = "Delete FROM LocationSteps WHERE LocationID = " +iLocationID;
+            sql = "DELETE FROM `LocationSteps` WHERE `LocationID` = " +iLocationID;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
             iCount = SQL.executeUpdate(sql);
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationSteps were deleted");
 
             //Removes the location
-            sql = "Delete FROM Locations WHERE LocationID = " +iLocationID;
+            sql = "DELETE FROM `Locations` WHERE `LocationID` = " +iLocationID;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
             iCount = SQL.executeUpdate(sql);
 

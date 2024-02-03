@@ -71,9 +71,9 @@ public class Tutorial
         {
             //Compiles the command to fetch tutorials
             if (bInUseOnly)
-                sql = "Select * FROM Tutorials WHERE Tutorials.InUse = 1";
+                sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`InUse` = 1";
             else
-                sql = "Select * FROM Tutorials";
+                sql = "SELECT * FROM `Tutorials`";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -107,9 +107,9 @@ public class Tutorial
 
             //Compiles the command to fetch category relevancies
             if (bInUseOnly)
-                sql = "Select * FROM Tutorials,CategoryPoints WHERE Tutorials.InUse = 1 AND Tutorials.TutorialID = CategoryPoints.TutorialID";
+                sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`InUse` = 1 AND `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID`";
             else
-                sql = "Select * FROM Tutorials,CategoryPoints WHERE Tutorials.TutorialID = CategoryPoints.TutorialID";
+                sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID`";
 
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -223,7 +223,7 @@ public class Tutorial
         try
         {
             //Compiles the command to fetch tutorials
-            sql = "Select * FROM Tutorials WHERE Tutorials.Author = '" +uuid +"'";
+            sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`Author` = '" +uuid +"'";
 
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -250,7 +250,7 @@ public class Tutorial
             }
 
             //Compiles the command to fetch category difficulties
-            sql = "Select * FROM Tutorials,CategoryPoints WHERE Tutorials.TutorialID = CategoryPoints.TutorialID AND Tutorials.Author = '"+uuid+"'";
+            sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID` AND `Tutorials`.`Author` = '"+uuid+"'";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -312,8 +312,8 @@ public class Tutorial
 
         try
         {
-            //Compiles the command to fetch tutoria
-            sql = "Select * FROM Tutorials WHERE Tutorials.TutorialID = " +this.iTutorialID;
+            //Compiles the command to fetch the tutorial
+            sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`TutorialID` = " +this.iTutorialID;
 
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
@@ -352,11 +352,11 @@ public class Tutorial
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             if (this.bCompulsory)
-                szSql = "UPDATE Tutorials SET Compulsory = 0 WHERE TutorialID = "+ this.iTutorialID;
+                szSql = "UPDATE `Tutorials` SET `Compulsory` = 0 WHERE `TutorialID` = "+ this.iTutorialID;
             else
             {
                 setAllTutorialsNotCompulsory();
-                szSql = "UPDATE Tutorials SET Compulsory = 1 WHERE TutorialID = "+ this.iTutorialID;
+                szSql = "UPDATE `Tutorials` SET `Compulsory` = 1 WHERE `TutorialID` = "+ this.iTutorialID;
             }
             SQL.executeUpdate(szSql);
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Set tutorial "+this.iTutorialID +" as compulsory");
@@ -379,7 +379,7 @@ public class Tutorial
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            szSql = "UPDATE Tutorials SET Compulsory = 0";
+            szSql = "UPDATE `Tutorials` SET `Compulsory` = 0";
             SQL.executeUpdate(szSql);
         }
         catch (Exception e)
@@ -401,11 +401,11 @@ public class Tutorial
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             if (this.bInUse)
             {
-                szSql = "UPDATE Tutorials SET InUse = 0 WHERE TutorialID = "+ this.iTutorialID;
+                szSql = "UPDATE `Tutorials` SET `InUse` = 0 WHERE `TutorialID` = "+ this.iTutorialID;
             }
             else if (Location.getAllLocationIDsForTutorial(this.iTutorialID).length > 0)
             {
-                szSql = "UPDATE Tutorials SET InUse = 1 WHERE TutorialID = "+ this.iTutorialID;
+                szSql = "UPDATE `Tutorials` SET `InUse` = 1 WHERE `TutorialID` = "+ this.iTutorialID;
             }
             else
             {

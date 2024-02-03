@@ -382,6 +382,9 @@ public class Step
         }
     }
 
+    /**
+     * Use this if a manual termination of the tutorial must occur, for example a player leaves the server. This will terminate the step, unregister listeners and unregister the tasks.
+     */
     public void terminateEarly()
     {
         //Unregisters the video link listener
@@ -415,6 +418,13 @@ public class Step
             this.locationStep.removeInstructionsHologram();
     }
 
+    /**
+     * Retrieves from the database the list of steps for the specified stage
+     * @param player The player playing through the tutorial
+     * @param plugin The instance of the plugin
+     * @param stage The stage for which all steps must be retrieved
+     * @return A list of steps for this stage
+     */
     public static ArrayList<Step> fetchStepsByStageID(Player player, TeachingTutorials plugin, Stage stage)
     {
         ArrayList<Step> steps = new ArrayList<>();
@@ -426,7 +436,7 @@ public class Step
         try
         {
             //Compiles the command to fetch steps
-            sql = "Select * FROM Steps WHERE StageID = "+stage.iStageID +" ORDER BY 'StepInStage' ASC";
+            sql = "SELECT * FROM `Steps` WHERE `StageID` = "+stage.iStageID +" ORDER BY 'StepInStage' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query

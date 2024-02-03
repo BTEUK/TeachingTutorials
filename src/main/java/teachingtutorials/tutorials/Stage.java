@@ -201,7 +201,7 @@ public class Stage
         try
         {
             //Compiles the command to fetch stages
-            sql = "Select * FROM Stages WHERE TutorialID = "+lesson.getTutorial().getTutorialID() +" ORDER BY 'Order' ASC";
+            sql = "SELECT * FROM `Stages` WHERE `TutorialID` = "+lesson.getTutorial().getTutorialID() +" ORDER BY 'Order' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -239,7 +239,7 @@ public class Stage
         try
         {
             //Compiles the command to fetch stages
-            sql = "Select * FROM Stages WHERE TutorialID = "+iTutorialID +" ORDER BY 'Order' ASC";
+            sql = "SELECT * FROM `Stages` WHERE `TutorialID` = "+iTutorialID +" ORDER BY 'Order' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query

@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.listeners.TextEditorBookListener;
@@ -31,10 +30,7 @@ public class StepEditorMenu extends Gui
     private final LocationStep locationStep;
 
     private TextEditorBookListener instructionsBookListener;
-    private ItemStack instructionsBook;
-
     private TextEditorBookListener videoLinkBookListener;
-    private ItemStack videoLinkBook;
 
     public StepEditorMenu(TeachingTutorials plugin, User user, Step step, LocationStep locationStep)
     {
@@ -44,15 +40,8 @@ public class StepEditorMenu extends Gui
         this.step = step;
         this.locationStep = locationStep;
 
-        this.instructionsBook = new ItemStack(Material.WRITABLE_BOOK, 1);
-        BookMeta instructionsBookMeta = (BookMeta) instructionsBook.getItemMeta();
-        instructionsBookMeta.setTitle(step.getName());
-        this.instructionsBook.setItemMeta(instructionsBookMeta);
-
-        this.videoLinkBook = new ItemStack(Material.WRITABLE_BOOK, 1);
-        BookMeta videoLinkBookMeta = (BookMeta) videoLinkBook.getItemMeta();
-        videoLinkBookMeta.setTitle(step.getName());
-        this.videoLinkBook.setItemMeta(videoLinkBookMeta);
+        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, locationStep, StepEditorMenu.this, step.getName());
+        this.instructionsBookListener = new TextEditorBookListener(plugin, user, locationStep, StepEditorMenu.this, step.getInstructionDisplayType(), step.getName());
 
         setItems();
     }
@@ -99,7 +88,7 @@ public class StepEditorMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     //The book must have the step name as the title
-                    Utils.giveItem(u.player, instructionsBook, "Instructions editor book");
+                    Utils.giveItem(u.player, instructionsBookListener.getBook(), "Instructions editor book");
                     Display display = new Display(u.player, Component.text("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
                     display.Message();
 
@@ -107,7 +96,6 @@ public class StepEditorMenu extends Gui
                     u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
 
                     //Sets up the book listener and registers it
-                    instructionsBookListener = new TextEditorBookListener(plugin, u, locationStep, StepEditorMenu.this, step.getInstructionDisplayType(), step.getName(), instructionsBook);
                     instructionsBookListener.register();
 
                     //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
@@ -142,7 +130,7 @@ public class StepEditorMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     //The book must have the step name as the title
-                    Utils.giveItem(u.player, videoLinkBook, "Video link editor book");
+                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
                     Display display = new Display(u.player, Component.text("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     display.Message();
 
@@ -150,7 +138,6 @@ public class StepEditorMenu extends Gui
                     u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
 
                     //Sets up the book listener and registers it
-                    videoLinkBookListener = new TextEditorBookListener(plugin, u, locationStep, StepEditorMenu.this, step.getName(), videoLinkBook);
                     videoLinkBookListener.register();
 
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
@@ -159,6 +146,7 @@ public class StepEditorMenu extends Gui
         }
         else
         {
+            //Set start location
             setItem(12, setStartLocation, new guiAction() {
                 @Override
                 public void rightClick(User u) {
@@ -181,7 +169,7 @@ public class StepEditorMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     //The book must have the step name as the title
-                    Utils.giveItem(u.player, videoLinkBook, "Video link editor book");
+                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
                     Display display = new Display(u.player, Component.text("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     display.Message();
 
@@ -189,7 +177,6 @@ public class StepEditorMenu extends Gui
                     u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
 
                     //Sets up the book listener and registers it
-                    videoLinkBookListener = new TextEditorBookListener(plugin, u, locationStep, StepEditorMenu.this, step.getName(), videoLinkBook);
                     videoLinkBookListener.register();
 
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself

@@ -24,6 +24,7 @@ public class Step
     private Player player;
     private TeachingTutorials plugin;
     public Stage parentStage;
+    private VideoLinkCommandListener videoLinkListener;
 
     /**
      * Notes whether all tasks have been completed/set or not
@@ -69,6 +70,9 @@ public class Step
         else
             //Gets the location specific data
             this.locationStep = LocationStep.getFromStepAndLocation(this.iStepID, this.parentStage.tutorialPlaythrough.getLocation().getLocationID(), getInstructionDisplayType().equals(Display.DisplayType.hologram));
+
+        //Initialises the video link listener
+        videoLinkListener = new VideoLinkCommandListener(this.plugin, this.player, this.locationStep);
     }
 
     //Used for adding a step to the DB
@@ -217,6 +221,9 @@ public class Step
         //Player is a student doing a tutorial
         if (!parentStage.bLocationCreation)
         {
+            //Registers the video link listener
+            videoLinkListener.register();
+
             //Register the start of all groups
             int i;
             int iGroups = groups.size();
@@ -321,9 +328,14 @@ public class Step
             }
             else
             {
+                //Unregisters the video link listener
+                videoLinkListener.unregister();
+
                 //Remove hologram
                 if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
                     locationStep.removeInstructionsHologram();
+
+                //Calls stage to start the next step
                 parentStage.nextStep();
             }
         }
@@ -370,11 +382,13 @@ public class Step
         }
     }
 
+    /**
+     * Use this if a manual termination of the tutorial must occur, for example a player leaves the server. This will terminate the step, unregister listeners and unregister the tasks.
+     */
     public void terminateEarly()
     {
-        //Remove holograms
-        if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
-            this.locationStep.removeInstructionsHologram();
+        //Unregisters the video link listener
+        videoLinkListener.unregister();
 
         //Unregisters the current task listener
         if (parentStage.bLocationCreation)
@@ -398,8 +412,19 @@ public class Step
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"  [TeachingTutorials] Unregistered group "+(i+1));
             }
         }
+
+        //Remove holograms
+        if (getInstructionDisplayType().equals(Display.DisplayType.hologram))
+            this.locationStep.removeInstructionsHologram();
     }
 
+    /**
+     * Retrieves from the database the list of steps for the specified stage
+     * @param player The player playing through the tutorial
+     * @param plugin The instance of the plugin
+     * @param stage The stage for which all steps must be retrieved
+     * @return A list of steps for this stage
+     */
     public static ArrayList<Step> fetchStepsByStageID(Player player, TeachingTutorials plugin, Stage stage)
     {
         ArrayList<Step> steps = new ArrayList<>();
@@ -411,7 +436,7 @@ public class Step
         try
         {
             //Compiles the command to fetch steps
-            sql = "Select * FROM Steps WHERE StageID = "+stage.iStageID +" ORDER BY 'StepInStage' ASC";
+            sql = "SELECT * FROM `Steps` WHERE `StageID` = "+stage.iStageID +" ORDER BY 'StepInStage' ASC";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query

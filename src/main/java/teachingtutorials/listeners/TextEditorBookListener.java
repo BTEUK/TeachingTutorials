@@ -3,6 +3,7 @@ package teachingtutorials.listeners;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -27,15 +28,47 @@ public class TextEditorBookListener implements Listener
     private String szStepName;
     private ItemStack book;
 
-    public TextEditorBookListener(TeachingTutorials plugin, User user, LocationStep locationStep, StepEditorMenu stepEditorMenu, Display.DisplayType displayType, String szStepName, ItemStack book)
+    private boolean bWasInstructions; //If not then it was video link
+
+    //Used for creating an instructions editor book
+    public TextEditorBookListener(TeachingTutorials plugin, User user, LocationStep locationStep, StepEditorMenu stepEditorMenu, Display.DisplayType displayType, String szStepName)
+    {
+        this.displayType = displayType;
+        this.bWasInstructions = true;
+
+        commonSetup(plugin, user, locationStep, stepEditorMenu, szStepName);
+    }
+
+    //Used for creating a video link editor book
+    public TextEditorBookListener(TeachingTutorials plugin, User user, LocationStep locationStep, StepEditorMenu stepEditorMenu, String szStepName)
+    {
+        this.bWasInstructions = false;
+
+        commonSetup(plugin, user, locationStep, stepEditorMenu, szStepName);
+    }
+
+    private void commonSetup(TeachingTutorials plugin, User user, LocationStep locationStep, StepEditorMenu stepEditorMenu, String szStepName)
     {
         this.plugin = plugin;
         this.user = user;
         this.locationStep = locationStep;
         this.stepEditorMenu = stepEditorMenu;
-        this.displayType = displayType;
         this.szStepName = szStepName;
-        this.book = book;
+
+        //Creates the book
+        this.book = new ItemStack(Material.WRITABLE_BOOK, 1);
+
+        //Extracts the book meta reference, and sets the title
+        BookMeta videoLinkBookMeta = (BookMeta) this.book.getItemMeta();
+        videoLinkBookMeta.setTitle(szStepName);
+
+        //Adds the meta of the book back in
+        this.book.setItemMeta(videoLinkBookMeta);
+    }
+
+    public ItemStack getBook()
+    {
+        return book;
     }
 
     public void register()
@@ -66,8 +99,11 @@ public class TextEditorBookListener implements Listener
         //Removes the end space, the space after the last page is added in the loop but then needs to be removed
         szNewContent = szNewContent.substring(0, szNewContent.length() - 1);
 
-        //Edits the step instructions
-        locationStep.setInstruction(szNewContent, displayType, user.player, szStepName);
+        //Edits the step instructions or video link
+        if (bWasInstructions)
+            locationStep.setInstruction(szNewContent, displayType, user.player, szStepName);
+        else
+            locationStep.setVideoLink(szNewContent);
 
         //Saves the instructions in the book
         BookMeta bookMeta = (BookMeta) book.getItemMeta();
@@ -85,7 +121,8 @@ public class TextEditorBookListener implements Listener
         user.player.getInventory().getItemInMainHand().setAmount(0);
 
         //Informs the menu that some instructions were edited
-        stepEditorMenu.instructionsEdited();
+        if (bWasInstructions)
+            stepEditorMenu.instructionsEdited();
     }
 
     private void unregister()

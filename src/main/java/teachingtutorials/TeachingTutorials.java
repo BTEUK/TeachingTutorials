@@ -495,7 +495,7 @@ public class TeachingTutorials extends JavaPlugin
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO Tutorials (TutorialName, Author) VALUES ('"+tutorial.szTutorialName+"', '"+tutorial.uuidAuthor +"')";
+            sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+tutorial.szTutorialName+"', '"+tutorial.uuidAuthor +"')";
             SQL.executeUpdate(sql);
 
             sql = "Select LAST_INSERT_ID()";
@@ -515,7 +515,7 @@ public class TeachingTutorials extends JavaPlugin
         {
             try
             {
-                sql = "INSERT INTO CategoryPoints (TutorialID, Category, Relevance) VALUES (" + iTutorialID + ", '" + tutorial.szCategoryEnumsInOrder[i] + "', " +((float) tutorial.categoryUsage[i])/100+ ")";
+                sql = "INSERT INTO `CategoryPoints` (`TutorialID`, `Category`, `Relevance`) VALUES (" + iTutorialID + ", '" + tutorial.szCategoryEnumsInOrder[i] + "', " +((float) tutorial.categoryUsage[i])/100+ ")";
                 Bukkit.getConsoleSender().sendMessage(sql);
                 SQL.executeUpdate(sql);
             }
@@ -537,7 +537,7 @@ public class TeachingTutorials extends JavaPlugin
             Stage stage = stages.get(i);
             try
             {
-                sql = "INSERT INTO Stages (StageName, TutorialID, `Order`) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
+                sql = "INSERT INTO `Stages` (`StageName`, `TutorialID`, `Order`) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
                 Bukkit.getConsoleSender().sendMessage(sql);
                 SQL.executeUpdate(sql);
 
@@ -565,7 +565,7 @@ public class TeachingTutorials extends JavaPlugin
                 {
                     Display.DisplayType instructionDisplayType = step.getInstructionDisplayType();
 
-                    sql = "INSERT INTO Steps (StepName, StageID, StepInStage, InstructionDisplay) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+",'" +instructionDisplayType +"')";
+                    sql = "INSERT INTO `Steps` (`StepName`, `StageID`, `StepInStage`, `InstructionDisplay`) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+",'" +instructionDisplayType +"')";
                     Bukkit.getConsoleSender().sendMessage(sql);
                     SQL.executeUpdate(sql);
 
@@ -593,7 +593,7 @@ public class TeachingTutorials extends JavaPlugin
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Adding group "+k +". Name: "+group.getName());
                     try
                     {
-                        sql = "INSERT INTO Groups (StepID)" +
+                        sql = "INSERT INTO `Groups` (`StepID`)" +
                                 " VALUES (" +iStepID+")";
                         Bukkit.getConsoleSender().sendMessage(sql);
                         SQL.executeUpdate(sql);
@@ -628,7 +628,7 @@ public class TeachingTutorials extends JavaPlugin
 
                         try
                         {
-                            sql = "INSERT INTO Tasks (GroupID, TaskType, `Order`, Details)" +
+                            sql = "INSERT INTO `Tasks` (`GroupID`, `TaskType`, `Order`, `Details`)" +
                                     " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1) +", '" +szDetails +"')";
                             Bukkit.getConsoleSender().sendMessage(sql);
                             SQL.executeUpdate(sql);

@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.listeners.TextEditorBookListener;
@@ -30,9 +29,8 @@ public class StepEditorMenu extends Gui
     private final Step step;
     private final LocationStep locationStep;
 
-    private TextEditorBookListener bookListener;
-
-    private ItemStack book;
+    private TextEditorBookListener instructionsBookListener;
+    private TextEditorBookListener videoLinkBookListener;
 
     public StepEditorMenu(TeachingTutorials plugin, User user, Step step, LocationStep locationStep)
     {
@@ -42,10 +40,8 @@ public class StepEditorMenu extends Gui
         this.step = step;
         this.locationStep = locationStep;
 
-        this.book = new ItemStack(Material.WRITABLE_BOOK, 1);
-        BookMeta bookMeta = (BookMeta) book.getItemMeta();
-        bookMeta.setTitle(step.getName());
-        this.book.setItemMeta(bookMeta);
+        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, locationStep, StepEditorMenu.this, step.getName());
+        this.instructionsBookListener = new TextEditorBookListener(plugin, user, locationStep, StepEditorMenu.this, step.getInstructionDisplayType(), step.getName());
 
         setItems();
     }
@@ -59,11 +55,15 @@ public class StepEditorMenu extends Gui
         ItemStack teleportToStart = Utils.createItem(Material.VILLAGER_SPAWN_EGG, 1,
                 Component.text("Teleport back to the start location", NamedTextColor.GREEN));
 
+        ItemStack videoLink = Utils.createItem(Material.PAINTING, 1,
+                Component.text("Set the video tutorial link if one exists", NamedTextColor.GREEN),
+                Component.text("This is specific to each location of the tutorial", NamedTextColor.DARK_GREEN));
+
         boolean bIsHologramNeeded = step.getInstructionDisplayType().equals(Display.DisplayType.hologram);
         if (bIsHologramNeeded)
         {
             //Set start location coordinates to current location
-            setItem(11, setStartLocation, new guiAction() {
+            setItem(10, setStartLocation, new guiAction() {
                 @Override
                 public void rightClick(User u) {
                     leftClick(u);
@@ -79,7 +79,7 @@ public class StepEditorMenu extends Gui
             ItemStack instructions = Utils.createItem(Material.WRITABLE_BOOK, 1,
                     Component.text("Set the instructions", NamedTextColor.GREEN));
 
-            setItem(13, instructions, new guiAction() {
+            setItem(12, instructions, new guiAction() {
                 @Override
                 public void rightClick(User u) {
                     leftClick(u);
@@ -88,7 +88,7 @@ public class StepEditorMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     //The book must have the step name as the title
-                    Utils.giveItem(u.player, book, "Instructions editor book");
+                    Utils.giveItem(u.player, instructionsBookListener.getBook(), "Instructions editor book");
                     Display display = new Display(u.player, Component.text("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
                     display.Message();
 
@@ -96,8 +96,7 @@ public class StepEditorMenu extends Gui
                     u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
 
                     //Sets up the book listener and registers it
-                    bookListener = new TextEditorBookListener(plugin, u, locationStep, StepEditorMenu.this, step.getInstructionDisplayType(), step.getName(), book);
-                    bookListener.register();
+                    instructionsBookListener.register();
 
                     //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
                 }
@@ -108,7 +107,7 @@ public class StepEditorMenu extends Gui
                     Component.text("Set the instructions hologram location", NamedTextColor.GREEN),
                     Component.text("Set the instructions hologram to your current position", NamedTextColor.DARK_GREEN));
 
-            setItem(15, hologramLocation, new guiAction() {
+            setItem(14, hologramLocation, new guiAction() {
                 @Override
                 public void rightClick(User u) {
                     leftClick(u);
@@ -120,10 +119,35 @@ public class StepEditorMenu extends Gui
                     step.tryNextStep();
                 }
             });
+
+            //Set video link
+            setItem(16, videoLink, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+
+                @Override
+                public void leftClick(User u) {
+                    //The book must have the step name as the title
+                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
+                    Display display = new Display(u.player, Component.text("Use the video link editor book to set the video link", NamedTextColor.GREEN));
+                    display.Message();
+
+                    //Closes the current inventory
+                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+
+                    //Sets up the book listener and registers it
+                    videoLinkBookListener.register();
+
+                    //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
+                }
+            });
         }
         else
         {
-            setItem(13, setStartLocation, new guiAction() {
+            //Set start location
+            setItem(12, setStartLocation, new guiAction() {
                 @Override
                 public void rightClick(User u) {
                     leftClick(u);
@@ -132,6 +156,30 @@ public class StepEditorMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     setStartLocation(u.player.getLocation());
+                }
+            });
+
+            //Set video link
+            setItem(14, videoLink, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+
+                @Override
+                public void leftClick(User u) {
+                    //The book must have the step name as the title
+                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
+                    Display display = new Display(u.player, Component.text("Use the video link editor book to set the video link", NamedTextColor.GREEN));
+                    display.Message();
+
+                    //Closes the current inventory
+                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+
+                    //Sets up the book listener and registers it
+                    videoLinkBookListener.register();
+
+                    //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
         }

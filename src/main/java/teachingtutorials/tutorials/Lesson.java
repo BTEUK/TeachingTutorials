@@ -716,7 +716,7 @@ public class Lesson extends TutorialPlaythrough
         try
         {
             //Compiles the command to fetch the lesson in progress - assumes a player can only have one lesson ongoing at a time
-            sql = "Select * FROM Lessons WHERE UUID = '" +creatorOrStudent.player.getUniqueId() +"' AND Finished = 0";
+            sql = "SELECT * FROM `Lessons` WHERE `UUID` = '" +creatorOrStudent.player.getUniqueId() +"' AND `Finished` = 0";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -761,7 +761,7 @@ public class Lesson extends TutorialPlaythrough
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            szSql = "INSERT INTO Lessons (UUID, TutorialID, Finished, StageAt, StepAt, LocationID)" +
+            szSql = "INSERT INTO `Lessons` (`UUID`, `TutorialID`, `Finished`, `StageAt`, `StepAt`, `LocationID`)" +
                     " VALUES ("
                     +"'"+creatorOrStudent.player.getUniqueId()+"', "
                     +this.tutorial.getTutorialID()+", "
@@ -771,7 +771,7 @@ public class Lesson extends TutorialPlaythrough
                     +this.location.getLocationID() +")";
             SQL.executeUpdate(szSql);
 
-            szSql = "Select LAST_INSERT_ID()";
+            szSql = "SELECT LAST_INSERT_ID()";
             resultSet = SQL.executeQuery(szSql);
             resultSet.next();
             this.iLessonID = resultSet.getInt(1);
@@ -796,10 +796,10 @@ public class Lesson extends TutorialPlaythrough
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //At this point StageIndex actually refers to what stage they are on and is 1 indexed
-            szSql = "UPDATE Lessons SET StageAt = " +iStageIndex +" WHERE LessonID = "+ this.iLessonID;
+            szSql = "UPDATE `Lessons` SET `StageAt` = " +iStageIndex +" WHERE `LessonID` = "+ this.iLessonID;
             SQL.executeUpdate(szSql);
 
-            szSql = "UPDATE Lessons SET StepAt = " +currentStage.getCurrentStep() +" WHERE LessonID = "+ this.iLessonID;
+            szSql = "UPDATE `Lessons` SET `StepAt` = " +currentStage.getCurrentStep() +" WHERE `LessonID` = "+ this.iLessonID;
             SQL.executeUpdate(szSql);
         }
         catch (Exception e)
@@ -819,7 +819,7 @@ public class Lesson extends TutorialPlaythrough
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            szSql = "UPDATE Lessons SET Finished = 1 WHERE LessonID = "+ this.iLessonID;
+            szSql = "UPDATE `Lessons` SET `Finished` = 1 WHERE `LessonID` = "+ this.iLessonID;
             SQL.executeUpdate(szSql);
         }
         catch (Exception e)

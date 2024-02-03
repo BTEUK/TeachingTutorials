@@ -160,7 +160,7 @@ public class Group
         try
         {
             //Compiles the command to fetch groups
-            sql = "Select * FROM Groups WHERE StepID = "+step.iStepID;
+            sql = "Select * FROM `Groups` WHERE `StepID` = "+step.iStepID;
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query

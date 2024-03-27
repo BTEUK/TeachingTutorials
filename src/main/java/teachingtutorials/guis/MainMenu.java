@@ -35,30 +35,32 @@ public class MainMenu extends Gui
         FileConfiguration config = TeachingTutorials.getInstance().getConfig();
         boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial");
 
-        //Continue learning menu button
+        //'Continue' menu button
         ItemStack continueLearning_CompulsoryComplete;
         if (user.bInLesson)
             continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                    Component.text("Continue learning", NamedTextColor.GREEN),
-                    Component.text("Continue your lesson", NamedTextColor.DARK_GREEN));
+                    TutorialGUIUtils.optionTitle("Continue lesson"),
+                    TutorialGUIUtils.optionLore("Continue your lesson"));
         else
             continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                    Component.text("Continue learning", NamedTextColor.GREEN),
-                    Component.text("Start another tutorial", NamedTextColor.DARK_GREEN));
+                    TutorialGUIUtils.optionTitle("Start a new Tutorial"),
+                    TutorialGUIUtils.optionLore("Finds a tutorial for you"));
 
         //Tutorial library
         ItemStack tutorialLibrary = Utils.createItem(Material.BOOKSHELF, 1,
-                Component.text("Tutorial Library", NamedTextColor.GREEN),
-                Component.text("Browse all of our available tutorials", NamedTextColor.DARK_GREEN));
+                TutorialGUIUtils.optionTitle("Tutorial Library"),
+                TutorialGUIUtils.optionLore("Browse all of our available tutorials"));
 
-        //The system has the compulsory tutorial feature enabled
+        //Checks the system has the compulsory tutorial feature enabled
         if (bCompulsoryTutorialEnabled)
         {
             if (user.bHasCompletedCompulsory)
             {
                 //Restart compulsory tutorial
                 ItemStack restartCompulsory = Utils.createItem(Material.ENCHANTED_BOOK, 1,
-                        Component.text("Restart Compulsory Tutorial", NamedTextColor.GREEN));
+                        TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
+                        TutorialGUIUtils.optionLore("If you are already in a tutorial,"),
+                        TutorialGUIUtils.optionLore("it will resume that."));
                 super.setItem(11 - 1, restartCompulsory, new guiAction() {
                     @Override
                     public void rightClick(User u)
@@ -110,14 +112,14 @@ public class MainMenu extends Gui
                 if (user.bInLesson)
                 {
                     continue_CompulsoryNotComplete = Utils.createItem(Material.BOOK, 1,
-                            Component.text("Continue Compulsory Tutorial", NamedTextColor.GREEN),
-                            Component.text("Gain the applicant rank", NamedTextColor.DARK_GREEN));
+                            TutorialGUIUtils.optionTitle("Continue the Starter Tutorial"),
+                            TutorialGUIUtils.optionLore("Gain the applicant rank"));
                 }
                 else
                 {
                     continue_CompulsoryNotComplete = Utils.createItem(Material.BOOK, 1,
-                            Component.text("Start Compulsory Tutorial", NamedTextColor.GREEN),
-                            Component.text("Gain the applicant rank", NamedTextColor.DARK_GREEN));
+                            TutorialGUIUtils.optionTitle("Begin the Starter Tutorial"),
+                            TutorialGUIUtils.optionLore("Gain the applicant rank"));
                 }
                 super.setItem(14 - 1, continue_CompulsoryNotComplete, new guiAction() {
                     @Override
@@ -171,7 +173,7 @@ public class MainMenu extends Gui
         {
             //Admin and creator menu
             super.setItem(19 - 1, Utils.createItem(Material.LECTERN, 1,
-                    Component.text("Creator Menu", NamedTextColor.GREEN)), new guiAction() {
+                    TutorialGUIUtils.optionTitle("Creator Menu")), new guiAction() {
                 @Override
                 public void rightClick(User u) {
                     leftClick(u);

@@ -68,12 +68,14 @@ public class CompulsoryTutorialMenu extends Gui
         //Indicates that the creator has no tutorials if they don't own any
         if (iTutorials == 0)
         {
-            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, Component.text("There are no in-use tutorials on the system", NamedTextColor.GREEN));
+            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1,
+                    TutorialGUIUtils.optionTitle("There are no in-use tutorials on the system"));
             inventory.setItem(5-1, noTutorials);
         }
 
         //Adds back button
-        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, Component.text("Back to creator menu", NamedTextColor.GREEN, TextDecoration.BOLD));
+        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1,
+                TutorialGUIUtils.backButton("Back to creator menu"));
         inventory.setItem((iRows * 9)-1, back);
 
         //Inv slot 0 = the first one
@@ -84,14 +86,14 @@ public class CompulsoryTutorialMenu extends Gui
             if (tutorials[i].bCompulsory)
             {
                 tutorial = Utils.createItem(compulsoryBlock, 1,
-                        Component.text(tutorials[i].szTutorialName, NamedTextColor.GREEN, TextDecoration.BOLD),
-                        Component.text(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName(), NamedTextColor.DARK_GREEN));
+                        TutorialGUIUtils.optionTitle(tutorials[i].szTutorialName).decoration(TextDecoration.BOLD, true),
+                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName()));
             }
             else
             {
                 tutorial = Utils.createItem(nonCompulsoryBlock, 1,
-                        Component.text(tutorials[i].szTutorialName, NamedTextColor.GREEN),
-                        Component.text(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName(), NamedTextColor.DARK_GREEN));
+                        TutorialGUIUtils.optionTitle(tutorials[i].szTutorialName),
+                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName()));
             }
             inventory.setItem(i, tutorial);
         }

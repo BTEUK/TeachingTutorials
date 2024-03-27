@@ -10,6 +10,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
+import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.listeners.TextEditorBookListener;
 import teachingtutorials.tutorials.LocationStep;
 import teachingtutorials.tutorials.Step;
@@ -49,15 +50,15 @@ public class StepEditorMenu extends Gui
     public void setItems()
     {
         ItemStack setStartLocation = Utils.createItem(Material.COMPASS, 1,
-                Component.text("Set the step's start location", NamedTextColor.GREEN),
-                Component.text("Set the start location to your current position and direction", NamedTextColor.DARK_GREEN));
+                TutorialGUIUtils.optionTitle("Set the step's start location"),
+                TutorialGUIUtils.optionLore("Set the start location to your current position and direction"));
 
         ItemStack teleportToStart = Utils.createItem(Material.VILLAGER_SPAWN_EGG, 1,
-                Component.text("Teleport back to the start location", NamedTextColor.GREEN));
+                TutorialGUIUtils.optionTitle("Teleport back to the start location"));
 
         ItemStack videoLink = Utils.createItem(Material.PAINTING, 1,
-                Component.text("Set the video tutorial link if one exists", NamedTextColor.GREEN),
-                Component.text("This is specific to each location of the tutorial", NamedTextColor.DARK_GREEN));
+                TutorialGUIUtils.optionTitle("Set the video tutorial link if one exists"),
+                TutorialGUIUtils.optionLore("This is specific to each location of the tutorial"));
 
         boolean bIsHologramNeeded = step.getInstructionDisplayType().equals(Display.DisplayType.hologram);
         if (bIsHologramNeeded)
@@ -77,7 +78,7 @@ public class StepEditorMenu extends Gui
 
             //Set instructions
             ItemStack instructions = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                    Component.text("Set the instructions", NamedTextColor.GREEN));
+                    TutorialGUIUtils.optionTitle("Set the instructions"));
 
             setItem(12, instructions, new guiAction() {
                 @Override
@@ -104,8 +105,8 @@ public class StepEditorMenu extends Gui
 
             //Set hologram coordinates to player's current location
             ItemStack hologramLocation = Utils.createItem(Material.FILLED_MAP, 1,
-                    Component.text("Set the instructions hologram location", NamedTextColor.GREEN),
-                    Component.text("Set the instructions hologram to your current position", NamedTextColor.DARK_GREEN));
+                    TutorialGUIUtils.optionTitle("Set the instructions hologram location"),
+                    TutorialGUIUtils.optionLore("Set the instructions hologram to your current position"));
 
             setItem(14, hologramLocation, new guiAction() {
                 @Override

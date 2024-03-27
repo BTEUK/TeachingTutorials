@@ -82,12 +82,12 @@ public class CreatorTutorialsMenu extends Gui
         //Indicates that the creator has no tutorials if they don't own any
         if (allTutorials.length == 0)
         {
-            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, Component.text("You have no tutorials", NamedTextColor.GREEN));
+            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, TutorialGUIUtils.optionTitle("You have no tutorials"));
             inventory.setItem(5-1, noTutorials);
         }
 
         //Adds back button
-        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, Component.text("Back to creator menu", NamedTextColor.GREEN, TextDecoration.BOLD));
+        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.backButton("Back to creator menu"));
         inventory.setItem((iRows * 9)-1, back);
 
         //Creates the menu options
@@ -97,14 +97,14 @@ public class CreatorTutorialsMenu extends Gui
             //Sets tutorial name bold for tutorials in use
             if (allTutorials[i].bInUse)
                 tutorial = Utils.createItem(Material.WRITTEN_BOOK, 1,
-                        Component.text(allTutorials[i].szTutorialName, NamedTextColor.GREEN, TextDecoration.BOLD),
-                        Component.text("In Use - Left click to remove from use", NamedTextColor.DARK_GREEN),
-                        Component.text("Right click to add a new location", NamedTextColor.DARK_GREEN));
+                        TutorialGUIUtils.optionTitle(allTutorials[i].szTutorialName).decoration(TextDecoration.BOLD, true),
+                        TutorialGUIUtils.optionLore("In Use - Left click to remove from use"),
+                        TutorialGUIUtils.optionLore("Right click to add a new location"));
             else
                 tutorial = Utils.createItem(Material.BOOK, 1,
-                        Component.text(allTutorials[i].szTutorialName, NamedTextColor.GREEN),
-                        Component.text("Not in Use - Left click to set in use", NamedTextColor.DARK_GREEN),
-                        Component.text("Right click to add a new location", NamedTextColor.DARK_GREEN));
+                        TutorialGUIUtils.optionTitle(allTutorials[i].szTutorialName),
+                        TutorialGUIUtils.optionLore("Not in Use - Left click to set in use"),
+                        TutorialGUIUtils.optionLore("Right click to add a new location"));
             inventory.setItem(i, tutorial);
         }
 

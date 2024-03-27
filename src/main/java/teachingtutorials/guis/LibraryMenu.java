@@ -71,7 +71,9 @@ public class LibraryMenu extends Gui
         //Indicates that there are no tutorials in the system
         if (iTutorials == 0)
         {
-            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, Component.text("There are no tutorials available to play currently", NamedTextColor.GREEN));
+            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1,
+                    TutorialGUIUtils.optionTitle("There are no tutorials available to play currently"),
+                    TutorialGUIUtils.optionLore("Ask a server admin to get some created"));
             inventory.setItem(5-1, noTutorials);
         }
 
@@ -80,13 +82,13 @@ public class LibraryMenu extends Gui
         for (i = 0 ; i < iTutorials ; i++)
         {
             tutorial = Utils.createItem(Material.KNOWLEDGE_BOOK, 1,
-                    Component.text(tutorials[i].szTutorialName, NamedTextColor.GREEN, TextDecoration.BOLD),
-                    Component.text("Tutor: " +Bukkit.getOfflinePlayer(tutorials[i].uuidAuthor).getName(), NamedTextColor.DARK_GREEN));
+                    TutorialGUIUtils.optionTitle(tutorials[i].szTutorialName).decoration(TextDecoration.BOLD, true),
+                    TutorialGUIUtils.optionLore("Tutor - " +Bukkit.getOfflinePlayer(tutorials[i].uuidAuthor).getName()));
             inventory.setItem(i, tutorial);
         }
 
         //Adds back button
-        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, Component.text("Back to main menu", NamedTextColor.GREEN, TextDecoration.BOLD));
+        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.backButton("Back to main menu"));
         inventory.setItem((iRows * 9) - 1, back);
 
         //Inv slot 0 = the first one

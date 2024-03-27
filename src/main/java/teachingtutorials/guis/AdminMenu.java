@@ -30,18 +30,18 @@ public class AdminMenu extends Gui
     private void createGui()
     {
         ItemStack setCompulsory = Utils.createItem(Material.IRON_DOOR, 1,
-                Component.text("Set Compulsory Tutorial", NamedTextColor.GREEN),
-                Component.text("Admins only", NamedTextColor.DARK_GREEN));
+                TutorialGUIUtils.optionTitle("Set Compulsory Tutorial"),
+                TutorialGUIUtils.optionLore("Admins only"));
 
         ItemStack myTutorials = Utils.createItem(Material.BOOKSHELF, 1,
-                Component.text("My Tutorials", NamedTextColor.GREEN),
-                Component.text("View the tutorials you have created", NamedTextColor.DARK_GREEN),
-                Component.text("Add locations", NamedTextColor.DARK_GREEN),
-                Component.text("Set a tutorial as in use or not in use", NamedTextColor.DARK_GREEN));
+                TutorialGUIUtils.optionTitle("My Tutorials"),
+                TutorialGUIUtils.optionLore("- View the tutorials you have created"),
+                TutorialGUIUtils.optionLore("- Add locations"),
+                TutorialGUIUtils.optionLore("- Set a tutorial as in use or not in use"));
 
         ItemStack createTutorial = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                Component.text("Create Tutorial", NamedTextColor.GREEN),
-                Component.text("Create a new tutorial in game (coming soon)", NamedTextColor.DARK_GREEN));
+                TutorialGUIUtils.optionTitle("Create a new Tutorial"),
+                TutorialGUIUtils.optionLore("Create a new tutorial in game (coming soon)"));
 
         int iSlotMyTutorials;
 
@@ -96,7 +96,7 @@ public class AdminMenu extends Gui
         });
 
         setItem(27 - 1, Utils.createItem(Material.SPRUCE_DOOR, 1,
-                Component.text("Back to main menu", NamedTextColor.GREEN, TextDecoration.BOLD)),
+                        TutorialGUIUtils.backButton("Back to main menu")),
                 new guiAction() {
             @Override
             public void rightClick(User u) {

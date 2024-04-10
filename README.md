@@ -4,7 +4,7 @@ This link gives a detailed summary of the intended plan:
 **https://docs.google.com/document/d/1FBd9vSfhHPDqNUBmbLcdZRFyIyhDvNKcvEDxLDoPFLw/edit**
 * The BTE Teaching System or Teaching Tutorials is the next phase of tutorials on the BTE UK server and the first tutorial system to be implemented on the BTE network.
 * It is the next step up in teaching players on server with an interactive system.
-* It will allow tutorials to be created using a config so that tutorials can be added without code needed. No tutorials will be hard coded.
+* It will allow tutorials to be created using a config and then stored in a database so that tutorials can be added without any coding needed. No tutorials will be hard coded.
 * It adds the option of multiple "Locations" being avaiable for a single tutorial.
 * It will assess a player's performance in each tutorial in a number of categories and will use this to update a player's overall rating in each of the categories.
 * A player's overall rating tells the system what the player needs more work on and therefore what tutorials to make them complete next.

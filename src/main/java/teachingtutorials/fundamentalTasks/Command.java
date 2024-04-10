@@ -1,5 +1,13 @@
 package teachingtutorials.fundamentalTasks;
 
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extension.platform.permission.ActorSelectorLimits;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.regions.RegionSelector;
+import com.sk89q.worldedit.regions.selector.CuboidRegionSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -11,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.util.BlockVector;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
@@ -20,6 +29,8 @@ import teachingtutorials.utils.VirtualBlock;
 import teachingtutorials.utils.WorldEdit;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 
 enum commandType
 {
@@ -192,6 +203,7 @@ public class Command extends Task implements Listener
             }
         }
 
+        //Not a new location
         else if (command.startsWith("/"+szTargetCommand))
         {
             command = command.replace(("/"+szTargetCommand), "");
@@ -211,6 +223,20 @@ public class Command extends Task implements Listener
                         displayVirtualBlocks();
 
                         event.setCancelled(true);
+
+                        // This point would be the point where the command is allowed to run,
+                        // and then another listener listeners out for the block changes
+                        // and converts these changes into virtual blocks.
+                        // To deal with the current virtual blocks/overlapping, the virtual blocks could temporarily be
+                        // converted to real blocks before the WE changes were applied, and then the world would be
+                        // compared to how it was previously and any additional blocks would be all of the virtual blocks,
+                        // which would then be stored as the new list.
+
+                        // That would mean that the WE deals with the gmask stuff itself.
+                        // The whole world would not need to be checked for changes, just any locations which had block
+                        // changes from the command itself.
+
+                        // Unless, I can find a way to have the WE api do this for me.
                         break;
                     case none:
                         event.setCancelled(true);
@@ -279,13 +305,13 @@ public class Command extends Task implements Listener
             //---------------------------------------------
 
             //If it's a virtual blocks command type, assume a selection task was the previous task
-            //Gets the associated selection of this virtual blocks type command
+            //Gets the associated selection of this virtual blocks type command - we want the actual answers
             Selection selection = (Selection) tasks.get(this.iOrder - 2);
 
             double[] dTargetCoords1 = selection.dTargetCoords1;
             double[] dTargetCoords2 = selection.dTargetCoords2;
 
-            World world = player.getWorld();
+            World world = parentGroup.parentStep.parentStage.tutorialPlaythrough.getLocation().getWorld();
             Location location1 = GeometricUtils.convertToBukkitLocation(world, dTargetCoords1[0], dTargetCoords1[1]);
             Location location2 = GeometricUtils.convertToBukkitLocation(world, dTargetCoords2[0], dTargetCoords2[1]);
             if (location1 == null || location2 == null)
@@ -296,27 +322,20 @@ public class Command extends Task implements Listener
 //            Selection selection = (Selection) parentGroup.getTasks().get(iOrder - 2);
 //            selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, selection.iSelectedBlockCoordinates1, selection.iSelectedBlockCoordinates2, szWorldName);
 
-            int[] iBlockCoordinates1 = new int[]{location1.getBlockX(), (int) dTargetCoords1[2], location1.getBlockZ()};
-            int[] iBlockCoordinates2 = new int[]{location2.getBlockX(), (int) dTargetCoords2[2], location2.getBlockZ()};
+            BlockVector3 selectionPoint1 = BlockVector3.at(location1.getBlockX(), (int) dTargetCoords1[2], location1.getBlockZ());
+            BlockVector3 selectionPoint2 = BlockVector3.at(location2.getBlockX(), (int) dTargetCoords2[2], location2.getBlockZ());
 
-            selectionBlocks = WorldEdit.BlocksCalculator(szTargetCommand, iBlockCoordinates1, iBlockCoordinates2, world.getName());
+//            //Get the player's selection limits
+//            ActorSelectorLimits selectionLimits = ActorSelectorLimits.forActor(BukkitAdapter.adapt(player));
 
-            //Calculates the material of the blocks
-            BlockData material = WorldEdit.BlockTypeCalculator(szTargetCommandArgs.replace(" ", ""));
-            //In future updates to the WE functionality, blockTypeCalculator will use statistics to produce better mixes
-            //And will produce a different material every time it is called
+            //Creates the 'correct' world edit selection region
+            //For now this is only cuboid, but more selection mechanics will be made available
+            RegionSelector regionSelector = new CuboidRegionSelector(BukkitAdapter.adapt(world), selectionPoint1, selectionPoint2);
 
-            //Creates virtual block objects
-            Location blockLocation;
-            virtualBlocks = new VirtualBlock[selectionBlocks.size()];
-            for (int i = 0; i < virtualBlocks.length; i++)
-            {
-                blockLocation = selectionBlocks.get(i);
-                virtualBlocks[i] = new VirtualBlock(this.parentGroup.parentStep.parentStage.tutorialPlaythrough, player, player.getWorld(),
-                        blockLocation.getBlockX(), blockLocation.getBlockY(), blockLocation.getBlockZ(),
-                        material.getMaterial());
-                //In the future, material will be reestablished for every block, allowing mixes
-            }
+            //Calculates the virtual blocks
+            WorldEdit.BlocksCalculator(iTaskID, virtualBlocks, regionSelector, szTargetCommand, szTargetCommandArgs.split(" "), world, player, parentGroup.parentStep.parentStage.tutorialPlaythrough);
         }
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All virtual blocks for this task: "+virtualBlocks.size());
     }
 }

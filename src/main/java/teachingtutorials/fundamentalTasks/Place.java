@@ -51,6 +51,7 @@ public class Place extends Task implements Listener
 
         this.fDifficulty = fDifficulty;
 
+        //Calculates the virtual block
         calculateVirtualBlocks();
     }
 
@@ -223,11 +224,14 @@ public class Place extends Task implements Listener
         spotHit();
     }
 
+    /**
+     * Uses the target coords and target material to calculate the virtual block
+     */
     public void calculateVirtualBlocks()
     {
         VirtualBlock virtualPlaceBlock = new VirtualBlock(this.parentGroup.parentStep.parentStage.tutorialPlaythrough, player, player.getWorld(),
                                                         iTargetCoords[0], iTargetCoords[1], iTargetCoords[2],
-                                                        mTargetMaterial);
-        this.virtualBlocks = new VirtualBlock[]{virtualPlaceBlock};
+                                                        mTargetMaterial.createBlockData());
+        this.virtualBlocks.add(virtualPlaceBlock);
     }
 }

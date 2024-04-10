@@ -3,6 +3,7 @@ package teachingtutorials;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,19 +17,14 @@ import teachingtutorials.listeners.JoinLeaveEvent;
 import teachingtutorials.listeners.GlobalPlayerCommandProcess;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.*;
-import teachingtutorials.utils.DBConnection;
-import teachingtutorials.utils.Display;
-import teachingtutorials.utils.User;
-import teachingtutorials.utils.VirtualBlock;
+import teachingtutorials.utils.*;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 public class TeachingTutorials extends JavaPlugin
 {
@@ -56,7 +52,7 @@ public class TeachingTutorials extends JavaPlugin
     public ArrayList<NewLocation> newLocations;
 
     //A list of all virtual blocks
-    public ArrayList<VirtualBlock> virtualBlocks;
+    public HashMap<VirtualBlockLocation, BlockData> virtualBlocks;
 
     @Override
     public void onEnable()
@@ -92,7 +88,7 @@ public class TeachingTutorials extends JavaPlugin
         players = new ArrayList<>();
         lessons = new ArrayList<>();
         newLocations = new ArrayList<>();
-        virtualBlocks = new ArrayList<>();
+        virtualBlocks = new HashMap<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
@@ -220,17 +216,16 @@ public class TeachingTutorials extends JavaPlugin
         //----------------------------------------
         //--------Refreshes virtual blocks--------
         //----------------------------------------
-        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable()
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
         {
-            @Override
-            public void run()
+            int iSize;
+            iSize = virtualBlocks.size();
+            VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
+            BlockData[] blockData = virtualBlocks.values().toArray(BlockData[]::new);
+
+            for (int i = 0 ; i < iSize ; i++)
             {
-                int i;
-                int iNumVirtualBlocks = virtualBlocks.size();
-                for (i = 0 ; i < iNumVirtualBlocks ; i++)
-                {
-                    virtualBlocks.get(i).sendUpdate();
-                }
+                locations[i].sendUpdate(blockData[i]);
             }
         }, 0, 10);
 

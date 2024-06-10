@@ -14,12 +14,14 @@ public class Event
     public Player player;
     public EventType eventType;
     public Timestamp timestamp;
+    public int iData;
 
-    public Event(Player player, EventType eventType, Timestamp timestamp)
+    public Event(Player player, EventType eventType, Timestamp timestamp, int iData)
     {
         this.player = player;
         this.eventType = eventType;
         this.timestamp = timestamp;
+        this.iData = iData;
     }
 
     //SQL Fetches
@@ -51,9 +53,10 @@ public class Event
                     continue;
                 EventType eventType = EventType.valueOf(resultSet.getString("EventName"));
                 Timestamp timestamp = resultSet.getTimestamp("Timestamp");
+                int iData = resultSet.getInt("Data");
 
                 //Creates an event object to store the details
-                Event event = new Event(player, eventType, timestamp);
+                Event event = new Event(player, eventType, timestamp, iData);
 
                 //Go through entire event list and check for any duplicate players and sort them
                 for (int i = 0 ; i < events.size() ; i++)
@@ -120,5 +123,33 @@ public class Event
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting event");
             e.printStackTrace();
         }
+
+    }
+    public static void addEvent(EventType eventType, UUID userUUID, int iData)
+    {
+        String sql;
+        Statement SQL = null;
+
+        int iCount;
+
+        try
+        {
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Removes the answers
+            sql = "INSERT INTO `Events` (`UUID`,`EventName`,`Data`) VALUES('" +userUUID +"', '"+eventType.toString()+"', "+iData +")";
+            iCount = SQL.executeUpdate(sql);
+        }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error deleting event");
+            se.printStackTrace();
+        }
+        catch (Exception e)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting event");
+            e.printStackTrace();
+        }
+
     }
 }

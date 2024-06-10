@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.fundamentalTasks.TpllListener;
 import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
@@ -230,8 +231,15 @@ public class Step
 
             for (i = 0; i < iGroups; i++)
             {
-                groups.get(i).initialRegister();
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+(i+1));
+                final int I = i;
+                //Registers each group 0.2 seconds apart from each other - this is to allow all world edit block calculations to complete
+                //WE block calculations involves running the WE command over the console and detecting and recording changes, before
+                // then removing those changes from the actual world. This involves delicate use of listeners, hence this 0.1 second control
+                Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), () ->
+                {
+                    groups.get(I).initialRegister();
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+(I+1));
+                }, i*4L);
             }
 
             //TP to start location, and store this location for later use

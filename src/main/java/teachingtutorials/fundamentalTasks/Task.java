@@ -12,12 +12,26 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.logging.Level;
 
 public class Task
 {
     public int iTaskID;
+
+    /**
+     * The type of the task, e.g, "command". This is not enumerated, but may be in the future.
+     */
     public String type;
+
+    /**
+     * The number of the task in the group. 1 is the first task in the group.
+     */
     public int iOrder;
+
+    /**
+     * Any extra information about the task as given in the database
+     */
     public String szDetails;
 
     public float fDifficulties[] = new float[5];
@@ -34,7 +48,10 @@ public class Task
 
     protected boolean bNewLocation;
 
-    protected VirtualBlock[] virtualBlocks;
+    /**
+     * A list of virtual blocks which are to be displayed as a result of task completion
+     */
+    protected HashSet<VirtualBlock> virtualBlocks;
 
     public void register()
     {
@@ -55,9 +72,12 @@ public class Task
     public Task(TeachingTutorials plugin)
     {
         this.plugin = plugin;
-        this.virtualBlocks = new VirtualBlock[0];
+        this.virtualBlocks = new HashSet<>();
     }
 
+    /**
+     * Calculates some scores and then tells the parent group that its active task has just been finished
+     */
     protected void taskComplete()
     {
         if (!parentGroup.parentStep.parentStage.bLocationCreation)
@@ -71,35 +91,37 @@ public class Task
         parentGroup.taskFinished();
     }
 
-    //Called when terminating early
+    /**
+     * Removes virtual blocks and sets task to inactive
+     */
     public void unregister()
     {
         removeVirtualBlocks();
         bActive = false;
     }
 
-    //Adds all of the virtual blocks of this task to the plugin's virtual blocks list
+    /**
+     * Adds all of the virtual blocks of this task to the plugin's virtual blocks list
+     */
     public void displayVirtualBlocks()
     {
-        int i;
-        int iVirtualBlocks = virtualBlocks.length;
-
-        for (i = 0 ; i < iVirtualBlocks ; i++)
+        for (VirtualBlock virtualBlock: virtualBlocks)
         {
-            plugin.virtualBlocks.add(virtualBlocks[i]);
+            //The put will overwrite any existing virtual blocks at this location
+            plugin.virtualBlocks.put(virtualBlock.blockLocation, virtualBlock.blockData);
         }
     }
 
-    //Removes all of the virtual blocks of this task from the plugin's virtual blocks list
+    /**
+     * Removes all of the virtual blocks of this task from the plugin's virtual blocks list
+     */
     protected void removeVirtualBlocks()
     {
-        int i;
-        int iVirtualBlocks = virtualBlocks.length;
-
-        for (i = 0 ; i < iVirtualBlocks ; i++)
+        for (VirtualBlock virtualBlock: virtualBlocks)
         {
-            plugin.virtualBlocks.remove(virtualBlocks[i]);
+            plugin.virtualBlocks.remove(virtualBlock.blockLocation);
         }
+        plugin.getLogger().info(ChatColor.AQUA +"All virtual blocks from task with task id " +iTaskID +" removed");
     }
 
     public void newLocationSpotHit()
@@ -107,7 +129,14 @@ public class Task
 
     }
 
-    //Fetches the tasks and the answers for a particular group and location
+    /**
+     * Fetches the tasks and the answers for a particular group and location
+     * @param plugin
+     * @param iLocationID
+     * @param parentGroup
+     * @param player
+     * @return
+     */
     public static ArrayList<Task> fetchTasks(TeachingTutorials plugin, int iLocationID, Group parentGroup, Player player)
     {
         ArrayList<Task> tasks = new ArrayList<>();

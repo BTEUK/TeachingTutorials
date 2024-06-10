@@ -3,6 +3,7 @@ package teachingtutorials.utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TutorialPlaythrough;
 
@@ -13,41 +14,66 @@ public class VirtualBlock
     //Technically the TutorialPlaythrough could iterate through all stages, steps, groups and tasks to disable the virtual blocks but
     //this would be quite resource intensive (involves iterating through the virtual blocks list for every task and ultimately
     //the exact same code could be run just using the tutorial playthrough check but just with one iteration through the list
-    private TutorialPlaythrough tutorialPlaythrough;
+    public VirtualBlockLocation blockLocation;
+    public BlockData blockData;
 
-    public Player player;
-    private int iBlockX, iBlockY, iBlockZ;
-    public Material material;
 
-    public Location location;
-
-    public VirtualBlock(TutorialPlaythrough tutorialPlaythrough, Player player, World world, int iBlockX, int iBlockY, int iBlockZ, Material material)
+    /**
+     * Constructs the virtual block. Use this if the bukkit location object for this block has not yet been created
+     * @param tutorialPlaythrough
+     * @param player
+     * @param world
+     * @param iBlockX
+     * @param iBlockY
+     * @param iBlockZ
+     * @param blockData
+     */
+    public VirtualBlock(TutorialPlaythrough tutorialPlaythrough, Player player, World world, int iBlockX, int iBlockY, int iBlockZ, BlockData blockData)
     {
-        this.tutorialPlaythrough = tutorialPlaythrough;
-        this.player = player;
+        //Calculates the location
+        Location location = new Location(world, iBlockX, iBlockY, iBlockZ);
 
-        this.iBlockX = iBlockX;
-        this.iBlockY = iBlockY;
-        this.iBlockZ = iBlockZ;
-        this.material = material;
+        this.blockLocation = new VirtualBlockLocation(tutorialPlaythrough, player, location);
 
-        this.location = new Location(world, iBlockX, iBlockY, iBlockZ);
+        this.blockData = blockData;
     }
 
+    /**
+     * Constructs the virtual block. Use this if the bukkit location object for this block has already been created and initialised
+     * @param tutorialPlaythrough
+     * @param player
+     * @param location
+     * @param blockData
+     */
+    public VirtualBlock(TutorialPlaythrough tutorialPlaythrough, Player player, Location location, BlockData blockData)
+    {
+        this.blockLocation = new VirtualBlockLocation(tutorialPlaythrough, player, location);
+        this.blockData = blockData;
+    }
+
+    /**
+     * Sends the virtual block change to the player
+     */
     public void sendUpdate()
     {
-        //Sends the virtual block change to the player
-        player.sendBlockChange(location, material.createBlockData());
+        this.blockLocation.player.sendBlockChange(this.blockLocation.location, blockData);
     }
 
+    /**
+     * Returns the player's view of the block to match the actual world
+     */
     public void removeAndReset()
     {
-        //Returns the block to match the actual world
-        player.sendBlockChange(location, location.getBlock().getBlockData());
+        this.blockLocation.player.sendBlockChange(this.blockLocation.location, this.blockLocation.location.getBlock().getBlockData());
     }
 
+    /**
+     * Returns whether the virtual block is one created by the given tutorial
+     */
     public boolean isFromTutorial(TutorialPlaythrough tutorialPlaythrough)
     {
-        return tutorialPlaythrough.equals(this.tutorialPlaythrough);
+        return this.blockLocation.isFromTutorial(tutorialPlaythrough);
     }
+
+    //A util class for converting a list of them to one thing?
 }

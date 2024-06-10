@@ -1,6 +1,7 @@
 package teachingtutorials;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.tutorials.Location;
@@ -8,9 +9,10 @@ import teachingtutorials.tutorials.Stage;
 import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
-import teachingtutorials.utils.VirtualBlock;
+import teachingtutorials.utils.VirtualBlockLocation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 //To be extended by lesson and new location
 //They both share a lot of data and processes, and they are also rather similar in the user experience as well
@@ -88,19 +90,17 @@ public abstract class TutorialPlaythrough
         fallListener.unregister();
 
         //Removes virtual blocks
-        int i;
-        ArrayList<VirtualBlock> virtualBlocks = plugin.virtualBlocks;
-        int iVirtualBlocks = virtualBlocks.size();
-        VirtualBlock virtualBlock;
-        for (i = 0 ; i < iVirtualBlocks ; i++)
+        HashMap<VirtualBlockLocation, BlockData> virtualBlocks = plugin.virtualBlocks;
+        int iSize;
+        iSize = virtualBlocks.size();
+        VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
+
+        for (int i = 0 ; i < iSize ; i++)
         {
-            virtualBlock = virtualBlocks.get(i);
-            if (virtualBlock.isFromTutorial(this))
+            if (locations[i].isFromTutorial(this))
             {
-                virtualBlocks.remove(i);
-                virtualBlock.removeAndReset();
-                iVirtualBlocks--;
-                i--;
+                virtualBlocks.remove(locations[i]);
+                locations[i].removeAndReset();
             }
         }
 
@@ -120,7 +120,7 @@ public abstract class TutorialPlaythrough
         {
             String szServerName = config.getString("Server_Name");
 
-            //Switches the player's server after 40 seconds
+            //Switches the player's server after 2 seconds
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> creatorOrStudent.player.performCommand("server " +szServerName), 40L);
         }
 

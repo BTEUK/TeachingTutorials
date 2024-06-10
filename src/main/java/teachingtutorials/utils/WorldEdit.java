@@ -1,137 +1,176 @@
 package teachingtutorials.utils;
 
-//import com.sk89q.worldedit.EditSession;
-//import com.sk89q.worldedit.LocalSession;
-//import com.sk89q.worldedit.bukkit.BukkitWorld;
-//import com.sk89q.worldedit.entity.Player;
-//import com.sk89q.worldedit.extension.platform.Actor;
-//import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
-//import com.sk89q.worldedit.function.operation.Operation;
-//import com.sk89q.worldedit.math.BlockVector3;
-//import com.sk89q.worldedit.regions.CuboidRegion;
-//import com.sk89q.worldedit.session.ClipboardHolder;
-//import com.sk89q.worldedit.session.SessionManager;
-//import com.sk89q.worldedit.session.SessionOwner;
-//import org.apache.commons.lang.WordUtils;
+import com.google.common.base.Joiner;
+import com.sk89q.worldedit.IncompleteRegionException;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.event.extent.EditSessionEvent;
+import com.sk89q.worldedit.extension.platform.Actor;
+import com.sk89q.worldedit.extent.AbstractDelegateExtent;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.RegionSelector;
+import com.sk89q.worldedit.util.eventbus.Subscribe;
+import com.sk89q.worldedit.world.block.BlockStateHolder;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Player;
+import teachingtutorials.TeachingTutorials;
+import teachingtutorials.TutorialPlaythrough;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public class WorldEdit
 {
-    public static ArrayList<Location> BlocksCalculator(String szCommand, int[] iSelectedBlockCoordinates1, int[] iSelectedBlockCoordinates2, String szWorld)
+    private static Object worldEditEditEvent;
+
+    /**
+     * Creates a world edit event listener which catches the block changes arising from world edit commands owned by the given player
+     * and creates virtual block objects from these. The specific command parsed is then run, triggering the calculation of all blocks
+     * changes from this command.
+     * @param virtualBlocks The list of virtual blocks for the calling task
+     * @param szCommandLabel The command label (first word) of the command
+     * @param szCommandArgs The command args
+     * @param bukkitWorld The bukkit world for this set of blocks
+     * @param player The player doing the task
+     * @param tutorialPlaythrough The tutorial playthrough which this task belongs to
+     * @return
+     */
+    public static void BlocksCalculator(int iTaskID, final HashSet<VirtualBlock> virtualBlocks, RegionSelector correctSelectionRegion, String szCommandLabel, String[] szCommandArgs, World bukkitWorld, Player player, TutorialPlaythrough tutorialPlaythrough)
     {
-        World bukkitWorld = Bukkit.getWorld(szWorld);
+        //Get instance
+        com.sk89q.worldedit.WorldEdit worldEdit = com.sk89q.worldedit.WorldEdit.getInstance();
 
-        //Refer back to elgamer code. See how the line works there. Add more debug output, work out where the blocks are actually being placed
+        //Get the console actor
+        Actor consoleActor = BukkitAdapter.adapt(Bukkit.getConsoleSender());
 
-//        World world = new BukkitWorld(Bukkit.getWorld(szWorld));
-//        EditSession editSession = com.sk89q.worldedit.WorldEdit.getInstance().newEditSession(world);
-//
-//        com.sk89q.worldedit.WorldEdit.getInstance().getSessionManager().getIfPresent( )
-//
-//        BlockVector3 point1 = BlockVector3.at(xz1[0], iY1, xz1[1]);
-//        BlockVector3 point2 = BlockVector3.at(xz1[0], iY2, xz1[1]);
-//        CuboidRegion cuboidRegion = new CuboidRegion(world, point1, point2);
-//        BlockArrayClipboard clipboard = new BlockArrayClipboard(cuboidRegion);
-//        editSession.drawLine()
-//
-//        Operation operation = new ClipboardHolder();
-
-
-        //In this method, see if you can utilise the world edit api
-        ArrayList<Location> line = null;
-
-        if (szCommand.startsWith("/line"))
+        //Modifies the command
+        //This code is taken from WorldEdit - See https://enginehub.org/
+        int plSep = szCommandLabel.indexOf(':');
+        if (plSep >= 0 && plSep < szCommandLabel.length() +1)
         {
-            line = new ArrayList<Location>();
-            int dx = Math.abs(iSelectedBlockCoordinates1[0]-iSelectedBlockCoordinates2[0]);
-            int dy = Math.abs(iSelectedBlockCoordinates1[1]-iSelectedBlockCoordinates2[1]);
-            int dz = Math.abs(iSelectedBlockCoordinates1[2]-iSelectedBlockCoordinates2[2]);
+            szCommandLabel = szCommandLabel.substring(plSep + 1);
+        }
+//        StringBuilder sb = new StringBuilder("/").append(szCommandLabel);
+        StringBuilder sb = new StringBuilder(szCommandLabel);
+//        if (szCommandArgs.length > 0)
+//            sb.append(" ");
+        String szWorldEditCommand = Joiner.on(" ").appendTo(sb, szCommandArgs).toString();
 
-            double dMax = Math.max(Math.max(dx, dz), dy);
+        //The command is now fully formatted correctly
+//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorial] Command being run via the API: "+szWorldEditCommand);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorial] Command being run via the console: "+szWorldEditCommand);
 
-            int x1 = iSelectedBlockCoordinates1[0];
-            int x2 = iSelectedBlockCoordinates2[0];
-            int y1 = iSelectedBlockCoordinates1[1];
-            int y2 = iSelectedBlockCoordinates2[1];
-            int z1 = iSelectedBlockCoordinates1[2];
-            int z2 = iSelectedBlockCoordinates2[2];
+        //Create the new event listener
+        worldEditEditEvent = new Object()
+        {
+            // The following code is extracted from LogBlock under creative commons.
+            // http://creativecommons.org/licenses/by-nc-sa/3.0/
 
-            if (dx + dy + dz == 0)
+            @Subscribe
+            public void onEditSessionEvent(EditSessionEvent event)
             {
-                line.add(new Location(bukkitWorld, x1, y1, z1));
-            }
-            else
-            {
-                int tipx;
-                int tipy;
-                int tipz;
-                int domstep;
-                if (dMax == dx)
+                final Actor actor = event.getActor();
+
+                if (actor.getName().equals(consoleActor.getName()))
                 {
-                    for(domstep = 0; domstep <= dx; domstep++)
-                    {
-                        tipx = x1 + domstep * (x2 - x1 > 0 ? 1 : -1);
-                        tipy = (int)Math.round((double)y1 + (double)domstep * (double)dy / (double)dx * (double)(y2 - y1 > 0 ? 1 : -1));
-                        tipz = (int)Math.round((double)z1 + (double)domstep * (double)dz / (double)dx * (double)(z2 - z1 > 0 ? 1 : -1));
-                        line.add(new Location(bukkitWorld, tipx, tipy, tipz));
-                    }
-                }
-                else if (dMax == dy)
-                {
-                    Bukkit.getConsoleSender().sendMessage("It was dy = " +dy);
-                    for(domstep = 0; domstep <= dy; ++domstep)
-                    {
-                        tipy = y1 + domstep * (y2 - y1 > 0 ? 1 : -1);
-                        tipx = (int)Math.round((double)x1 + (double)domstep * (double)dx / (double)dy * (double)(x2 - x1 > 0 ? 1 : -1));
-                        tipz = (int)Math.round((double)z1 + (double)domstep * (double)dz / (double)dy * (double)(z2 - z1 > 0 ? 1 : -1));
-                        Bukkit.getConsoleSender().sendMessage(tipx +", " +tipy +", " +tipz);
-                        line.add(new Location(bukkitWorld, tipx, tipy, tipz));
-                    }
+                    System.out.println("Edit session event detected belonging to the actor we are listening for - at stage: "+event.getStage().toString());
                 }
                 else
                 {
-                    Bukkit.getConsoleSender().sendMessage("It was dz = " +dz);
-                    for(domstep = 0; domstep <= dz; ++domstep)
-                    {
-                        tipz = z1 + domstep * (z2 - z1 > 0 ? 1 : -1);
-                        tipy = (int)Math.round((double)y1 + (double)domstep * (double)dy / (double)dz * (double)(y2 - y1 > 0 ? 1 : -1));
-                        tipx = (int)Math.round((double)x1 + (double)domstep * (double)dx / (double)dz * (double)(x2 - x1 > 0 ? 1 : -1));
-                        Bukkit.getConsoleSender().sendMessage(tipx +", " +tipy +", " +tipz);
-                        line.add(new Location(bukkitWorld, tipx, tipy, tipz));
-                    }
+                    System.out.println("Edit session event detected but doesn't belong to the correct actor, so ignoring");
+                    return;
                 }
+
+                //Creates the new extent
+                AbstractDelegateExtent blockChangeRecorderExtent = new AbstractDelegateExtent(event.getExtent())
+                {
+                    @Override
+                    public <B extends BlockStateHolder<B>> boolean setBlock(BlockVector3 position, B block) {
+                        Bukkit.getConsoleSender().sendMessage("\nA world edit block change has been detected, belonging to the listener for task " +iTaskID +". Recording to the given virtual blocks list");
+                        onBlockChange(position, block);
+                        //return super.setBlock(position, block);
+                        return false; // It's unclear whether this should really be used.
+                        // We don't want it to actually set the block so we can just cancel the whole event, but we do also want to set the block or at least try to
+                    }
+
+
+                    protected <B extends BlockStateHolder<B>> void onBlockChange(BlockVector3 pt, B block)
+                    {
+//                        //This should only ever be for one of the 3 stages anyway right?
+//                        if (event.getStage() != EditSession.Stage.BEFORE_CHANGE) {
+//                            return;
+//                        }
+                        //Unregisters the event after 0.1 seconds (2 ticks)
+                        Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), () ->
+                        {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistering world edit listener for task "+iTaskID);
+                            worldEdit.getEventBus().unregister(worldEditEditEvent);
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistered world edit listener for task "+iTaskID);
+
+                            int iSize = virtualBlocks.size();
+
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] There were " +iSize + " block changes detected for task "+iTaskID);
+                        }, 2L);
+
+
+                        //Calculates the old block
+                        Location location = BukkitAdapter.adapt(bukkitWorld, pt);
+                        Block blockBefore = location.getBlock();
+                        BlockData blockDataBefore = blockBefore.getBlockData();
+
+                        //Gets the new block
+                        BlockData blockDataNew = BukkitAdapter.adapt(block);
+
+                        //If there is actually a change of block
+                        if (!blockDataBefore.equals(blockDataNew))
+                        {
+                            Bukkit.getConsoleSender().sendMessage("There was a change of block: ");
+                            Bukkit.getConsoleSender().sendMessage("New block: " +blockDataNew.getMaterial());
+                            Bukkit.getConsoleSender().sendMessage("Location: " +location.toString());
+
+                            //Creates a virtual block
+                            VirtualBlock virtualBlock = new VirtualBlock(tutorialPlaythrough, player, location, blockDataNew);
+                            //Adds it to the new list
+                            virtualBlocks.add(virtualBlock);
+                        }
+                    }
+                };
+
+                //Sets the new extent into the event
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the extent");
+                event.setExtent(blockChangeRecorderExtent);
             }
+        };
 
-//            line = new ArrayList<Location>();
-//            Location l;
-//
-//            for (int i = 1; i < divider; i++)
-//            {
-//                l = new Location(Bukkit.getWorld(szWorld), minX + i * (diffX / divider), xz1[1], minZ + i * (diffZ / divider));
-//                line.add(l);
-//            }
-        }
-        return line;
-    }
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Sending command: "+szWorldEditCommand);
 
-    public static BlockData BlockTypeCalculator(String szCommandArgs)
-    {
-        BlockData blockData;
-        try
+        Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), () ->
         {
-            blockData = Bukkit.createBlockData(Material.valueOf(szCommandArgs.toUpperCase()));
-        }
-        catch (Exception e)
-        {
-            blockData = Bukkit.createBlockData(Material.STONE);
-            e.printStackTrace();
-        }
-        return blockData;
+            try
+            {
+                //Sets the selection
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Adjusting the selection");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/world "+tutorialPlaythrough.getLocation().getLocationID());
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/pos1 " + ((CuboidRegion) correctSelectionRegion.getRegion()).getPos1().toParserString());
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/pos2 " + ((CuboidRegion) correctSelectionRegion.getRegion()).getPos2().toParserString());
+
+                //Registers the world change event listener
+                worldEdit.getEventBus().register(worldEditEditEvent);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] World edit change event listener registered");
+
+                //Runs the command
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Sending the command");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), szWorldEditCommand);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Command sent");
+            }
+            catch (IncompleteRegionException e)
+            {
+
+            }
+        });
     }
 }

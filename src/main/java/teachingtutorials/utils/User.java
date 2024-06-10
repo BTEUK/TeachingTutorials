@@ -336,7 +336,7 @@ public class User
     //Fetches all tutorials made by a user
     public void fetchAllTutorials()
     {
-        this.allTutorials = Tutorial.fetchAllForUser(this.player.getUniqueId());
+        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId());
     }
 
     //---------------------------------------------------

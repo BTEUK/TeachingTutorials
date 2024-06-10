@@ -56,7 +56,7 @@ public class Tutorial
     //---------------------------------------------------
 
     //Fetches all tutorials in the DB
-    public static Tutorial[] fetchAll(boolean bInUseOnly)
+    public static Tutorial[] fetchAll(boolean bInUseOnly, boolean bCompulsoryOnly)
     {
         //Declare variables
         Tutorial[] tutorials;
@@ -70,8 +70,12 @@ public class Tutorial
         try
         {
             //Compiles the command to fetch tutorials
-            if (bInUseOnly)
+            if (bInUseOnly && bCompulsoryOnly)
+                sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`InUse` = 1 AND `Tutorials`.`Compulsory` = 1";
+            else if (bInUseOnly)
                 sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`InUse` = 1";
+            else if (bCompulsoryOnly)
+                sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`Compulsory` = 1";
             else
                 sql = "SELECT * FROM `Tutorials`";
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
@@ -172,7 +176,7 @@ public class Tutorial
         int i;
 
         //Fetches all in use tutorials
-        Tutorial[] allInUseTutorials = Tutorial.fetchAll(true);
+        Tutorial[] allInUseTutorials = Tutorial.fetchAll(true, false);
         iNumInUseTutorials = allInUseTutorials.length;
 
         //Boolean array storing whether each tutorial has at least one location
@@ -207,7 +211,7 @@ public class Tutorial
     }
 
     //Fetches all tutorials created by a user
-    public static Tutorial[] fetchAllForUser(UUID uuid)
+    public static Tutorial[] fetchAllByCreator(UUID uuid)
     {
         //Declare variables
 

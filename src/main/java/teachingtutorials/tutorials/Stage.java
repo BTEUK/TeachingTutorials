@@ -159,6 +159,7 @@ public class Stage
         {
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] "+tutorialPlaythrough.getCreatorOrStudent().player.getName() +" has started step " +iCurrentStep +" of stage " +iOrder);
 
+            //Uses -1 because iCurrentStep is 1 indexed, so need it in computer terms
             currentStep = steps.get(iCurrentStep-1);
             currentStep.startStep();
 

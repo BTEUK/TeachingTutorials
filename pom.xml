@@ -6,7 +6,7 @@
 
     <groupId>me.bteuk</groupId>
     <artifactId>TeachingTutorials</artifactId>
-    <version>1.1.0-Beta7</version>
+    <version>1.1.0-Beta8</version>
     <packaging>jar</packaging>
 
     <name>TeachingTutorials</name>

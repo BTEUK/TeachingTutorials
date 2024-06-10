@@ -56,7 +56,7 @@ public class AdminMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     delete();
-                    u.mainGui = new CompulsoryTutorialMenu(plugin, u, Tutorial.fetchAll(true));
+                    u.mainGui = new CompulsoryTutorialMenu(plugin, u, Tutorial.fetchAll(true, false));
                     u.mainGui.open(u);
                 }
             });
@@ -77,7 +77,7 @@ public class AdminMenu extends Gui
             @Override
             public void leftClick(User u) {
                 delete();
-                u.mainGui = new CreatorTutorialsMenu(plugin, u, Tutorial.fetchAllForUser(u.player.getUniqueId()));
+                u.mainGui = new CreatorTutorialsMenu(plugin, u, Tutorial.fetchAllByCreator(u.player.getUniqueId()));
                 u.mainGui.open(u);
             }
         });

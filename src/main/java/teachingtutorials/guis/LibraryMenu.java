@@ -38,7 +38,7 @@ public class LibraryMenu extends Gui
         setActions();
     }
 
-    private static Inventory getGUI (Tutorial[] tutorials)
+    public static Inventory getGUI (Tutorial[] tutorials)
     {
         //Declare variables
         int i;
@@ -147,10 +147,10 @@ public class LibraryMenu extends Gui
                 @Override
                 public void leftClick(User u)
                 {
-                    //Creates a NewLocation object
+                    //Creates a Lesson object
                     Lesson newLesson = new Lesson(user, plugin, tutorials[iSlot]);
 
-                    //Launches them into the new location adding process
+                    //Launches them into the new lesson
                     if (newLesson.startLesson())
                         delete();
                         user.mainGui = null;

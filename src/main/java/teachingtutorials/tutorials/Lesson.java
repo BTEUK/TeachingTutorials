@@ -27,8 +27,6 @@ public class Lesson extends TutorialPlaythrough
     private int iLessonID;
     private final boolean bCompulsory;
 
-    private int iTutorialIndex;
-
     //Records whether the tutorial details were determined on lesson initialisation
     private final boolean bTutorialDetailsAlreadyEntered;
 
@@ -49,6 +47,12 @@ public class Lesson extends TutorialPlaythrough
     public float fDetailDifTotal;
     public float fTerraDifTotal;
 
+    /**
+     *
+     * @param player
+     * @param plugin
+     * @param bCompulsory Defines whether the lesson is to restart the compulsory tutorial
+     */
     public Lesson(User player, TeachingTutorials plugin, boolean bCompulsory)
     {
         this.plugin = plugin;
@@ -87,21 +91,22 @@ public class Lesson extends TutorialPlaythrough
         //Student is ready to go into a lesson and the tutorial must now be determined
         else
         {
+            //Assumes that the compulsory tutorial is free to restart (they are either in it or not in any tutorial currently)
+            if (bCompulsory)
+            {
+                //Resumes the lesson but resets the progress
+                if (creatorOrStudent.bInLesson)
+                    return resumeLesson(true);
+                //Creates a new compulsory tutorial lesson
+                else
+                    return createAndStartNewLesson(true);
+            }
+
             //Checks to see whether a student has a lesson to finish as indicated by the database
-            if (creatorOrStudent.bInLesson)
+            else if (creatorOrStudent.bInLesson)
             {
                 //Attempts to resume the lesson if the student has a lesson that they need to complete
-                if (resumeLesson())
-                { //If the lesson resumed successfully
-                    creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
-                    creatorOrStudent.bInLesson = true; //Updates the user's "In Lesson" status in RAM
-                    creatorOrStudent.setInLesson(1); //Updates the DB
-
-                    //Adds this lesson to the list of lessons ongoing on the server
-                    this.plugin.lessons.add(this);
-                    return true;
-                }
-                else
+                if (!resumeLesson(false))
                 { //If the lesson failed to resume
                     Display display = new Display(creatorOrStudent.player, ChatColor.RED +"Could not resume lesson, speak to staff");
                     display.Message();
@@ -113,26 +118,10 @@ public class Lesson extends TutorialPlaythrough
             //If the user is ready to start a new tutorial and the tutorial is in no way already specified
             else
             {
-                //Attempts to create a new lesson, will select a tutorial (if not already known) and start it
-                if (createNewLesson())
-                { //If the lesson was created successfully
-
-                    //Creates a new lesson in the DB and fetches it's LessonID
-                    addLessonToDB();
-                    //There is currently no check to determine whether the DB creation worked
-
-                    //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
-                    creatorOrStudent.currentMode = Mode.Doing_Tutorial;
-                    creatorOrStudent.bInLesson = true;
-                    creatorOrStudent.setInLesson(1);
-
-                    //Adds this lesson to the list of lessons ongoing on the server
-                    this.plugin.lessons.add(this);
-
-                    return true;
-                }
-                else
-                { //If the lesson failed to be created
+                //Attempts to create a new lesson, will select a tutorial and a location and start it
+                if (!createAndStartNewLesson(false))
+                {
+                    //If the lesson failed to be created
                     Display display = new Display(creatorOrStudent.player, ChatColor.RED +"Could not create lesson, speak to staff");
                     display.Message();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not create lesson for player: "+creatorOrStudent.player.getName());
@@ -141,13 +130,14 @@ public class Lesson extends TutorialPlaythrough
                 }
             }
         }
+        return true;
     }
 
     //Resumes a previously started lesson
-    private boolean resumeLesson()
+    private boolean resumeLesson(boolean bResetProgress)
     {
         //Fetches the tutorial ID, the location, the stage and the step the player is at in their current tutorial
-        if (!fetchCurrentFromUUID())
+        if (!fetchCurrentFromUUID(bResetProgress))
             return false;
 
         //Gets the data for all of the stages
@@ -178,22 +168,23 @@ public class Lesson extends TutorialPlaythrough
         //Continues the current stage
         nextStage(iStepToStart);
 
+        //If the lesson resumed successfully
+        creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
+        creatorOrStudent.bInLesson = true; //Updates the user's "In Lesson" status in RAM
+        creatorOrStudent.setInLesson(1); //Updates the DB
+
+        //Adds this lesson to the list of lessons ongoing on the server
+        this.plugin.lessons.add(this);
+
         return true;
     }
 
-//    //Initiates a new location lesson, where a creator will play through a tutorial and record the answers for the new location
-//    private void createNewLocation()
-//    {
-//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting up lesson, creating a new location, for "+creatorOrStudent.player.getName());
-//        //We know the tutorial ID, so we can fetch the stages straight away
-//        fetchStages();
-//
-//        this.iStage = 0;
-//        nextStage();
-//    }
-
-    //Creates a new lesson to be played by a student
-    private boolean createNewLesson()
+    /**
+     * Creates a new lesson to be played by a student and starts the first stage
+     * @param bCompulsory Whether the new lesson must be the compulsory tutorial
+     * @return Whether the tutorial was created and started successfully
+     */
+    private boolean createAndStartNewLesson(boolean bCompulsory)
     {
         //Decide on the Tutorial ID
         if (bCompulsory)
@@ -208,11 +199,14 @@ public class Lesson extends TutorialPlaythrough
         }
         else if (bTutorialDetailsAlreadyEntered)
         {
-            //No action needed, tutorial already
+            //No action needed, tutorial already loaded. Do need to start it though right?
         }
         else //Find an appropriate tutorial and sets the ID to that
         {
-            if (!decideTutorial())
+            //Decides the tutorial
+            this.tutorial = decideTutorial(creatorOrStudent);
+
+            if (this.tutorial == null)
             {
                 creatorOrStudent.player.closeInventory();
                 Display display = new Display(creatorOrStudent.player, ChatColor.DARK_AQUA +"No tutorial could be found");
@@ -249,6 +243,19 @@ public class Lesson extends TutorialPlaythrough
             creatorOrStudent.player.sendMessage(ChatColor.AQUA +"No location has been created for this tutorial yet :(");
             return false;
         }
+
+        //Creates a new lesson in the DB and fetches it's LessonID
+        addLessonToDB();
+        //There is currently no check to determine whether the DB creation worked
+
+        //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
+        creatorOrStudent.currentMode = Mode.Doing_Tutorial;
+        creatorOrStudent.bInLesson = true;
+        creatorOrStudent.setInLesson(1);
+
+        //Adds this lesson to the list of lessons ongoing on the server
+        this.plugin.lessons.add(this);
+
         return true;
     }
 
@@ -299,7 +306,7 @@ public class Lesson extends TutorialPlaythrough
     }
 
     //Fetches all tutorials that are marked as "In Use" and using the student's ratings, will decide on the best tutorial to make them do
-    private boolean decideTutorial()
+    public static Tutorial decideTutorial(User creatorOrStudent)
     {
         //Prevalence of each category in each tutorial needed
 
@@ -375,7 +382,7 @@ public class Lesson extends TutorialPlaythrough
         //-----------------------------------------------------------------
         Tutorial[] tutorials;
 
-        tutorials = Tutorial.fetchAll(true);
+        tutorials = Tutorial.fetchAll(true, false);
 
 
         //----------------------------------------------------------------
@@ -400,17 +407,13 @@ public class Lesson extends TutorialPlaythrough
                     iIndexBiggestRelevance = i;
                 }
             }
-            iTutorialIndex = iIndexBiggestRelevance;
 
-            //Sets this lessons tutorial as the tutorial decided upon
-            this.tutorial = tutorials[iTutorialIndex];
-
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "Tutorial ID found as "+tutorial.getTutorialID() +". Tutorial = "+tutorial.szTutorialName);
-            return true;
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "Tutorial ID found as "+tutorials[iIndexBiggestRelevance].getTutorialID() +". Tutorial = "+tutorials[iIndexBiggestRelevance].szTutorialName);
+            return tutorials[iIndexBiggestRelevance];
         }
         else
         {
-            return false;
+            return null;
         }
     }
 
@@ -707,7 +710,7 @@ public class Lesson extends TutorialPlaythrough
     //---------------------------------------------------
 
     //Fetches the information for a lesson that a user has not yet finished
-    public boolean fetchCurrentFromUUID()
+    public boolean fetchCurrentFromUUID(boolean bResetProgress)
     {
         String sql;
         Statement SQL = null;
@@ -726,8 +729,18 @@ public class Lesson extends TutorialPlaythrough
                 this.iLessonID = resultSet.getInt("LessonID");
                 this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
                 this.tutorial.fetchByTutorialID();
-                this.iStageIndex = resultSet.getInt("StageAt");
-                this.iStepToStart = resultSet.getInt("StepAt");
+                if (bResetProgress)
+                {
+                    this.iStageIndex = 1;
+                    this.iStepToStart = 1;
+                }
+                else
+                {
+                    this.iStageIndex = resultSet.getInt("StageAt");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"StageAt: "+iStageIndex);
+                    this.iStepToStart = resultSet.getInt("StepAt");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"StepAt: "+iStepToStart);
+                }
 
                 //Fetches the location details during construction
                 this.location = new Location(resultSet.getInt("LocationID"));
@@ -743,6 +756,42 @@ public class Lesson extends TutorialPlaythrough
             this.tutorial.setTutorialID(-1);
             return false;
         }
+    }
+
+    /**
+     * Fetches the tutorial ID of the current in progress lesson for a player
+     * @param playerUUID
+     * @return The id of the tutorial of the current lesson a player is in, or -1 if no lesson
+     */
+    public static int getTutorialOfCurrentLessonOfPlayer(UUID playerUUID)
+    {
+        int iTutorialID;
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            sql = "SELECT `TutorialID` FROM `Lessons` WHERE `UUID` = '" +playerUUID +"' AND `Finished` = 0";
+            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            if (resultSet.next())
+            {
+                iTutorialID = resultSet.getInt("TutorialID");
+            }
+            else
+                iTutorialID = -1;
+        }
+        catch(SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching current lesson for " +playerUUID);
+            se.printStackTrace();
+            iTutorialID = -1;
+        }
+        return iTutorialID;
     }
 
     //---------------------------------------------------

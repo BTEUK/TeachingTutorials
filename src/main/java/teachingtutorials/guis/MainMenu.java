@@ -352,6 +352,10 @@ public class MainMenu extends Gui
                 user.mainGui.open(user);
                 return true;
             }
+            //Here I use the library event as the action arising from clicking the library
+            //If it is an externally added event via the database then this method is not called
+            // and instead something different happens, because we use that event for when
+            // a player clicks a tutorial on the tutorial library to start
             case LIBRARY ->
             {
                 user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations());

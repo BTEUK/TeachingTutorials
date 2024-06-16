@@ -738,7 +738,7 @@ public class Lesson extends TutorialPlaythrough
             {
                 this.iLessonID = resultSet.getInt("LessonID");
                 this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
-                this.tutorial.fetchByTutorialID();
+                this.tutorial.fetchByTutorialID(TeachingTutorials.getInstance().getDBConnection());
                 if (bResetProgress)
                 {
                     this.iStageIndex = 1;

@@ -206,7 +206,7 @@ public class TeachingTutorials extends JavaPlugin
                         {
                             Tutorial specifiedTutorial = new Tutorial();
                             specifiedTutorial.setTutorialID(event.iData);
-                            specifiedTutorial.fetchByTutorialID();
+                            specifiedTutorial.fetchByTutorialID(dbConnection);
 
                             //Creates a Lesson object
                             Lesson newLesson = new Lesson(user, instance, specifiedTutorial);

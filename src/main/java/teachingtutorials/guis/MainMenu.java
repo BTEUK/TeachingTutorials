@@ -60,7 +60,7 @@ public class MainMenu extends Gui
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"An error occurred. Player is in lesson but has no lesson in the database");
             }
             currentTutorial.setTutorialID(iTutorialIDCurrentLesson);
-            currentTutorial.fetchByTutorialID();
+            currentTutorial.fetchByTutorialID(TeachingTutorials.getInstance().getDBConnection());
 
             //Sets up the menu icon with the name of the current tutorial
             continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,

@@ -117,7 +117,7 @@ public class Tutorial
             else
                 sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID`";
 
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);

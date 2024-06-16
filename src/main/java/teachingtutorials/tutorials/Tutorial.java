@@ -188,7 +188,8 @@ public class Tutorial
         iAvailableTutorials = 0;
         for (i = 0 ; i < iNumInUseTutorials ; i++)
         {
-            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID()).length != 0);
+            //Determines whether tutorial i has any locations
+            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID(), dbConnection).length != 0);
 
             if (tutorialHasLocation[i])
             {
@@ -409,7 +410,7 @@ public class Tutorial
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 0 WHERE `TutorialID` = "+ this.iTutorialID;
             }
-            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID).length > 0)
+            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID, TeachingTutorials.getInstance().getDBConnection()).length > 0)
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 1 WHERE `TutorialID` = "+ this.iTutorialID;
             }

@@ -438,7 +438,7 @@ public class Lesson extends TutorialPlaythrough
     private boolean selectLocation()
     {
         int[] iLocationIDs;
-        iLocationIDs = Location.getAllLocationIDsForTutorial(this.tutorial.getTutorialID());
+        iLocationIDs = Location.getAllLocationIDsForTutorial(this.tutorial.getTutorialID(), TeachingTutorials.getInstance().getDBConnection());
 
         //Checks to see if any locations were found
         if (iLocationIDs.length == 0)

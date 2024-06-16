@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.utils.DBConnection;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -103,7 +104,7 @@ public class Location
         }
     }
 
-    public static int[] getAllLocationIDsForTutorial(int iTutorialID)
+    public static int[] getAllLocationIDsForTutorial(int iTutorialID, DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
@@ -117,7 +118,7 @@ public class Location
             //Compiles the command to fetch all the locations for the tutorial
             sql = "SELECT * FROM `Locations` WHERE `TutorialID` = " +iTutorialID;
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);

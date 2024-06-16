@@ -508,7 +508,7 @@ public class Lesson extends TutorialPlaythrough
         //Scoring not to be included in first release.
 
         //And trigger the scoreboard to refresh
-        creatorOrStudent.calculateRatings();
+        creatorOrStudent.calculateRatings(TeachingTutorials.getInstance().getDBConnection());
 
         Bukkit.getScheduler().runTask(plugin, new Runnable() {
             @Override

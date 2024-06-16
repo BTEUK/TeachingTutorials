@@ -257,7 +257,7 @@ public class Tutorial
 
             //Compiles the command to fetch category difficulties
             sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID` AND `Tutorials`.`Author` = '"+uuid+"'";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -310,7 +310,7 @@ public class Tutorial
     }
 
     //Fetches the details of a tutorial by the tutorial ID
-    public boolean fetchByTutorialID()
+    public boolean fetchByTutorialID(DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
@@ -321,7 +321,7 @@ public class Tutorial
             //Compiles the command to fetch the tutorial
             sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`TutorialID` = " +this.iTutorialID;
 
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);

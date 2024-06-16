@@ -292,7 +292,7 @@ public class User
     //---------------------------------------------------
 
     //Fetches all of the information about a user in the DB, and adds them to the DB if they are not in it
-    public void fetchDetailsByUUID()
+    public void fetchDetailsByUUID(DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
@@ -303,7 +303,7 @@ public class User
             //Compiles the command to select all data about the user
             sql = "SELECT * FROM `Players` WHERE `UUID` = '"+player.getUniqueId()+"'";
             System.out.println(sql);
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the update and returns the amount of records updated
             resultSet = SQL.executeQuery(sql);
@@ -334,9 +334,9 @@ public class User
     }
 
     //Fetches all tutorials made by the user
-    public void fetchAllTutorials()
+    public void fetchAllTutorials(DBConnection dbConnection)
     {
-        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId(), TeachingTutorials.getInstance().getDBConnection());
+        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId(), dbConnection);
     }
 
     //---------------------------------------------------

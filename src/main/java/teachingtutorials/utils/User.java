@@ -333,10 +333,10 @@ public class User
         }
     }
 
-    //Fetches all tutorials made by a user
+    //Fetches all tutorials made by the user
     public void fetchAllTutorials()
     {
-        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId());
+        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId(), TeachingTutorials.getInstance().getDBConnection());
     }
 
     //---------------------------------------------------

@@ -61,6 +61,20 @@ public class DBConnection
                 + this.PORT + "/" + this.Database + "?&useSSL=false&";
     }
 
+
+    public void externalMySQLSetup(String szHost, int iPort, String szDatabaseName, String szUsername, String szPassword)
+    {
+        this.HOST = szHost;
+        this.PORT = iPort;
+        this.Database = szDatabaseName;
+        this.USER = szUsername;
+        this.PASSWORD = szPassword;
+
+        this.DB_CON = "jdbc:mysql://" + this.HOST + ":"
+                + this.PORT + "/" + this.Database + "?&useSSL=false&";
+    }
+
+
     public boolean connect()
     {
         Bukkit.getConsoleSender().sendMessage("Username: "+this.USER);

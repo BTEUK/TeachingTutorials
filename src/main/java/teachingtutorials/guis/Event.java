@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.utils.DBConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class Event
     }
 
     //SQL Fetches
-    public static ArrayList<Event> getLatestEvents()
+    public static ArrayList<Event> getLatestEvents(DBConnection dbConnection)
     {
         ArrayList<Event> events = new ArrayList<>();
 
@@ -39,7 +40,7 @@ public class Event
         {
             //Compiles the command to fetch steps
             sql = "Select * FROM Events";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -125,7 +126,7 @@ public class Event
         }
 
     }
-    public static void addEvent(EventType eventType, UUID userUUID, int iData)
+    public static void addEvent(EventType eventType, UUID userUUID, int iData, DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
@@ -134,7 +135,7 @@ public class Event
 
         try
         {
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Removes the answers
             sql = "INSERT INTO `Events` (`UUID`,`EventName`,`Data`) VALUES('" +userUUID +"', '"+eventType.toString()+"', "+iData +")";

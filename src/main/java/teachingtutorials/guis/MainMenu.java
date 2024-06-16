@@ -43,7 +43,7 @@ public class MainMenu extends Gui
         //Get compulsory tutorial ID
         int iCompulsoryTutorialID;
 
-        Tutorial[] compulsoryTutorials = Tutorial.fetchAll(true, true);
+        Tutorial[] compulsoryTutorials = Tutorial.fetchAll(true, true, TeachingTutorials.getInstance().getDBConnection());
         if (compulsoryTutorials.length == 0)
             iCompulsoryTutorialID = -1;
         else
@@ -54,7 +54,7 @@ public class MainMenu extends Gui
         if (user.bInLesson)
         {
             //Get current tutorial ID and sets up the tutorial object from this
-            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId());
+            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), TeachingTutorials.getInstance().getDBConnection());
             if (iTutorialIDCurrentLesson == -1)
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"An error occurred. Player is in lesson but has no lesson in the database");
@@ -71,7 +71,7 @@ public class MainMenu extends Gui
         else
         {
             //Sets up the menu icon with the new tutorial's name
-            Tutorial nextTutorial = Lesson.decideTutorial(user);
+            Tutorial nextTutorial = Lesson.decideTutorial(user, TeachingTutorials.getInstance().getDBConnection());
             continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
                     TutorialGUIUtils.optionTitle("Start a new Tutorial:"),
                     TutorialGUIUtils.optionLore(nextTutorial.szTutorialName));
@@ -358,7 +358,7 @@ public class MainMenu extends Gui
             // a player clicks a tutorial on the tutorial library to start
             case LIBRARY ->
             {
-                user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations());
+                user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations(TeachingTutorials.getInstance().getDBConnection()));
                 user.mainGui.open(user);
                 return true;
             }

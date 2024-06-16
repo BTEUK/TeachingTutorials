@@ -186,7 +186,7 @@ public class TeachingTutorials extends JavaPlugin
             public void run()
             {
                 //Deal with external events in the DB
-                ArrayList<Event> events = Event.getLatestEvents();
+                ArrayList<Event> events = Event.getLatestEvents(dbConnection);
                 int iNumEvents = events.size();
                 Event event;
                 User user;
@@ -667,6 +667,11 @@ public class TeachingTutorials extends JavaPlugin
     public static TeachingTutorials getInstance()
     {
         return instance;
+    }
+
+    public DBConnection getDBConnection()
+    {
+        return dbConnection;
     }
 
     public Connection getConnection()

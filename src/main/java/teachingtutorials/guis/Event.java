@@ -126,31 +126,40 @@ public class Event
         }
 
     }
-    public static void addEvent(EventType eventType, UUID userUUID, int iData, DBConnection dbConnection)
+
+    public static boolean addEvent(EventType eventType, UUID userUUID, int iData, DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
 
-        int iCount;
+        int iCount = 0;
 
         try
         {
             SQL = dbConnection.getConnection().createStatement();
-
             //Removes the answers
             sql = "INSERT INTO `Events` (`UUID`,`EventName`,`Data`) VALUES('" +userUUID +"', '"+eventType.toString()+"', "+iData +")";
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +sql);
             iCount = SQL.executeUpdate(sql);
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error deleting event");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error adding event");
             se.printStackTrace();
+            return false;
         }
         catch (Exception e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting event");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error adding event");
             e.printStackTrace();
+            return false;
         }
-
+        if (iCount != 1)
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - Update failed, count not equal to 1");
+            return false;
+        }
+        else
+            return true;
     }
 }

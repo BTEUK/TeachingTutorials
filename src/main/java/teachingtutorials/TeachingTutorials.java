@@ -228,7 +228,7 @@ public class TeachingTutorials extends JavaPlugin
                     }
                 }
             }
-        }, 0L, 60L);
+        }, 0L, 40L);
 
         //----------------------------------------
         //--------Refreshes virtual blocks--------

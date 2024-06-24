@@ -49,7 +49,7 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Events` (
   `UUID` CHAR(36) NOT NULL,
-  `EventName` ENUM('COMPULSORY', 'CONTINUE', 'ADMIN_MENU') NOT NULL,
+  `EventName` ENUM('COMPULSORY', 'CONTINUE', 'ADMIN_MENU', 'LIBRARY') NOT NULL,
   `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Data` INT)
 ENGINE = InnoDB

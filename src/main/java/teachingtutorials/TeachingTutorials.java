@@ -186,7 +186,7 @@ public class TeachingTutorials extends JavaPlugin
             public void run()
             {
                 //Deal with external events in the DB
-                ArrayList<Event> events = Event.getLatestEvents();
+                ArrayList<Event> events = Event.getLatestEvents(dbConnection);
                 int iNumEvents = events.size();
                 Event event;
                 User user;
@@ -201,7 +201,24 @@ public class TeachingTutorials extends JavaPlugin
                     user = User.identifyUser(instance, event.player);
                     if (user != null)
                     {
-                        MainMenu.performEvent(event.eventType, user, instance);
+                        //Starts a lesson if the event was a library event type
+                        if (event.eventType.equals(EventType.LIBRARY))
+                        {
+                            Tutorial specifiedTutorial = new Tutorial();
+                            specifiedTutorial.setTutorialID(event.iData);
+                            specifiedTutorial.fetchByTutorialID(dbConnection);
+
+                            //Creates a Lesson object
+                            Lesson newLesson = new Lesson(user, instance, specifiedTutorial);
+
+                            //Launches them into the new lesson
+                            newLesson.startLesson();
+                        }
+
+                        else
+                        {
+                            MainMenu.performEvent(event.eventType, user, instance);
+                        }
 
                         //We only want the event to be removed if the player was on the server and the event took place
                         //There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
@@ -211,7 +228,7 @@ public class TeachingTutorials extends JavaPlugin
                     }
                 }
             }
-        }, 0L, 60L);
+        }, 0L, 40L);
 
         //----------------------------------------
         //--------Refreshes virtual blocks--------
@@ -650,6 +667,11 @@ public class TeachingTutorials extends JavaPlugin
     public static TeachingTutorials getInstance()
     {
         return instance;
+    }
+
+    public DBConnection getDBConnection()
+    {
+        return dbConnection;
     }
 
     public Connection getConnection()

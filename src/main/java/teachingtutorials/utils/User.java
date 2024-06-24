@@ -61,17 +61,17 @@ public class User
     }
 
     //Recalculates all ratings
-    public void calculateRatings()
+    public void calculateRatings(DBConnection dbConnection)
     {
-        iScoreTpll = calculateRating(Category.tpll);
-        iScoreWE = calculateRating(Category.worldedit);
-        iScoreTerraforming = calculateRating(Category.terraforming);
-        iScoreColouring = calculateRating(Category.colouring);
-        iScoreDetailing = calculateRating(Category.detail);
+        iScoreTpll = calculateRating(Category.tpll, dbConnection);
+        iScoreWE = calculateRating(Category.worldedit, dbConnection);
+        iScoreTerraforming = calculateRating(Category.terraforming, dbConnection);
+        iScoreColouring = calculateRating(Category.colouring, dbConnection);
+        iScoreDetailing = calculateRating(Category.detail, dbConnection);
     }
 
     //Uses scores from previous lessons to calculate a rating for a player in a category
-    private int calculateRating(Category category)
+    private int calculateRating(Category category, DBConnection dbConnection)
     {
         //Declare variables
         int iTotalScore = 0;
@@ -88,7 +88,7 @@ public class User
                     "AND `Scores`.`Category` = '" + category.toString() + "' "+
                     "AND `Lessons`.`LessonID` = `Scores`.`LessonID` " +
                     "ORDER BY `Scores`.`LessonID` DESC";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the update and returns the amount of records updated
             resultSet = SQL.executeQuery(sql);
@@ -292,7 +292,7 @@ public class User
     //---------------------------------------------------
 
     //Fetches all of the information about a user in the DB, and adds them to the DB if they are not in it
-    public void fetchDetailsByUUID()
+    public void fetchDetailsByUUID(DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
@@ -303,7 +303,7 @@ public class User
             //Compiles the command to select all data about the user
             sql = "SELECT * FROM `Players` WHERE `UUID` = '"+player.getUniqueId()+"'";
             System.out.println(sql);
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the update and returns the amount of records updated
             resultSet = SQL.executeQuery(sql);
@@ -333,10 +333,10 @@ public class User
         }
     }
 
-    //Fetches all tutorials made by a user
-    public void fetchAllTutorials()
+    //Fetches all tutorials made by the user
+    public void fetchAllTutorials(DBConnection dbConnection)
     {
-        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId());
+        this.allTutorials = Tutorial.fetchAllByCreator(this.player.getUniqueId(), dbConnection);
     }
 
     //---------------------------------------------------

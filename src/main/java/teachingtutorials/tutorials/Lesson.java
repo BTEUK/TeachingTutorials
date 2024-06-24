@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.listeners.Falling;
+import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
@@ -204,7 +205,7 @@ public class Lesson extends TutorialPlaythrough
         else //Find an appropriate tutorial and sets the ID to that
         {
             //Decides the tutorial
-            this.tutorial = decideTutorial(creatorOrStudent);
+            this.tutorial = decideTutorial(creatorOrStudent, TeachingTutorials.getInstance().getDBConnection());
 
             if (this.tutorial == null)
             {
@@ -305,8 +306,12 @@ public class Lesson extends TutorialPlaythrough
         }
     }
 
-    //Fetches all tutorials that are marked as "In Use" and using the student's ratings, will decide on the best tutorial to make them do
-    public static Tutorial decideTutorial(User creatorOrStudent)
+    /**
+     * Fetches all tutorials that are marked as "In Use" and using the student's ratings, will decide on the best tutorial to make them do
+     * @param creatorOrStudent
+     * @return A Tutorial object holding the information of the tutorial they should complete next
+     */
+    public static Tutorial decideTutorial(User creatorOrStudent, DBConnection dbConnection)
     {
         //Prevalence of each category in each tutorial needed
 
@@ -382,7 +387,7 @@ public class Lesson extends TutorialPlaythrough
         //-----------------------------------------------------------------
         Tutorial[] tutorials;
 
-        tutorials = Tutorial.fetchAll(true, false);
+        tutorials = Tutorial.fetchAll(true, false, dbConnection);
 
 
         //----------------------------------------------------------------
@@ -417,18 +422,23 @@ public class Lesson extends TutorialPlaythrough
         }
     }
 
-    //Gets a list of all of the stages of the specified tutorial and loads each with the relevant data
+    /**
+     * Gets the list of all of the stages of the specified tutorial and loads each with the relevant data
+     */
     private void fetchStages()
     {
         //List is in order of stage 1 1st
         stages = Stage.fetchStagesByTutorialID(creatorOrStudent.player, plugin, this);
     }
 
-    //Selects the location of a specific tutorial randomly
+    /**
+     * Selects the location of a specific tutorial randomly
+     * @return
+     */
     private boolean selectLocation()
     {
         int[] iLocationIDs;
-        iLocationIDs = Location.getAllLocationIDsForTutorial(this.tutorial.getTutorialID());
+        iLocationIDs = Location.getAllLocationIDsForTutorial(this.tutorial.getTutorialID(), TeachingTutorials.getInstance().getDBConnection());
 
         //Checks to see if any locations were found
         if (iLocationIDs.length == 0)
@@ -498,7 +508,7 @@ public class Lesson extends TutorialPlaythrough
         //Scoring not to be included in first release.
 
         //And trigger the scoreboard to refresh
-        creatorOrStudent.calculateRatings();
+        creatorOrStudent.calculateRatings(TeachingTutorials.getInstance().getDBConnection());
 
         Bukkit.getScheduler().runTask(plugin, new Runnable() {
             @Override
@@ -728,7 +738,7 @@ public class Lesson extends TutorialPlaythrough
             {
                 this.iLessonID = resultSet.getInt("LessonID");
                 this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
-                this.tutorial.fetchByTutorialID();
+                this.tutorial.fetchByTutorialID(TeachingTutorials.getInstance().getDBConnection());
                 if (bResetProgress)
                 {
                     this.iStageIndex = 1;
@@ -763,7 +773,7 @@ public class Lesson extends TutorialPlaythrough
      * @param playerUUID
      * @return The id of the tutorial of the current lesson a player is in, or -1 if no lesson
      */
-    public static int getTutorialOfCurrentLessonOfPlayer(UUID playerUUID)
+    public static int getTutorialOfCurrentLessonOfPlayer(UUID playerUUID, DBConnection dbConnection)
     {
         int iTutorialID;
 
@@ -774,7 +784,7 @@ public class Lesson extends TutorialPlaythrough
         try
         {
             sql = "SELECT `TutorialID` FROM `Lessons` WHERE `UUID` = '" +playerUUID +"' AND `Finished` = 0";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);

@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.listeners.Falling;
+import teachingtutorials.listeners.PlaythroughCommandListeners;
 import teachingtutorials.tutorials.Location;
 import teachingtutorials.tutorials.Stage;
 import teachingtutorials.tutorials.Tutorial;
@@ -32,6 +33,9 @@ public abstract class TutorialPlaythrough
 
     //Listens out for player falling below the min Y level
     protected Falling fallListener;
+
+    //Enables tpll, ll and blocks gmask
+    protected PlaythroughCommandListeners playthroughCommandListeners;
 
     public Tutorial getTutorial()
     {
@@ -86,8 +90,9 @@ public abstract class TutorialPlaythrough
         //Change player mode
         creatorOrStudent.currentMode = Mode.Idle;
 
-        //Unregisters the fall listener
+        //Unregisters the gameplay listeners
         fallListener.unregister();
+        playthroughCommandListeners.unregister();
 
         //Removes virtual blocks
         HashMap<VirtualBlockLocation, BlockData> virtualBlocks = plugin.virtualBlocks;

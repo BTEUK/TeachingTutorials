@@ -18,6 +18,7 @@ import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.fundamentalTasks.GeometricUtils;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.listeners.Falling;
+import teachingtutorials.listeners.PlaythroughCommandListeners;
 import teachingtutorials.newlocation.elevation.ElevationManager;
 import teachingtutorials.tutorials.Location;
 import teachingtutorials.tutorials.Stage;
@@ -92,6 +93,10 @@ public class NewLocation extends TutorialPlaythrough
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Starting new location adding");
 
         this.creatorOrStudent.currentMode = Mode.Creating_New_Location;
+
+        //Register the tpll and ll command and the gmask blocker
+        playthroughCommandListeners = new PlaythroughCommandListeners(plugin);
+        playthroughCommandListeners.register();
 
         //Set up tpll listeners for area to generate and use and listen for when all points have been made
         areaSelectionListener = new AreaSelectionListener(this.creatorOrStudent, plugin, this);
@@ -322,6 +327,8 @@ public class NewLocation extends TutorialPlaythrough
 
     public void terminateEarly()
     {
+        playthroughCommandListeners.unregister();
+
         //Unregisters the correct listeners
         switch (stage)
         {

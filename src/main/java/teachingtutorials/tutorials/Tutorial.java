@@ -3,6 +3,8 @@ package teachingtutorials.tutorials;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.utils.DBConnection;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -56,7 +58,7 @@ public class Tutorial
     //---------------------------------------------------
 
     //Fetches all tutorials in the DB
-    public static Tutorial[] fetchAll(boolean bInUseOnly, boolean bCompulsoryOnly)
+    public static Tutorial[] fetchAll(boolean bInUseOnly, boolean bCompulsoryOnly, DBConnection dbConnection)
     {
         //Declare variables
         Tutorial[] tutorials;
@@ -78,7 +80,7 @@ public class Tutorial
                 sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`Compulsory` = 1";
             else
                 sql = "SELECT * FROM `Tutorials`";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -115,7 +117,7 @@ public class Tutorial
             else
                 sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID`";
 
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -169,14 +171,14 @@ public class Tutorial
      *
      * @return All in use tutorials which have at least one location
      */
-    public static Tutorial[] getInUseTutorialsWithLocations()
+    public static Tutorial[] getInUseTutorialsWithLocations(DBConnection dbConnection)
     {
         int iAvailableTutorials;
         int iNumInUseTutorials;
         int i;
 
         //Fetches all in use tutorials
-        Tutorial[] allInUseTutorials = Tutorial.fetchAll(true, false);
+        Tutorial[] allInUseTutorials = Tutorial.fetchAll(true, false, dbConnection);
         iNumInUseTutorials = allInUseTutorials.length;
 
         //Boolean array storing whether each tutorial has at least one location
@@ -186,7 +188,8 @@ public class Tutorial
         iAvailableTutorials = 0;
         for (i = 0 ; i < iNumInUseTutorials ; i++)
         {
-            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID()).length != 0);
+            //Determines whether tutorial i has any locations
+            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID(), dbConnection).length != 0);
 
             if (tutorialHasLocation[i])
             {
@@ -211,7 +214,7 @@ public class Tutorial
     }
 
     //Fetches all tutorials created by a user
-    public static Tutorial[] fetchAllByCreator(UUID uuid)
+    public static Tutorial[] fetchAllByCreator(UUID uuid, DBConnection dbConnection)
     {
         //Declare variables
 
@@ -229,7 +232,7 @@ public class Tutorial
             //Compiles the command to fetch tutorials
             sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`Author` = '" +uuid +"'";
 
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -255,7 +258,7 @@ public class Tutorial
 
             //Compiles the command to fetch category difficulties
             sql = "SELECT * FROM `Tutorials`,`CategoryPoints` WHERE `Tutorials`.`TutorialID` = `CategoryPoints`.`TutorialID` AND `Tutorials`.`Author` = '"+uuid+"'";
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -308,7 +311,7 @@ public class Tutorial
     }
 
     //Fetches the details of a tutorial by the tutorial ID
-    public boolean fetchByTutorialID()
+    public boolean fetchByTutorialID(DBConnection dbConnection)
     {
         String sql;
         Statement SQL = null;
@@ -319,7 +322,7 @@ public class Tutorial
             //Compiles the command to fetch the tutorial
             sql = "SELECT * FROM `Tutorials` WHERE `Tutorials`.`TutorialID` = " +this.iTutorialID;
 
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
             resultSet = SQL.executeQuery(sql);
@@ -407,7 +410,7 @@ public class Tutorial
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 0 WHERE `TutorialID` = "+ this.iTutorialID;
             }
-            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID).length > 0)
+            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID, TeachingTutorials.getInstance().getDBConnection()).length > 0)
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 1 WHERE `TutorialID` = "+ this.iTutorialID;
             }

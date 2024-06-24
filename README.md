@@ -14,3 +14,8 @@ It will provide a foundation for a tutorials system which can be used throughout
 
 ## Tested versions
 1.18.2 - 1.20.1
+
+
+## Requires
+- WorldEdit (Strictly **not FAWE**, unfortunately)
+- LuckPerms

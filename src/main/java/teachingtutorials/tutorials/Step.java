@@ -239,7 +239,7 @@ public class Step
                 {
                     groups.get(I).initialRegister();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+(I+1));
-                }, i*4L);
+                }, i*8L);
             }
 
             //TP to start location, and store this location for later use

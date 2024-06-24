@@ -75,13 +75,17 @@ public class WorldEdit
             {
                 final Actor actor = event.getActor();
 
-                if (actor.getName().equals(consoleActor.getName()))
+                if (actor == null)
                 {
-                    System.out.println("Edit session event detected belonging to the actor we are listening for - at stage: "+event.getStage().toString());
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Edit session event detected belonging a null actor (assuming console) - at stage: "+event.getStage().toString());
+                }
+                else if (actor.getName().equals(consoleActor.getName()))
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Edit session event detected belonging to the actor we are listening for - at stage: "+event.getStage().toString());
                 }
                 else
                 {
-                    System.out.println("Edit session event detected but doesn't belong to the correct actor, so ignoring");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Edit session event detected but doesn't belong to the correct actor, so ignoring");
                     return;
                 }
 

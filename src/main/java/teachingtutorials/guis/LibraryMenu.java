@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -133,6 +134,22 @@ public class LibraryMenu extends Gui
             }
         });
 
+        //Initiates the current tutorial object
+        Tutorial currentTutorial = new Tutorial();
+
+        if (user.bInLesson)
+        {
+            //Get current lesson's tutorial ID and sets up the tutorial object from this
+            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), TeachingTutorials.getInstance().getDBConnection());
+            if (iTutorialIDCurrentLesson == -1)
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"An error occurred. Player is in lesson but has no lesson in the database");
+            }
+            Bukkit.getConsoleSender().sendMessage("Current TutorialID: "+iTutorialIDCurrentLesson);
+            currentTutorial.setTutorialID(iTutorialIDCurrentLesson);
+            currentTutorial.fetchByTutorialID(TeachingTutorials.getInstance().getDBConnection());
+        }
+
         //Inv slot 0 = the first one
         //Adds the actions of each slot
         for (i = 0 ; i < tutorials.length ; i++)
@@ -140,20 +157,44 @@ public class LibraryMenu extends Gui
             int iSlot = i;
             setAction(iSlot, new Gui.guiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
+                public void rightClick(User user) {
+                    leftClick(user);
                 }
 
                 @Override
-                public void leftClick(User u)
-                {
-                    //Creates a Lesson object
-                    Lesson newLesson = new Lesson(user, plugin, tutorials[iSlot]);
+                public void leftClick(User user) {
+                    Bukkit.getConsoleSender().sendMessage("Current TutorialID: "+currentTutorial.getTutorialID());
+                    Bukkit.getConsoleSender().sendMessage("TutorialID of slot: " +tutorials[iSlot].getTutorialID());
+                    boolean startTheLesson = false;
 
-                    //Launches them into the new lesson
-                    if (newLesson.startLesson())
-                        delete();
-                        user.mainGui = null;
+                    if (user.bInLesson)
+                    {
+                        if (currentTutorial.getTutorialID() != tutorials[iSlot].getTutorialID())
+                            user.player.sendMessage(ChatColor.RED +"You cannot start a new tutorial before you finish your current one");
+                        else
+                            startTheLesson = true;
+                    }
+                    else
+                    {
+                        startTheLesson = true;
+                    }
+
+                    if(startTheLesson)
+                    {
+                        //Creates a Lesson object
+                        Lesson newLesson = new Lesson(user, plugin, tutorials[iSlot]);
+
+                        //Launches them into the new lesson
+                        if (newLesson.startLesson())
+                        {
+                            delete();
+                            user.mainGui = null;
+                        }
+                        else
+                        {
+                            user.player.sendMessage(ChatColor.RED +"A problem occurred, please let staff know");
+                        }
+                    }
                 }
             });
         }

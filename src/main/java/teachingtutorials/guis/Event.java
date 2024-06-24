@@ -10,6 +10,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.UUID;
 
+/**
+ * Handles tutorial Events. Data fields refer to those of the events table of the database
+ */
 public class Event
 {
     public Player player;
@@ -17,6 +20,13 @@ public class Event
     public Timestamp timestamp;
     public int iData;
 
+    /**
+     * Constructs a new event
+     * @param player The player object for the event
+     * @param eventType The event type
+     * @param timestamp The time that the event was added to the DB
+     * @param iData The data of the event - The tutorial ID of the tutorial the event includes a reference to
+     */
     public Event(Player player, EventType eventType, Timestamp timestamp, int iData)
     {
         this.player = player;
@@ -25,7 +35,11 @@ public class Event
         this.iData = iData;
     }
 
-    //SQL Fetches
+    /**
+     * Gets a list of the current events in the events table
+     * @param dbConnection The database connection object
+     * @return A list of events
+     */
     public static ArrayList<Event> getLatestEvents(DBConnection dbConnection)
     {
         ArrayList<Event> events = new ArrayList<>();
@@ -99,6 +113,11 @@ public class Event
         return events;
     }
 
+    //SQL Updates
+
+    /**
+     * Removes this event from the database
+     */
     public void remove()
     {
         String sql;
@@ -127,6 +146,14 @@ public class Event
 
     }
 
+    /**
+     * Adds an event to the events table
+     * @param eventType The event that is to take place
+     * @param userUUID The UUID of the player undergoing to event
+     * @param iData Any data - refers to the TutorialID of any tutorials the event refers to
+     * @param dbConnection The database connection object
+     * @return True if the event was successfully added to the DB, false if not
+     */
     public static boolean addEvent(EventType eventType, UUID userUUID, int iData, DBConnection dbConnection)
     {
         String sql;
@@ -137,7 +164,6 @@ public class Event
         try
         {
             SQL = dbConnection.getConnection().createStatement();
-            //Removes the answers
             sql = "INSERT INTO `Events` (`UUID`,`EventName`,`Data`) VALUES('" +userUUID +"', '"+eventType.toString()+"', "+iData +")";
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +sql);
             iCount = SQL.executeUpdate(sql);

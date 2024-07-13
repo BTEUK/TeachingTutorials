@@ -247,6 +247,27 @@ public class TeachingTutorials extends JavaPlugin
         }, 0, 10);
 
 
+        //-----------------------------------------
+        //------ Performs calculation events ------
+        //-----------------------------------------
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
+        {
+            if (!WorldEdit.isCurrentCalculationOngoing())
+            {
+                WorldEditCalculation worldEditCalculation = WorldEdit.pendingCalculations.peek();
+                if (worldEditCalculation !=null)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation not already in progress, a new one has been detected");
+                    WorldEdit.setCalculationInProgress();
+                    worldEditCalculation.runCalculation();
+                }
+            }
+            else
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation ongoing, not initiating a new one");
+            }
+        }, 0, 4);
+
         //---------------------------------------
         //---------------Listeners---------------
         //---------------------------------------

@@ -1,24 +1,32 @@
 package teachingtutorials.utils;
 
+import com.fastasyncworldedit.core.extent.processor.ProcessorScope;
+import com.fastasyncworldedit.core.queue.IBatchProcessor;
+import com.fastasyncworldedit.core.queue.IChunk;
+import com.fastasyncworldedit.core.queue.IChunkGet;
+import com.fastasyncworldedit.core.queue.IChunkSet;
+import com.fastasyncworldedit.core.util.ExtentTraverser;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.event.extent.EditSessionEvent;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extent.AbstractDelegateExtent;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
+import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockStateHolder;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.block.Block;
+import com.sk89q.worldedit.world.block.BlockTypes;
+import com.sk89q.worldedit.world.block.BlockTypesCache;
+import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
+import teachingtutorials.utils.plugins.WorldEditImplementation;
 
 import java.util.HashSet;
 
@@ -31,7 +39,6 @@ public class WorldEditCalculation
     private final String szWorldEditCommand;
     private final RegionSelector regionSelector;
     private final TutorialPlaythrough tutorialPlaythrough;
-    private boolean bCalculationCurrentlyWaitingForFirstBlockChange;
 
     public Player getPlayer()
     {
@@ -63,11 +70,12 @@ public class WorldEditCalculation
         return this.worldEditEventListener;
     }
 
-    public boolean getWaitingForFirstBlockChange()
-    {
-        return bCalculationCurrentlyWaitingForFirstBlockChange;
-    }
-
+    /**
+     * Creates a listener to pick up the EditSessionEvent event for the command being run. This listener will replace
+     *  the 'extent' of the EditSession to one which records the changes and blocks them from being put onto the world.
+     * @param iTaskID The TaskID of the task
+     * @param virtualBlocks A reference to the list of virtual blocks to record block changes into
+     */
     private void setUpListener(int iTaskID, HashSet<VirtualBlock> virtualBlocks)
     {
         //Get the console actor
@@ -76,11 +84,9 @@ public class WorldEditCalculation
         //Get a reference to this object
         WorldEditCalculation thisCalculation = this;
 
+        //Creates a listener to listen out for world edit events and insert the recorder extent into the correct one
         worldEditEventListener = new Object()
         {
-            // The following code is extracted from LogBlock under creative commons.
-            // http://creativecommons.org/licenses/by-nc-sa/3.0/
-
             @Subscribe
             public void onEditSessionEvent(EditSessionEvent event)
             {
@@ -101,14 +107,21 @@ public class WorldEditCalculation
                 }
 
                 //Creates the new recorder extent
-                AbstractDelegateExtent blockChangeRecorderExtent = new BlockChangeRecorderExtent(event, thisCalculation, virtualBlocks, iTaskID);
+                AbstractDelegateExtent blockChangeRecorderExtent;
+
+//                if (TeachingTutorials.getInstance().worldEditImplementation.equals(WorldEditImplementation.FAWE))
+                blockChangeRecorderExtent = new BlockChangeRecorderExtentFAWE(event.getExtent(), thisCalculation, virtualBlocks, iTaskID);
+//                else
+//                    blockChangeRecorderExtent = new BlockChangeRecorderExtentWE(event.getExtent(), thisCalculation, virtualBlocks, iTaskID);
 
                 //Updates the extent of the edit session to be that of a block recording extent
                 //The block recording extent means that block changes are blocked and recorded in the set block mechanism
-
                 //Sets the new extent into the event
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the extent");
                 event.setExtent(blockChangeRecorderExtent);
+
+                //Once the extent has been set we don't need the listener anymore since any world edit changes under that extent will be recorded in the correct list
+                unregisterWorldChangeListener();
             }
         };
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] WorldEdit event listener has been initialised");
@@ -118,13 +131,14 @@ public class WorldEditCalculation
      * Runs the block calculation. Ultimately this will send the world edit command through the console,
      *  and catch it with the event. This event has already been defined and contains the list of virtual blocks which
      *  it will add detected block changes to.
+     * @return True if the calculation was implemented successfully, False if there was an error.
      */
     public void runCalculation()
     {
-        //Updates the activity waiting indicator
-        bCalculationCurrentlyWaitingForFirstBlockChange = true;
-        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Starting a new block change calculation");
+        //Console output
+        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Starting a new WE block change calculation");
 
+        //Runs the world edit command through the console and registers the listener to identify the resulting operation
         Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), () ->
         {
             //Sets the selection
@@ -156,100 +170,279 @@ public class WorldEditCalculation
     }
 
     /**
-     * Mark the block changes in the world as having started
+     * Unregisters the listener and unblocks the calculation queue
      */
-    public void markFired()
+    protected void unregisterWorldChangeListener()
     {
-        bCalculationCurrentlyWaitingForFirstBlockChange = false;
+        //Unregisters the WorldEdit event listener
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistering world edit listener");
+        com.sk89q.worldedit.WorldEdit.getInstance().getEventBus().unregister(this.getEditSessionListener());
+
+        //Updates the queue system, unblocking the queue
+        teachingtutorials.utils.WorldEdit.pendingCalculations.remove(this);
+        teachingtutorials.utils.WorldEdit.setCalculationFinished();
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] There are " +teachingtutorials.utils.WorldEdit.pendingCalculations.size() +" calculations remaining in the queue");
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistered world edit listener");
     }
 }
 
-class BlockChangeRecorderExtent extends AbstractDelegateExtent
+/**
+ * A new type of extent which records block changes and blocks them from being placed into the world
+ */
+class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IBatchProcessor
 {
-    EditSessionEvent editSessionEvent;
     WorldEditCalculation worldEditCalculation;
     HashSet<VirtualBlock> virtualBlocks;
     int iTaskID;
 
-    public BlockChangeRecorderExtent(EditSessionEvent editSessionEvent, WorldEditCalculation worldEditCalculation, HashSet<VirtualBlock> virtualBlocks, int iTaskID)
+    public BlockChangeRecorderExtentFAWE(Extent originalExtent, WorldEditCalculation worldEditCalculation, HashSet<VirtualBlock> virtualBlocks, int iTaskID)
     {
-        super(editSessionEvent.getExtent());
-        this.editSessionEvent = editSessionEvent;
+        super(originalExtent);
         this.worldEditCalculation = worldEditCalculation;
         this.virtualBlocks = virtualBlocks;
         this.iTaskID = iTaskID;
-    }
 
-    @Override
-    public <B extends BlockStateHolder<B>> boolean setBlock(BlockVector3 position, B block)
-    {
-        Bukkit.getConsoleSender().sendMessage("\nA world edit block change has been detected, belonging to the listener for task " +iTaskID +". Recording to the given virtual blocks list");
-        unregisterWorldChangeListener();
-        calculateBlockChange(position, block, worldEditCalculation);
-        //return super.setBlock(position, block);
-        return false;
+        super.addProcessor(this);
+        super.addPostProcessor(this);
     }
 
     /**
-     * Unregisters the listener and unblocks the calculation queue 0.1 seconds (2 ticks) after the first block change was detected
+     * Is called when processing the changes of a given chunk in the operation.
+     * This is where blocks are recorded and blocked from being placed on the world.
+     * @param chunk An object representing the chunk
+     * @param get An object representing the state of the chunk before the operation
+     * @param set An object representing the state of the chunk after the operation
+     * @return An object representing the required state of the chunk after the operation
      */
-    private void unregisterWorldChangeListener()
+    @Override
+    public IChunkSet processSet(IChunk chunk, IChunkGet get, IChunkSet set)
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Block change detected, waiting for first block change of this calculation:" +worldEditCalculation.getWaitingForFirstBlockChange());
-     //   The next thing to test is whether this above line ever gets sent, and if not then why not
-     //   I don't think it will because it doesn't print the other line in the method which calls this so it won't print this one'
-        if (worldEditCalculation.getWaitingForFirstBlockChange())
+        //Set:
+        // Presumably an implementation of CharSetBlocks
+        // Layers are height layers of a chunk
+        // A layer is a 16x16x16 piece of a chunk which stack up vertically to make up the chunk, There are 15 above 0 and 8 below 0.
+        // The layer index is layer = y >> 4
+
+        //The index of a chunk is calculated by = (y & 15) << 8 | z << 4 | x;
+        //This is just an index to a 16*16*16 array with Index = Y*256 + Z*16 + X
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] Processing chunk: " +chunk.getChunkBlockCoord().toString());
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Y range for chunk: " +chunk.getMinY() +" to " +chunk.getMaxY());
+
+        //Declare the variables for the block coordinate markers
+        int Y, dX, dZ;
+
+        //Declare the variables for the new and old block states
+        BlockState newBlock;
+        BlockState oldBlock;
+
+        //Initialise the chunk vector - a 2d vector to the 0,0 point of the chunk
+        BlockVector2 chunkVector;
+        chunkVector = BlockVector2.at(chunk.getX()*16, chunk.getZ()*16);
+
+        //Stores the ID of the 'reserved' block state locally
+        final int iReservedState = BlockTypesCache.ReservedIDs.__RESERVED__;
+
+        //Check whether the chunk is empty
+        if (set.isEmpty())
         {
-            //Mark the block changes as having started
-            worldEditCalculation.markFired();
-
-            Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), () ->
-            {
-                //Unregisters the WorldEdit event listener
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistering world edit listener for task "+iTaskID);
-                com.sk89q.worldedit.WorldEdit.getInstance().getEventBus().unregister(worldEditCalculation.getEditSessionListener());
-
-                //Updates the queue system, unblocking the queue
-                teachingtutorials.utils.WorldEdit.pendingCalculations.remove(worldEditCalculation);
-                teachingtutorials.utils.WorldEdit.setCalculationFinished();
-                Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] There are " +teachingtutorials.utils.WorldEdit.pendingCalculations.size() +" calculations remaining in the queue");
-
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistered world edit listener for task "+iTaskID);
-
-                int iSize = virtualBlocks.size();
-
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] There were " +iSize + " block changes recorded for task "+iTaskID);
-            }, 2L);
+            //Skip this chunk
+            Bukkit.getConsoleSender().sendMessage("Chunk has no edits");
+            return set;
         }
+
+        //Goes through every 'layer' in the new chunk
+        final int iMaxSectionPosition = set.getMaxSectionPosition();
+        for (int iLayer = set.getMinSectionPosition() ; iLayer <= iMaxSectionPosition ; iLayer++)
+        {
+            //Get the layer
+            char[] blocks = set.loadIfPresent(iLayer);
+            if (blocks == null)
+            {
+                //Layer had no blocks sections
+                Bukkit.getConsoleSender().sendMessage("Layer "+iLayer +" of chunk " +chunk.getChunkBlockCoord().toString() +" had no block sections");
+                //Do nothing
+            }
+            else
+            {
+                //Layer had block sections
+                Bukkit.getConsoleSender().sendMessage("Layer "+iLayer +" of chunk " +chunk.getChunkBlockCoord().toString() +" had block sections, identifying blocks in this layer now");
+
+                //Goes through every block in the layer
+                int iNumBlocksInLayer = blocks.length;
+                for (int index = 0 ; index < iNumBlocksInLayer ; index++)
+                {
+                    //Extracts the ID of the block
+                    char block = blocks[index];
+
+                    //Check whether there is a block change
+                    if (block == iReservedState)
+                    {
+                        //No block change recorded
+                    }
+                    else
+                    {
+                        //Record this block change
+
+                        //Extract the block coordinates
+                        //Index works as if you are indexing a 3D matrix but on a 1D scale
+
+                        //In the index, Y is taken and timesed by 256, add Z by 16 and X is added on at the end
+
+                        //To get X we need to take index % 16
+                        //To get Z we need to take index/16  % 16
+                        //To get Y we need to take index/256  % 16
+
+                        //The following code is equivalent to using mod and div by uses bitwise operations to extract the appropriate bits instead
+                        dX = index & 15;
+                        dZ = (index >> 4) & 15;
+                        Y = (index >> 8) & 15; //the Y within the layer
+
+                        Y = Y + iLayer * 16; //This should shift the Y back
+
+                        //Extract the block type
+                        newBlock = BlockTypesCache.states[block];
+
+                        //Creates a vector to the block
+                        BlockVector3 block3Vector = BlockVector3.at(chunkVector.getX() + dX, Y, chunkVector.getBlockZ() +dZ);
+
+                        //Gets the old block
+                        oldBlock = get.getBlock(dX, Y, dZ);
+
+                        //Records the block change
+                        adaptAndRecordBlockChange(block3Vector, oldBlock, newBlock);
+
+                        //Cancels the world change
+                        blocks[index] = iReservedState;
+                    }
+                }
+            }
+        }
+
+        return set;
     }
 
-    private  <B extends BlockStateHolder<B>> void calculateBlockChange(BlockVector3 pt, B block, WorldEditCalculation worldEditCalculation)
+    @Override
+    public void postProcess(final IChunk chunk, final IChunkGet get, final IChunkSet set)
     {
-//                        //This should only ever be for one of the 3 stages anyway right?
-//                        if (event.getStage() != EditSession.Stage.BEFORE_CHANGE) {
-//                            return;
-//                        }
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] Post processing of chunk: " +chunk.getChunkBlockCoord().toString());
 
-        //Calculates the old block
-        Location location = BukkitAdapter.adapt(worldEditCalculation.getWorld(), pt);
-        Block blockBefore = location.getBlock();
-        BlockData blockDataBefore = blockBefore.getBlockData();
+        //Print out the number of new virtual blocks
+        int iSize = virtualBlocks.size();
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] There were " +iSize + " block changes recorded");
 
-        //Gets the new block
-        BlockData blockDataNew = BukkitAdapter.adapt(block);
+    }
 
-        //If there is actually a change of block
-        if (!blockDataBefore.equals(blockDataNew))
-        {
-            Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] There was a change of block: ");
-            Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]  New block: " +blockDataNew.getMaterial());
-            Bukkit.getConsoleSender().sendMessage("[TeachingTutorials]  Location: " +location.toString());
-
-            //Creates a virtual block
-            VirtualBlock virtualBlock = new VirtualBlock(worldEditCalculation.getTutorialPlaythrough(), worldEditCalculation.getPlayer(), location, blockDataNew);
-            //Adds it to the new list
-            virtualBlocks.add(virtualBlock);
+    @Override
+    public Extent construct(final Extent child) {
+        if (getExtent() != child) {
+            new ExtentTraverser<Extent>(this).setNext(child);
         }
+        return this;
+    }
+
+    @Override
+    public ProcessorScope getScope() {
+        return ProcessorScope.READING_SET_BLOCKS;
+    }
+
+    /**
+     * Takes a vector, and WorldEdit BlockState objects for the old and new blocks and records the change of block
+     * @param vector A vector pointing to the location of the block change
+     * @param blockDataOld WorldEdit BlockState object for the old block
+     * @param blockDataNew WorldEdit BlockState object for the new block
+     */
+    private void adaptAndRecordBlockChange(BlockVector3 vector, BlockState blockDataOld, BlockState blockDataNew)
+    {
+        recordBlockChange(BukkitAdapter.adapt(worldEditCalculation.getWorld(), vector), BukkitAdapter.adapt(blockDataOld), BukkitAdapter.adapt(blockDataNew));
+    }
+
+    /**
+     * Creates a new virtual block and adds it to the list for this task
+     * @param location The location of the virtual block
+     * @param blockDataOld The old block's block data
+     * @param blockDataNew The new block's block data
+     */
+    private void recordBlockChange(Location location, BlockData blockDataOld, BlockData blockDataNew)
+    {
+        //Notify the console of a block change
+        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] Block change detected | Old block: " +blockDataOld.getMaterial() +", New block: " +blockDataNew.getMaterial());
+
+        //Creates a virtual block
+        VirtualBlock virtualBlock = new VirtualBlock(worldEditCalculation.getTutorialPlaythrough(), worldEditCalculation.getPlayer(), location, blockDataNew);
+
+        //Adds it to the new list
+        virtualBlocks.add(virtualBlock);
     }
 }
 
+///**
+// * A new type of extent which records block changes and blocks them from being placed into the world
+// */
+//class BlockChangeRecorderExtentWE extends AbstractDelegateExtent
+//{
+//    WorldEditCalculation worldEditCalculation;
+//    HashSet<VirtualBlock> virtualBlocks;
+//    int iTaskID;
+//
+//    public BlockChangeRecorderExtentWE(Extent originalExtent, WorldEditCalculation worldEditCalculation, HashSet<VirtualBlock> virtualBlocks, int iTaskID)
+//    {
+//        super(originalExtent);
+//        this.worldEditCalculation = worldEditCalculation;
+//        this.virtualBlocks = virtualBlocks;
+//        this.iTaskID = iTaskID;
+//    }
+//
+//    /**
+//     * Creates a new virtual block and adds it to the list for this task
+//     * @param location The location of the virtual block
+//     * @param blockDataOld The old block's block data
+//     * @param blockDataNew The new block's block data
+//     */
+//    private void recordBlockChange(Location location, BlockData blockDataOld, BlockData blockDataNew)
+//    {
+//        //Notify the console of a block change
+//        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] Block change detected | Old block: " +blockDataOld.getMaterial() +", New block: " +blockDataNew.getMaterial());
+//
+//        //Creates a virtual block
+//        VirtualBlock virtualBlock = new VirtualBlock(worldEditCalculation.getTutorialPlaythrough(), worldEditCalculation.getPlayer(), location, blockDataNew);
+//
+//        //Adds it to the new list
+//        virtualBlocks.add(virtualBlock);
+//    }
+//
+//    @Override
+//    public <B extends BlockStateHolder<B>> boolean setBlock(BlockVector3 position, B block)
+//    {
+//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] A world edit block change has been detected, belonging to the listener for task " +iTaskID +". Recording to the given virtual blocks list");
+//        if (!block.getBlockType().equals(BlockTypes.__RESERVED__))
+//            calculateBlockChange(position.getX(), position.getY(), position.getZ(), block, worldEditCalculation);
+//        //return super.setBlock(position, block);
+//        return false;
+//    }
+//
+//    @Override
+//    public <B extends BlockStateHolder<B>> boolean setBlock(int x, int y, int z, B block)
+//    {
+//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] A world edit block change has been detected, belonging to the listener for task " +iTaskID +". Recording to the given virtual blocks list");
+//        if (!block.getBlockType().equals(BlockTypes.__RESERVED__))
+//            calculateBlockChange(x, y, z, block, worldEditCalculation);
+//        //return super.setBlock(position, block);
+//        return false;
+//    }
+//
+//    @Deprecated
+//    private <B extends BlockStateHolder<B>> void calculateBlockChange(int x, int y, int z, B blockDataNew, WorldEditCalculation worldEditCalculation)
+//    {
+//        //Creates a location object
+//        Location location = new Location(worldEditCalculation.getWorld(), x, y, z);
+//
+//        //Gets the original block
+//        BlockData blockDataBefore = location.getBlock().getBlockData();
+//
+//        //Records the change
+//        recordBlockChange(location, blockDataBefore, BukkitAdapter.adapt(blockDataNew));
+//    }
+//}
+//

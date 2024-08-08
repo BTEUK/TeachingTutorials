@@ -18,6 +18,7 @@ import teachingtutorials.listeners.GlobalPlayerCommandProcess;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.*;
 import teachingtutorials.utils.*;
+import teachingtutorials.utils.plugins.WorldEditImplementation;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -54,6 +55,9 @@ public class TeachingTutorials extends JavaPlugin
     //A list of all virtual blocks
     public HashMap<VirtualBlockLocation, BlockData> virtualBlocks;
 
+    //Identifies which world edit is being used
+    public WorldEditImplementation worldEditImplementation;
+
     @Override
     public void onEnable()
     {
@@ -75,6 +79,29 @@ public class TeachingTutorials extends JavaPlugin
         if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
         {
             getLogger().severe("*** WorldGuard is not installed or not enabled. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+
+        if (Bukkit.getPluginManager().isPluginEnabled("FastAsyncWorldEdit"))
+        {
+            worldEditImplementation = WorldEditImplementation.FAWE;
+            getLogger().info("WorldEdit implementation detected as FAWE");
+        }
+        else if (Bukkit.getPluginManager().isPluginEnabled("WorldEdit"))
+        {
+            worldEditImplementation = WorldEditImplementation.WorldEdit;
+            getLogger().severe("WorldEdit implementation detected as WorldEdit (not FAWE). Please change to FAWE to continue.");
+            getLogger().severe("Contact the authors of the plugin for support");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+        else
+        {
+            worldEditImplementation = WorldEditImplementation.NONE;
+            getLogger().severe("*** No type of WorldEdit is loaded on the server. ***");
             getLogger().severe("*** This plugin will be disabled. ***");
             this.setEnabled(false);
             return;
@@ -246,6 +273,27 @@ public class TeachingTutorials extends JavaPlugin
             }
         }, 0, 10);
 
+
+        //-----------------------------------------
+        //------ Performs calculation events ------
+        //-----------------------------------------
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
+        {
+            if (!WorldEdit.isCurrentCalculationOngoing())
+            {
+                WorldEditCalculation worldEditCalculation = WorldEdit.pendingCalculations.peek();
+                if (worldEditCalculation !=null)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation not already in progress, a new one has been detected");
+                    WorldEdit.setCalculationInProgress();
+                    worldEditCalculation.runCalculation();
+                }
+            }
+            else
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation ongoing, not initiating a new one");
+            }
+        }, 0, 4);
 
         //---------------------------------------
         //---------------Listeners---------------

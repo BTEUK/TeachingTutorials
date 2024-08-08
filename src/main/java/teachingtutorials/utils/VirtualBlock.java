@@ -1,7 +1,6 @@
 package teachingtutorials.utils;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
@@ -40,10 +39,10 @@ public class VirtualBlock
 
     /**
      * Constructs the virtual block. Use this if the bukkit location object for this block has already been created and initialised
-     * @param tutorialPlaythrough
-     * @param player
-     * @param location
-     * @param blockData
+     * @param tutorialPlaythrough The tutorial playthrough instance that this virtual block belongs to
+     * @param player The player to display the virtual block for
+     * @param location The location of the virtual block
+     * @param blockData The block data for the virtual block
      */
     public VirtualBlock(TutorialPlaythrough tutorialPlaythrough, Player player, Location location, BlockData blockData)
     {

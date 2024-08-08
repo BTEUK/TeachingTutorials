@@ -333,9 +333,9 @@ public class Command extends Task implements Listener
             RegionSelector regionSelector = new CuboidRegionSelector(BukkitAdapter.adapt(world), selectionPoint1, selectionPoint2);
 
             //Calculates the virtual blocks
-            WorldEdit.BlocksCalculator(iTaskID, virtualBlocks, regionSelector, szTargetCommand, szTargetCommandArgs.split(" "), world, player, parentGroup.parentStep.parentStage.tutorialPlaythrough);
-        }
+            WorldEdit.BlocksCalculator(iTaskID, virtualBlocks, regionSelector, szTargetCommand, szTargetCommandArgs.split(" "), parentGroup.parentStep.parentStage.tutorialPlaythrough);
 
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All virtual blocks for this task: "+virtualBlocks.size());
+            //It will create a new calculation object and add this to the queue. The plugin will calculate the blocks when available
+        }
     }
 }

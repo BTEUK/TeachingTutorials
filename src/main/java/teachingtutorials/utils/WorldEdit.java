@@ -1,30 +1,13 @@
 package teachingtutorials.utils;
 
 import com.google.common.base.Joiner;
-import com.sk89q.worldedit.IncompleteRegionException;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.event.extent.EditSessionEvent;
-import com.sk89q.worldedit.extension.platform.Actor;
-import com.sk89q.worldedit.extent.AbstractDelegateExtent;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.RegionSelector;
-import com.sk89q.worldedit.util.eventbus.Subscribe;
-import com.sk89q.worldedit.world.block.BlockStateHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.Player;
-import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Queue;
 
 public class WorldEdit
 {
@@ -70,14 +53,10 @@ public class WorldEdit
         {
             szCommandLabel = szCommandLabel.substring(plSep + 1);
         }
-//        StringBuilder sb = new StringBuilder("/").append(szCommandLabel);
         StringBuilder sb = new StringBuilder(szCommandLabel);
-//        if (szCommandArgs.length > 0)
-//            sb.append(" ");
         String szWorldEditCommand = Joiner.on(" ").appendTo(sb, szCommandArgs).toString();
 
         //The command is now fully formatted correctly
-//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Command being run via the API: "+szWorldEditCommand);
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Upcoming command being run via the console: "+szWorldEditCommand);
 
 

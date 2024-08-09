@@ -26,9 +26,11 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
-import teachingtutorials.utils.plugins.WorldEditImplementation;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Stores the details of a world edit block change calculation which is to be made
@@ -39,6 +41,68 @@ public class WorldEditCalculation
     private final String szWorldEditCommand;
     private final RegionSelector regionSelector;
     private final TutorialPlaythrough tutorialPlaythrough;
+    private final int iTaskID;
+
+    //Records the default blocks of the world  where the calculation
+    public HashMap<Location, BlockData> realBlocks = new HashMap<>();
+
+    //Indicates whether the blocks in the world need resetting
+    private AtomicBoolean bBlocksRequireReset = new AtomicBoolean(false);
+
+    /**
+     * Attempts to reset the actual blocks of the world back to how they were before the calculation took place.
+     * Should only happen once per calculation
+     */
+    public void tryResettingWorld()
+    {
+        //Checks whether the blocks have already been reset and if not then mark it as having been reset so that something else doesn't access it
+        if (bBlocksRequireReset.getAndSet(false))
+        {
+            //Extracts the real blocks
+            int iSize;
+            iSize = realBlocks.size();
+            Location[] locations = realBlocks.keySet().toArray(Location[]::new);
+            BlockData[] blockData = realBlocks.values().toArray(BlockData[]::new);
+
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] About to run the resetting of the blocks on the world for task: " +iTaskID);
+
+            //Run the resetting
+            Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), new Runnable() {
+                @Override
+                public void run()
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] Running the resetting of the blocks on the world for task: " +iTaskID);
+
+                    //Set the blocks of the world back to the correct blocks
+                    World world = getWorld();
+                    for (int i = 0 ; i < iSize ; i++)
+                    {
+                        world.setBlockData(locations[i], blockData[i]);
+//                        Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE +"[TeachingTutorials] Setting block at "+locations[i].toString()  +" to the correct block: "+blockData[i].getMaterial().toString());
+                    }
+
+                    //Wait a few ticks before saying that the blocks have been set to give it a chance to set the blocks before the next calculation
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] In 5 ticks will mark the blocks as having been reset for task: " +iTaskID);
+
+                    //Mark blocks as rest after a time
+                    Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
+                        @Override
+                        public void run() {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] Marking the blocks as having been reset for task: " +iTaskID);
+
+                            //Marks that virtual blocks have been taken off the real world
+                            teachingtutorials.utils.WorldEdit.setVirtualBlocksOffRealWorld();
+
+                            //Unblock the calculation queue
+                            unblockCalculationQueue();
+
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] Marked the blocks as having been reset for task: " +iTaskID);
+                        }
+                    }, 5L);
+                }
+            });
+        }
+    }
 
     public Player getPlayer()
     {
@@ -55,11 +119,12 @@ public class WorldEditCalculation
         return tutorialPlaythrough;
     }
 
-    public WorldEditCalculation(String szWorldEditCommand, RegionSelector regionSelector, TutorialPlaythrough tutorialPlaythrough, int iTaskID, HashSet<VirtualBlock> virtualBlocks)
+    public WorldEditCalculation(String szWorldEditCommand, RegionSelector regionSelector, TutorialPlaythrough tutorialPlaythrough, int iTaskID, ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks)
     {
         this.szWorldEditCommand = szWorldEditCommand;
         this.regionSelector = regionSelector;
         this.tutorialPlaythrough = tutorialPlaythrough;
+        this.iTaskID = iTaskID;
 
         //2. Create the new event listener
         setUpListener(iTaskID, virtualBlocks);
@@ -76,7 +141,7 @@ public class WorldEditCalculation
      * @param iTaskID The TaskID of the task
      * @param virtualBlocks A reference to the list of virtual blocks to record block changes into
      */
-    private void setUpListener(int iTaskID, HashSet<VirtualBlock> virtualBlocks)
+    private void setUpListener(int iTaskID, ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks)
     {
         //Get the console actor
         Actor consoleActor = BukkitAdapter.adapt(Bukkit.getConsoleSender());
@@ -87,6 +152,7 @@ public class WorldEditCalculation
         //Creates a listener to listen out for world edit events and insert the recorder extent into the correct one
         worldEditEventListener = new Object()
         {
+            //Runs after the command has been sent
             @Subscribe
             public void onEditSessionEvent(EditSessionEvent event)
             {
@@ -94,11 +160,11 @@ public class WorldEditCalculation
 
                 if (actor == null)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Edit session event detected belonging a null actor (assuming console) - at stage: "+event.getStage().toString());
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Edit session event detected belonging a null actor (assuming console) - at stage: "+event.getStage().toString() +" for task:" +iTaskID);
                 }
                 else if (actor.getName().equals(consoleActor.getName()))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Edit session event detected belonging to the actor we are listening for - at stage: "+event.getStage().toString());
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Edit session event detected belonging to the actor we are listening for - at stage: "+event.getStage().toString() +" for task:" +iTaskID);
                 }
                 else
                 {
@@ -117,14 +183,13 @@ public class WorldEditCalculation
                 //Updates the extent of the edit session to be that of a block recording extent
                 //The block recording extent means that block changes are blocked and recorded in the set block mechanism
                 //Sets the new extent into the event
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the extent");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the extent for task:" +iTaskID);
                 event.setExtent(blockChangeRecorderExtent);
 
                 //Once the extent has been set we don't need the listener anymore since any world edit changes under that extent will be recorded in the correct list
                 unregisterWorldChangeListener();
             }
         };
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] WorldEdit event listener has been initialised");
     }
 
     /**
@@ -136,54 +201,165 @@ public class WorldEditCalculation
     public void runCalculation()
     {
         //Console output
-        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Starting a new WE block change calculation");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Starting a new WE block change calculation on task: "+iTaskID);
 
         //Runs the world edit command through the console and registers the listener to identify the resulting operation
         Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), () ->
         {
             //Sets the selection
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Adjusting the selection");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Adjusting the selection on task: "+iTaskID);
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/world "+tutorialPlaythrough.getLocation().getLocationID());
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/pos1 " + ((CuboidRegion) regionSelector.getRegion()).getPos1().toParserString());
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "/pos2 " + ((CuboidRegion) regionSelector.getRegion()).getPos2().toParserString());
 
-            //Registers the world change event listener
-            try
-            {
-                WorldEdit.getInstance().getEventBus().register(worldEditEventListener);
-            }
-            catch (Exception e)
-            {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[Teaching Tutorials] Error registering WorldEdit event listener: "+e.getMessage());
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[Teaching Tutorials] :" +e.getCause());
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[Teaching Tutorials] :" +e);
-                e.printStackTrace();
-            }
+/*
+            I think we need to be really careful with this and do another check.  We cannot let this run if the blocks of the last one have not been reset
+                i.e We cannot let this run until the calculation queue of the last one is not unblocked.
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] World edit change event listener registered");
-
-            //Runs the command
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Sending command: "+szWorldEditCommand);
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), szWorldEditCommand);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Command sent");
+            Although the resetting of the blocks in calculation A should be done before B is even allowed to start, that may not actually happen if the setting of the blocks in calculation A is done in a bukkit.RunTask()
+            Possibly test for if we are ready
+            Possibly add some recursion
+*/
+            //Check for whether a task is ongoing - uses atomic boolean to be thread safe
+            if (teachingtutorials.utils.WorldEdit.isCurrentCalculationOngoing())
+            {
+                //Wait a tick
+                Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
+                    @Override
+                    public void run() {
+                        recordRealBlocksAndSetVirtualsAndRunCommand();
+                    }
+                }, 1L);
+            }
+            else
+                recordRealBlocksAndSetVirtualsAndRunCommand();
         });
+
+        //Console output
+        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] All pre-tasks and command have been added to the bukkit scheduler for task: "+iTaskID);
+    }
+
+    private void recordRealBlocksAndSetVirtualsAndRunCommand()
+    {
+        //Check for whether blocks are on the world - uses atomic boolean to be thread safe
+        if (teachingtutorials.utils.WorldEdit.areVirtualBlocksOnRealWorld())
+        {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Delaying the real world block recording and command run on task: "+iTaskID);
+            //Wait a tick and try again
+            Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
+                @Override
+                public void run() {
+                    recordRealBlocksAndSetVirtualsAndRunCommand();
+                }
+            }, 1L);
+        }
+        //If the virtual blocks are off the world then we can record the default world blocks now
+        else
+        {
+            //Extracts the current list of virtual blocks
+            ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks = TeachingTutorials.getInstance().virtualBlocks;
+
+            final int iSize = virtualBlocks.size();
+            VirtualBlockLocation[] virtualBlockLocations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
+            final BlockData[] virtualBlockData = virtualBlocks.values().toArray(BlockData[]::new);
+
+            final World world = getWorld();
+
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Recording the world blocks for: "+iTaskID);
+
+            //Records the real blocks of the world at the virtual blocks location
+            for (int i = 0 ; i < iSize ; i++)
+            {
+                final int iPosition = i;
+                if (virtualBlockLocations[iPosition].isFromTutorial(tutorialPlaythrough))
+                {
+                    //Store the block details in local objects
+                    Location location = virtualBlockLocations[iPosition].location;
+                    BlockData realBlock = world.getBlockData(location).clone();
+
+                    //Adds the real block at this location to the list
+                    realBlocks.put(location, realBlock);
+
+//                    Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_BLUE +"Block recorded at ("
+//                            +virtualBlockLocations[iPosition].location.getX()+","
+//                            +virtualBlockLocations[iPosition].location.getY()+","
+//                            +virtualBlockLocations[iPosition].location.getZ()
+//                            +") with material: "+realBlock.getMaterial());
+                }
+            }
+
+            //Marks that virtual blocks have been placed on the real world
+            teachingtutorials.utils.WorldEdit.setVirtualBlocksOnRealWorld();
+
+            //We set virtual blocks to the world so that it takes them into account in the WE calculation
+            //Wait 15 ticks before setting the virtual blocks to the world because the recording of the blocks (see for loop above)
+            // often overruns by several ticks and ends up recording the blocks after they are set below
+            Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
+                @Override
+                public void run() {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the virtual blocks to the world on task: "+iTaskID);
+                    //Sets the real block to that of the virtual block at this location
+                    for (int i = 0 ; i < iSize ; i++)
+                    {
+                        final int iPosition = i;
+                        if (virtualBlockLocations[iPosition].isFromTutorial(tutorialPlaythrough))
+                        {
+                            Location location = virtualBlockLocations[iPosition].location;
+
+                            //Sets the real block to that of the virtual block at this location
+                            world.setBlockData(location, virtualBlockData[iPosition]);
+                        }
+                    }
+
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Finished recording the world blocks and setting virtual blocks on task: "+iTaskID);
+
+                    //Once the chunks have started being processed it will put all of the blocks back
+                    bBlocksRequireReset.set(true);
+
+                    //Registers the world change event listener
+                    try
+                    {
+                        WorldEdit.getInstance().getEventBus().register(worldEditEventListener);
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered the EditSessionEvent listener on task: "+iTaskID);
+                    }
+                    catch (Exception e)
+                    {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[Teaching Tutorials] Error registering WorldEdit event listener: "+e.getMessage());
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[Teaching Tutorials] :" +e.getCause());
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[Teaching Tutorials] :" +e);
+                        e.printStackTrace();
+                    }
+
+                    //Runs the command
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Sending command for task "+iTaskID +": "+szWorldEditCommand);
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), szWorldEditCommand);
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Command sent for task: "+iTaskID);
+                }
+            }, 15L);
+        }
     }
 
     /**
-     * Unregisters the listener and unblocks the calculation queue
+     * Unregisters the listener
      */
-    protected void unregisterWorldChangeListener()
+    private void unregisterWorldChangeListener()
     {
         //Unregisters the WorldEdit event listener
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistering world edit listener");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistering world edit listener for task:" +iTaskID);
         com.sk89q.worldedit.WorldEdit.getInstance().getEventBus().unregister(this.getEditSessionListener());
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistered world edit listener for task:" +iTaskID);
+    }
 
+    /**
+     * Unblocks the calculation queue
+     */
+    private void unblockCalculationQueue()
+    {
         //Updates the queue system, unblocking the queue
         teachingtutorials.utils.WorldEdit.pendingCalculations.remove(this);
         teachingtutorials.utils.WorldEdit.setCalculationFinished();
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unblocked calculation queue from task:" +iTaskID);
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] There are " +teachingtutorials.utils.WorldEdit.pendingCalculations.size() +" calculations remaining in the queue");
-
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Unregistered world edit listener");
     }
 }
 
@@ -193,10 +369,11 @@ public class WorldEditCalculation
 class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IBatchProcessor
 {
     WorldEditCalculation worldEditCalculation;
-    HashSet<VirtualBlock> virtualBlocks;
-    int iTaskID;
+    ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks;
 
-    public BlockChangeRecorderExtentFAWE(Extent originalExtent, WorldEditCalculation worldEditCalculation, HashSet<VirtualBlock> virtualBlocks, int iTaskID)
+    private final int iTaskID;
+
+    public BlockChangeRecorderExtentFAWE(Extent originalExtent, WorldEditCalculation worldEditCalculation, ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks, int iTaskID)
     {
         super(originalExtent);
         this.worldEditCalculation = worldEditCalculation;
@@ -218,6 +395,13 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
     @Override
     public IChunkSet processSet(IChunk chunk, IChunkGet get, IChunkSet set)
     {
+        //Now we know the calculation has taken place, we can remove the blocks we placed for the preexisting virtual blocks
+        //This will get called for each chunk but after it is called the first time any future calls won't have an effect
+        //Because there is a boolean marking whether it has already been called or not
+        worldEditCalculation.tryResettingWorld();
+
+        //For some reason this gets called way too much
+
         //Set:
         // Presumably an implementation of CharSetBlocks
         // Layers are height layers of a chunk
@@ -227,8 +411,8 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
         //The index of a chunk is calculated by = (y & 15) << 8 | z << 4 | x;
         //This is just an index to a 16*16*16 array with Index = Y*256 + Z*16 + X
 
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] Processing chunk: " +chunk.getChunkBlockCoord().toString());
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Y range for chunk: " +chunk.getMinY() +" to " +chunk.getMaxY());
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] Processing chunk: " +chunk.getChunkBlockCoord().toString() +" for task:" +iTaskID);
+//        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Y range for chunk: " +chunk.getMinY() +" to " +chunk.getMaxY());
 
         //Declare the variables for the block coordinate markers
         int Y, dX, dZ;
@@ -248,7 +432,7 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
         if (set.isEmpty())
         {
             //Skip this chunk
-            Bukkit.getConsoleSender().sendMessage("Chunk has no edits");
+//            Bukkit.getConsoleSender().sendMessage("Chunk has no edits");
             return set;
         }
 
@@ -261,13 +445,13 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
             if (blocks == null)
             {
                 //Layer had no blocks sections
-                Bukkit.getConsoleSender().sendMessage("Layer "+iLayer +" of chunk " +chunk.getChunkBlockCoord().toString() +" had no block sections");
+//                Bukkit.getConsoleSender().sendMessage("Layer "+iLayer +" of chunk " +chunk.getChunkBlockCoord().toString() +" had no block sections");
                 //Do nothing
             }
             else
             {
                 //Layer had block sections
-                Bukkit.getConsoleSender().sendMessage("Layer "+iLayer +" of chunk " +chunk.getChunkBlockCoord().toString() +" had block sections, identifying blocks in this layer now");
+//                Bukkit.getConsoleSender().sendMessage("Layer "+iLayer +" of chunk " +chunk.getChunkBlockCoord().toString() +" had block sections, identifying blocks in this layer now");
 
                 //Goes through every block in the layer
                 int iNumBlocksInLayer = blocks.length;
@@ -326,12 +510,9 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
     @Override
     public void postProcess(final IChunk chunk, final IChunkGet get, final IChunkSet set)
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] Post processing of chunk: " +chunk.getChunkBlockCoord().toString());
-
         //Print out the number of new virtual blocks
         int iSize = virtualBlocks.size();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] There were " +iSize + " block changes recorded");
-
+        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"\n[TeachingTutorials] Post processing of chunk: " +chunk.getChunkBlockCoord().toString()+". There have been " +iSize + " block changes recorded so far for task:" +iTaskID);
     }
 
     @Override
@@ -367,13 +548,13 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
     private void recordBlockChange(Location location, BlockData blockDataOld, BlockData blockDataNew)
     {
         //Notify the console of a block change
-        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] Block change detected | Old block: " +blockDataOld.getMaterial() +", New block: " +blockDataNew.getMaterial());
+//        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] Block change detected | Old block: " +blockDataOld.getMaterial() +", New block: " +blockDataNew.getMaterial());
 
         //Creates a virtual block
         VirtualBlock virtualBlock = new VirtualBlock(worldEditCalculation.getTutorialPlaythrough(), worldEditCalculation.getPlayer(), location, blockDataNew);
 
         //Adds it to the new list
-        virtualBlocks.add(virtualBlock);
+        virtualBlocks.put(virtualBlock.blockLocation, virtualBlock.blockData);
     }
 }
 

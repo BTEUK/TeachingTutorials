@@ -12,7 +12,7 @@ import teachingtutorials.utils.User;
 import teachingtutorials.utils.VirtualBlockLocation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 //To be extended by lesson and new location
 //They both share a lot of data and processes, and they are also rather similar in the user experience as well
@@ -90,7 +90,7 @@ public abstract class TutorialPlaythrough
         fallListener.unregister();
 
         //Removes virtual blocks
-        HashMap<VirtualBlockLocation, BlockData> virtualBlocks = plugin.virtualBlocks;
+        ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks = plugin.virtualBlocks;
         int iSize;
         iSize = virtualBlocks.size();
         VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);

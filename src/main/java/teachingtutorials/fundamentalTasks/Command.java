@@ -53,10 +53,21 @@ public class Command extends Task implements Listener
 
     private ArrayList<Task> tasksInGroup;
 
-    //Used in a lesson
-    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
+    /**
+     * Used in a lesson
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param szAnswers
+     * @param fDifficulty
+     * @param tasks
+     */
+    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
     {
-        super(plugin);
+        super(plugin, player, parentGroup, iTaskID, iOrder, "command", szDetails, false);
         this.type = "command";
         this.player = player;
         this.parentGroup = parentGroup;
@@ -96,21 +107,22 @@ public class Command extends Task implements Listener
         }
 
         this.fDifficulty = fDifficulty;
-
-        this.bNewLocation = false;
     }
 
-    //Used when creating a new location
+    /**
+     * Used when creating a new location
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param tasks
+     */
     public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, ArrayList<Task> tasks)
     {
-        super(plugin);
-        this.type = "command";
-        this.player = player;
-        this.bNewLocation = true;
-        this.parentGroup = parentGroup;
-        this.iTaskID = iTaskID;
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "command", szDetails, true);
+
         this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
 
         //Listen out for difficulty - There will only be one difficulty listener per command to avoid bugs
@@ -139,7 +151,7 @@ public class Command extends Task implements Listener
         String command = event.getMessage();
 
         //Checks whether it is a new location
-        if (bNewLocation) //Set the answers
+        if (bCreatingNewLocation) //Set the answers
         {
             LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
 

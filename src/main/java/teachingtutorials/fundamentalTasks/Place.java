@@ -26,16 +26,20 @@ public class Place extends Task implements Listener
 
     private DifficultyListener difficultyListener;
 
-    //Used in a lesson
-    public Place(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty)
+    /**
+     * Used in a lesson
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param szAnswers
+     * @param fDifficulty
+     */
+    public Place(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fDifficulty)
     {
-        super(plugin);
-
-        this.bNewLocation = false;
-
-        this.type = "place";
-        this.player = player;
-        this.parentGroup = parentGroup;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "place", szDetails, false);
 
         //Extracts the coordinates
         String[] szCoordinates3AndMaterial = szAnswers.split(",");
@@ -46,26 +50,24 @@ public class Place extends Task implements Listener
         //Extracts the material
         mTargetMaterial = Material.getMaterial(szCoordinates3AndMaterial[3]);
 
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
-
         this.fDifficulty = fDifficulty;
 
         //Calculates the virtual block
         calculateVirtualBlocks();
     }
 
-    //Used in location creation
+    /**
+     * Used when creating a new location
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     */
     public Place(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
-        super(plugin);
-        this.type = "place";
-        this.player = player;
-        this.bNewLocation = true;
-        this.parentGroup = parentGroup;
-        this.iTaskID = iTaskID;
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "place", szDetails, true);
 
         //Listen out for difficulty - There will only be one difficulty listener per place task to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.tpll);
@@ -120,7 +122,7 @@ public class Place extends Task implements Listener
         int iBlockZ = newBlockLocation.getBlockZ();
 
         //Checks whether it is a new location
-        if (bNewLocation)
+        if (bCreatingNewLocation)
         {
             //Store the material
             mTargetMaterial = newBlockMaterial;
@@ -232,6 +234,6 @@ public class Place extends Task implements Listener
         VirtualBlock virtualPlaceBlock = new VirtualBlock(this.parentGroup.parentStep.parentStage.tutorialPlaythrough, player, player.getWorld(),
                                                         iTargetCoords[0], iTargetCoords[1], iTargetCoords[2],
                                                         mTargetMaterial.createBlockData());
-        this.virtualBlocks.add(virtualPlaceBlock);
+        this.virtualBlocks.put(virtualPlaceBlock.blockLocation, virtualPlaceBlock.blockData);
     }
 }

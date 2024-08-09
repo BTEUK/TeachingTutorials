@@ -26,6 +26,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TeachingTutorials extends JavaPlugin
 {
@@ -53,7 +54,7 @@ public class TeachingTutorials extends JavaPlugin
     public ArrayList<NewLocation> newLocations;
 
     //A list of all virtual blocks
-    public HashMap<VirtualBlockLocation, BlockData> virtualBlocks;
+    public ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks;
 
     //Identifies which world edit is being used
     public WorldEditImplementation worldEditImplementation;
@@ -115,7 +116,7 @@ public class TeachingTutorials extends JavaPlugin
         players = new ArrayList<>();
         lessons = new ArrayList<>();
         newLocations = new ArrayList<>();
-        virtualBlocks = new HashMap<>();
+        virtualBlocks = new ConcurrentHashMap<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------

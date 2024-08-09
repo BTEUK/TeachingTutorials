@@ -4,10 +4,13 @@ import com.google.common.base.Joiner;
 import com.sk89q.worldedit.regions.RegionSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.block.data.BlockData;
 import teachingtutorials.TutorialPlaythrough;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorldEdit
 {
@@ -15,23 +18,50 @@ public class WorldEdit
      * A queue of pending calculations to be performed
      */
     public static LinkedList<WorldEditCalculation> pendingCalculations = new LinkedList<>();
-    private static boolean bCurrentCalculationOngoing = false;
+    private static AtomicBoolean bCurrentCalculationOngoing = new AtomicBoolean(false);
+
+    //Records whether there are virtual blocks on the real world
+    private static AtomicBoolean bVirtualBlocksOnRealWorld = new AtomicBoolean(false);
+
+    /**
+     * Current calculation refers to whether a calculation is already in the process from listening to the
+     * EditSessionEvent to waiting for the first sign that the calculation has been complete and still having blocks on
+     * the world which need to be removed after using them for calculation.
+     * @return
+     */
 
     public static boolean isCurrentCalculationOngoing()
     {
-        return bCurrentCalculationOngoing;
+        return bCurrentCalculationOngoing.get();
     }
 
     public static void setCalculationInProgress()
     {
-        bCurrentCalculationOngoing = true;
+        bCurrentCalculationOngoing.set(true);
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] The calculations queue has been blocked - calculation in progress");
     }
 
     public static void setCalculationFinished()
     {
-        bCurrentCalculationOngoing = false;
+        bCurrentCalculationOngoing.set(false);
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] The calculations queue has been unblocked!");
+    }
+
+    public static boolean areVirtualBlocksOnRealWorld()
+    {
+        return bVirtualBlocksOnRealWorld.get();
+    }
+
+    public static void setVirtualBlocksOnRealWorld()
+    {
+        bVirtualBlocksOnRealWorld.set(true);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] Blocks have been marked as on the world");
+    }
+
+    public static void setVirtualBlocksOffRealWorld()
+    {
+        bVirtualBlocksOnRealWorld.set(false);
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] Blocks have been marked as taken off the world");
     }
 
     /**
@@ -44,7 +74,7 @@ public class WorldEdit
      * @param tutorialPlaythrough The tutorial playthrough which this task belongs to
      * @return
      */
-    public static void BlocksCalculator(int iTaskID, final HashSet<VirtualBlock> virtualBlocks, RegionSelector correctSelectionRegion, String szCommandLabel, String[] szCommandArgs, TutorialPlaythrough tutorialPlaythrough)
+    public static void BlocksCalculator(int iTaskID, final ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks, RegionSelector correctSelectionRegion, String szCommandLabel, String[] szCommandArgs, TutorialPlaythrough tutorialPlaythrough)
     {
         //1. Modifies the command
         //This code is taken from WorldEdit - See https://enginehub.org/

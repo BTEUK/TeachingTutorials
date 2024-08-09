@@ -43,13 +43,19 @@ public class Selection extends Task implements Listener
 
     private DifficultyListener difficultyListener;
 
-    //Used in a lesson
-    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fWEDifficulty)
+    /**
+     * Used when in a lesson
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iOrder
+     * @param szDetails
+     * @param szAnswers
+     * @param fWEDifficulty
+     */
+    public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fWEDifficulty)
     {
-        super(plugin);
-        this.type = "selection";
-        this.player = player;
-        this.parentGroup = parentGroup;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "selection", szDetails, false);
 
         //Extracts the answers
         String[] cords = szAnswers.split(",");
@@ -60,27 +66,24 @@ public class Selection extends Task implements Listener
         this.dTargetCoords2[1] = Double.parseDouble(cords[4]);
         this.dTargetCoords2[2] = Double.parseDouble(cords[5]);
 
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
-
         this.fWEDifficulty = fWEDifficulty;
-
-        this.bNewLocation = false;
 
         this.bSelection1Made = false;
         this.bSelection2Made = false;
     }
 
+    /**
+     * Used when creating a new location
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     */
     public Selection(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
-        super(plugin);
-        this.type = "selection";
-        this.player = player;
-        this.bNewLocation = true;
-        this.parentGroup = parentGroup;
-        this.iTaskID = iTaskID;
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "selection", szDetails, true);
 
         this.bSelection1Made = false;
         this.bSelection2Made = false;
@@ -126,7 +129,7 @@ public class Selection extends Task implements Listener
             iSelectedBlockCoordinates2 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
 
         //Checks whether it is a new location
-        if (bNewLocation)
+        if (bCreatingNewLocation)
         {
             //Checks whether it is a left click or right click and stores the coordinates
             if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))

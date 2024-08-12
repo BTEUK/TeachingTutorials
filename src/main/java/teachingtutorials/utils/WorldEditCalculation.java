@@ -267,6 +267,9 @@ public class WorldEditCalculation
 
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Recording the world blocks for: "+iTaskID);
 
+            //Marks that virtual blocks have been placed on the real world
+            teachingtutorials.utils.WorldEdit.setVirtualBlocksOnRealWorld();
+
             //Records the real blocks of the world at the virtual blocks location
             for (int i = 0 ; i < iSize ; i++)
             {
@@ -275,7 +278,7 @@ public class WorldEditCalculation
                 {
                     //Store the block details in local objects
                     Location location = virtualBlockLocations[iPosition].location;
-                    BlockData realBlock = world.getBlockData(location).clone();
+                    BlockData realBlock = world.getBlockData(location).clone(); //This actually gets run asynchronously and takes over a second sometimes
 
                     //Adds the real block at this location to the list
                     realBlocks.put(location, realBlock);
@@ -287,9 +290,6 @@ public class WorldEditCalculation
 //                            +") with material: "+realBlock.getMaterial());
                 }
             }
-
-            //Marks that virtual blocks have been placed on the real world
-            teachingtutorials.utils.WorldEdit.setVirtualBlocksOnRealWorld();
 
             //We set virtual blocks to the world so that it takes them into account in the WE calculation
             //Wait 15 ticks before setting the virtual blocks to the world because the recording of the blocks (see for loop above)
@@ -335,7 +335,7 @@ public class WorldEditCalculation
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), szWorldEditCommand);
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Command sent for task: "+iTaskID);
                 }
-            }, 15L);
+            }, TeachingTutorials.getInstance().getConfig().getLong("BlockRecordDelay"));
         }
     }
 

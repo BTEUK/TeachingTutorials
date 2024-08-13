@@ -113,6 +113,9 @@ public class Step
         return selectionCompleteHold;
     }
 
+    /**
+     * Displays the virtual blocks of all tasks is this step
+     */
     public void displayAllVirtualBlocks()
     {
         //Gets the groups from the DB
@@ -125,6 +128,11 @@ public class Step
         }
     }
 
+    /**
+     * Fetches the list of groups of this step from the database and stores this in {@link #groups}.
+     * <p> </p>
+     * The order of groups does not matter and as such the order that they are fetched and stored in doesn't matter.
+     */
     private void fetchAndInitialiseGroups()
     {
         groups = Group.fetchGroupsByStepID(player, plugin, this);

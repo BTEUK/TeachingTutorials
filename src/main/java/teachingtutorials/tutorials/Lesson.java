@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.listeners.Falling;
+import teachingtutorials.listeners.PlaythroughCommandListeners;
 import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
@@ -97,10 +98,10 @@ public class Lesson extends TutorialPlaythrough
             {
                 //Resumes the lesson but resets the progress
                 if (creatorOrStudent.bInLesson)
-                    return resumeLesson(true);
+                    resumeLesson(true);
                 //Creates a new compulsory tutorial lesson
                 else
-                    return createAndStartNewLesson(true);
+                    createAndStartNewLesson(true);
             }
 
             //Checks to see whether a student has a lesson to finish as indicated by the database
@@ -131,6 +132,26 @@ public class Lesson extends TutorialPlaythrough
                 }
             }
         }
+
+        //Registers the fall listener
+        fallListener = new Falling(creatorOrStudent.player, plugin);
+        fallListener.register();
+
+        //Register the tpll and ll command and the gmask blocker
+        playthroughCommandListeners = new PlaythroughCommandListeners(plugin);
+        playthroughCommandListeners.register();
+
+        //Signals the next stage to start, at the required step, as previously determined
+        nextStage(iStepToStart);
+
+        //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
+        creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
+        creatorOrStudent.bInLesson = true; //Updates the user's "In Lesson" status in RAM
+        creatorOrStudent.setInLesson(1); //Updates the DB
+
+        //Adds this lesson to the list of lessons ongoing on the server
+        this.plugin.lessons.add(this);
+
         return true;
     }
 
@@ -169,21 +190,6 @@ public class Lesson extends TutorialPlaythrough
 
         //Takes the stage position back for it to then be set forward again at the start of nextStage()
         iStageIndex = iStageIndex - 1;
-
-        //Registers the fall listener
-        fallListener = new Falling(creatorOrStudent.player, plugin);
-        fallListener.register();
-
-        //Continues the current stage
-        nextStage(iStepToStart);
-
-        //If the lesson resumed successfully
-        creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode
-        creatorOrStudent.bInLesson = true; //Updates the user's "In Lesson" status in RAM
-        creatorOrStudent.setInLesson(1); //Updates the DB
-
-        //Adds this lesson to the list of lessons ongoing on the server
-        this.plugin.lessons.add(this);
 
         return true;
     }
@@ -239,12 +245,8 @@ public class Lesson extends TutorialPlaythrough
             //Set the current stage to the first stage
             this.iStageIndex = 0;
 
-            //Registers the fall listener
-            fallListener = new Falling(creatorOrStudent.player, plugin);
-            fallListener.register();
-
-            //Signals for the next stage (the first stage) to begin
-            nextStage(1);
+            //Sets the step to start to the first step
+            this.iStepToStart = 1;
         }
         else
         {
@@ -256,14 +258,6 @@ public class Lesson extends TutorialPlaythrough
         //Creates a new lesson in the DB and fetches it's LessonID
         addLessonToDB();
         //There is currently no check to determine whether the DB creation worked
-
-        //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
-        creatorOrStudent.currentMode = Mode.Doing_Tutorial;
-        creatorOrStudent.bInLesson = true;
-        creatorOrStudent.setInLesson(1);
-
-        //Adds this lesson to the list of lessons ongoing on the server
-        this.plugin.lessons.add(this);
 
         return true;
     }
@@ -833,15 +827,20 @@ public class Lesson extends TutorialPlaythrough
                     +"'"+creatorOrStudent.player.getUniqueId()+"', "
                     +this.tutorial.getTutorialID()+", "
                     +"0, "
-                    +this.iStageIndex+", "
-                    +this.currentStage.getCurrentStep()+", "
+                    +"1, "
+                    +"1, "
                     +this.location.getLocationID() +")";
+            Bukkit.getConsoleSender().sendMessage(szSql);
             SQL.executeUpdate(szSql);
 
             szSql = "SELECT LAST_INSERT_ID()";
             resultSet = SQL.executeQuery(szSql);
             resultSet.next();
             this.iLessonID = resultSet.getInt(1);
+        }
+        catch (SQLException se)
+        {
+            Bukkit.getConsoleSender().sendMessage("SQL Error: "+se.getMessage());
         }
         catch (Exception e)
         {

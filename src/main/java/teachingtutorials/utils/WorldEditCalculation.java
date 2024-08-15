@@ -18,8 +18,6 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
 import com.sk89q.worldedit.world.block.BlockState;
-import com.sk89q.worldedit.world.block.BlockStateHolder;
-import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldedit.world.block.BlockTypesCache;
 import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
@@ -29,7 +27,7 @@ import teachingtutorials.TutorialPlaythrough;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -43,8 +41,8 @@ public class WorldEditCalculation
     private final TutorialPlaythrough tutorialPlaythrough;
     private final int iTaskID;
 
-    //Records the default blocks of the world  where the calculation
-    public HashMap<Location, BlockData> realBlocks = new HashMap<>();
+    //Records the default blocks of the world
+    public Map<Location, BlockData> realBlocks = new HashMap<>();
 
     //Indicates whether the blocks in the world need resetting
     private AtomicBoolean bBlocksRequireReset = new AtomicBoolean(false);
@@ -84,7 +82,7 @@ public class WorldEditCalculation
                     //Wait a few ticks before saying that the blocks have been set to give it a chance to set the blocks before the next calculation
                     Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] In 5 ticks will mark the blocks as having been reset for task: " +iTaskID);
 
-                    //Mark blocks as rest after a time
+                    //Mark blocks as reset after a time
                     Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
                         @Override
                         public void run() {
@@ -119,7 +117,7 @@ public class WorldEditCalculation
         return tutorialPlaythrough;
     }
 
-    public WorldEditCalculation(String szWorldEditCommand, RegionSelector regionSelector, TutorialPlaythrough tutorialPlaythrough, int iTaskID, ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks)
+    public WorldEditCalculation(String szWorldEditCommand, RegionSelector regionSelector, TutorialPlaythrough tutorialPlaythrough, int iTaskID, VirtualBlockGroup<Location, BlockData> virtualBlocks)
     {
         this.szWorldEditCommand = szWorldEditCommand;
         this.regionSelector = regionSelector;
@@ -141,7 +139,7 @@ public class WorldEditCalculation
      * @param iTaskID The TaskID of the task
      * @param virtualBlocks A reference to the list of virtual blocks to record block changes into
      */
-    private void setUpListener(int iTaskID, ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks)
+    private void setUpListener(int iTaskID, VirtualBlockGroup<Location, BlockData> virtualBlocks)
     {
         //Get the console actor
         Actor consoleActor = BukkitAdapter.adapt(Bukkit.getConsoleSender());
@@ -256,59 +254,65 @@ public class WorldEditCalculation
         //If the virtual blocks are off the world then we can record the default world blocks now
         else
         {
+            // ---------------- Begin Recording Real World Blocks ----------------
+
             //Extracts the current list of virtual blocks
-            ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks = TeachingTutorials.getInstance().virtualBlocks;
+            ArrayList<VirtualBlockGroup<Location, BlockData>> virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups();
 
-            final int iSize = virtualBlocks.size();
-            VirtualBlockLocation[] virtualBlockLocations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
-            final BlockData[] virtualBlockData = virtualBlocks.values().toArray(BlockData[]::new);
-
-            final World world = getWorld();
+            //Declares the temporary list object
+            VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
 
             Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Recording the world blocks for: "+iTaskID);
+
+            //Goes through all virtual block groups
+            int iTasksActive = virtualBlockGroups.size();
+            for (int j = 0 ; j < iTasksActive ; j++)
+            {
+                //Extracts the jth virtual block group
+                virtualBlockGroup = virtualBlockGroups.get(j);
+
+                //Checks whether this group and this calculation are part of the same lesson
+                if (!virtualBlockGroup.isOfPlaythrough(this.tutorialPlaythrough))
+                {
+                    continue;
+                }
+
+                //Gets all of the real blocks and adds this list to the list of lists
+                realBlocks.putAll(virtualBlockGroup.getRealBlocks());
+            }
 
             //Marks that virtual blocks have been placed on the real world
             teachingtutorials.utils.WorldEdit.setVirtualBlocksOnRealWorld();
 
-            //Records the real blocks of the world at the virtual blocks location
-            for (int i = 0 ; i < iSize ; i++)
-            {
-                final int iPosition = i;
-                if (virtualBlockLocations[iPosition].isFromTutorial(tutorialPlaythrough))
-                {
-                    //Store the block details in local objects
-                    Location location = virtualBlockLocations[iPosition].location;
-                    BlockData realBlock = world.getBlockData(location).clone(); //This actually gets run asynchronously and takes over a second sometimes
-
-                    //Adds the real block at this location to the list
-                    realBlocks.put(location, realBlock);
-
-//                    Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_BLUE +"Block recorded at ("
-//                            +virtualBlockLocations[iPosition].location.getX()+","
-//                            +virtualBlockLocations[iPosition].location.getY()+","
-//                            +virtualBlockLocations[iPosition].location.getZ()
-//                            +") with material: "+realBlock.getMaterial());
-                }
-            }
-
             //We set virtual blocks to the world so that it takes them into account in the WE calculation
-            //Wait 15 ticks before setting the virtual blocks to the world because the recording of the blocks (see for loop above)
+            //Wait ~25 ticks before setting the virtual blocks to the world because the recording of the blocks (see for loop above)
             // often overruns by several ticks and ends up recording the blocks after they are set below
+
+            // ---------------- Begin Placing Virtual Blocks ----------------
+
             Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
                 @Override
                 public void run() {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the virtual blocks to the world on task: "+iTaskID);
-                    //Sets the real block to that of the virtual block at this location
-                    for (int i = 0 ; i < iSize ; i++)
-                    {
-                        final int iPosition = i;
-                        if (virtualBlockLocations[iPosition].isFromTutorial(tutorialPlaythrough))
-                        {
-                            Location location = virtualBlockLocations[iPosition].location;
 
-                            //Sets the real block to that of the virtual block at this location
-                            world.setBlockData(location, virtualBlockData[iPosition]);
+                    //Declares the temporary list object
+                    VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
+
+                    //Goes through all virtual block groups
+                    int iTasksActive = virtualBlockGroups.size();
+                    for (int j = 0 ; j < iTasksActive ; j++)
+                    {
+                        //Extracts the jth virtual block group
+                        virtualBlockGroup = virtualBlockGroups.get(j);
+
+                        //Checks whether this group and this calculation are part of the same lesson
+                        if (!virtualBlockGroup.isOfPlaythrough(tutorialPlaythrough))
+                        {
+                            continue;
                         }
+
+                        //Call for these blocks to be placed on the world
+                        virtualBlockGroup.addBlocksToWorld();
                     }
 
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Finished recording the world blocks and setting virtual blocks on task: "+iTaskID);
@@ -369,11 +373,11 @@ public class WorldEditCalculation
 class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IBatchProcessor
 {
     WorldEditCalculation worldEditCalculation;
-    ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks;
+    VirtualBlockGroup<Location, BlockData> virtualBlocks;
 
     private final int iTaskID;
 
-    public BlockChangeRecorderExtentFAWE(Extent originalExtent, WorldEditCalculation worldEditCalculation, ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks, int iTaskID)
+    public BlockChangeRecorderExtentFAWE(Extent originalExtent, WorldEditCalculation worldEditCalculation, VirtualBlockGroup<Location, BlockData> virtualBlocks, int iTaskID)
     {
         super(originalExtent);
         this.worldEditCalculation = worldEditCalculation;
@@ -547,14 +551,8 @@ class BlockChangeRecorderExtentFAWE extends AbstractDelegateExtent implements IB
      */
     private void recordBlockChange(Location location, BlockData blockDataOld, BlockData blockDataNew)
     {
-        //Notify the console of a block change
-//        Bukkit.getConsoleSender().sendMessage("[TeachingTutorials] Block change detected | Old block: " +blockDataOld.getMaterial() +", New block: " +blockDataNew.getMaterial());
-
-        //Creates a virtual block
-        VirtualBlock virtualBlock = new VirtualBlock(worldEditCalculation.getTutorialPlaythrough(), worldEditCalculation.getPlayer(), location, blockDataNew);
-
-        //Adds it to the new list
-        virtualBlocks.put(virtualBlock.blockLocation, virtualBlock.blockData);
+        //Adds it to the new list of virtual blocks
+        virtualBlocks.put(location, blockDataNew);
     }
 }
 

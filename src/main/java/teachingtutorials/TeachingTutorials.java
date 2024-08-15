@@ -2,6 +2,7 @@ package teachingtutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -53,11 +54,26 @@ public class TeachingTutorials extends JavaPlugin
     //A list of all ongoing location creations
     public ArrayList<NewLocation> newLocations;
 
-    //A list of all virtual blocks
-    public ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks;
+    //A list of all virtual block groups. Each task's virtual blocks are stored in a group and placed here when active
+    private ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups;
 
     //Identifies which world edit is being used
     public WorldEditImplementation worldEditImplementation;
+
+    public void addVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
+    {
+        virtualBlockGroups.add(virtualBlocks);
+    }
+
+    public void removeVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
+    {
+        virtualBlockGroups.remove(virtualBlocks);
+    }
+
+    public ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>>  getVirtualBlockGroups()
+    {
+        return virtualBlockGroups;
+    }
 
     @Override
     public void onEnable()
@@ -116,7 +132,7 @@ public class TeachingTutorials extends JavaPlugin
         players = new ArrayList<>();
         lessons = new ArrayList<>();
         newLocations = new ArrayList<>();
-        virtualBlocks = new ConcurrentHashMap<>();
+        virtualBlockGroups = new ArrayList<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
@@ -209,7 +225,6 @@ public class TeachingTutorials extends JavaPlugin
         //----------Sets up event check----------
         //---------------------------------------
 
-        //3 second timer - checks events
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
             {
@@ -263,14 +278,18 @@ public class TeachingTutorials extends JavaPlugin
         //----------------------------------------
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
         {
-            int iSize;
-            iSize = virtualBlocks.size();
-            VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
-            BlockData[] blockData = virtualBlocks.values().toArray(BlockData[]::new);
+            //Declares the temporary list object
+            VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
 
-            for (int i = 0 ; i < iSize ; i++)
+            //Goes through all virtual block groups
+            int iTasksActive = virtualBlockGroups.size();
+            for (int j = 0 ; j < iTasksActive ; j++)
             {
-                locations[i].sendUpdate(blockData[i]);
+                //Extracts the jth virtual block group
+                virtualBlockGroup = virtualBlockGroups.get(j);
+
+                //Calls for the blocks to be displayed
+                virtualBlockGroup.displayBlocks();
             }
         }, 0, 10);
 

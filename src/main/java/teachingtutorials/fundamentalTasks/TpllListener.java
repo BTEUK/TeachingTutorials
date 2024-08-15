@@ -31,13 +31,20 @@ public class TpllListener extends Task implements Listener
 
     private DifficultyListener difficultyListener;
 
-    //Used in a lesson
-    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty)
+    /**
+     * Used for a lesson
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param szAnswers
+     * @param fDifficulty
+     */
+    public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fDifficulty)
     {
-        super(plugin);
-        this.type = "tpll";
-        this.player = player;
-        this.parentGroup = parentGroup;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "tpll", szDetails, false);
 
         //Extracts the answers
         String[] cords = szAnswers.split(",");
@@ -57,25 +64,21 @@ public class TpllListener extends Task implements Listener
             this.fAccuracies[1] = Float.parseFloat(szAccuracies[1]);
         }
 
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
-
         this.fDifficulty = fDifficulty;
-
-        this.bNewLocation = false;
     }
 
-    //Used when creating a new location
+    /**
+     * Used when creating a new location
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     */
     public TpllListener(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
-        super(plugin);
-        this.type = "tpll";
-        this.player = player;
-        this.bNewLocation = true;
-        this.parentGroup = parentGroup;
-        this.iTaskID = iTaskID;
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "tpll", szDetails, true);
 
         //Listen out for difficulty - There will only be one difficulty listener per tpll command to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.tpll);
@@ -144,7 +147,7 @@ public class TpllListener extends Task implements Listener
                     return; //Returns if the tpll was not in the bounds of the earth
 
                 //Checks whether it is a new location
-                if (bNewLocation)
+                if (bCreatingNewLocation)
                 {
                     //Set the answers
                     LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);

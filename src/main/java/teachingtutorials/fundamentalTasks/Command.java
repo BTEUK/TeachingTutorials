@@ -1,36 +1,27 @@
 package teachingtutorials.fundamentalTasks;
 
-import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.extension.platform.permission.ActorSelectorLimits;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.regions.selector.CuboidRegionSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.util.BlockVector;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
-import teachingtutorials.utils.VirtualBlock;
 import teachingtutorials.utils.WorldEdit;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 
 enum commandType
 {
@@ -53,10 +44,21 @@ public class Command extends Task implements Listener
 
     private ArrayList<Task> tasksInGroup;
 
-    //Used in a lesson
-    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
+    /**
+     * Used in a lesson
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param szAnswers
+     * @param fDifficulty
+     * @param tasks
+     */
+    public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fDifficulty, ArrayList<Task> tasks)
     {
-        super(plugin);
+        super(plugin, player, parentGroup, iTaskID, iOrder, "command", szDetails, false);
         this.type = "command";
         this.player = player;
         this.parentGroup = parentGroup;
@@ -96,21 +98,22 @@ public class Command extends Task implements Listener
         }
 
         this.fDifficulty = fDifficulty;
-
-        this.bNewLocation = false;
     }
 
-    //Used when creating a new location
+    /**
+     * Used when creating a new location
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param tasks
+     */
     public Command(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, ArrayList<Task> tasks)
     {
-        super(plugin);
-        this.type = "command";
-        this.player = player;
-        this.bNewLocation = true;
-        this.parentGroup = parentGroup;
-        this.iTaskID = iTaskID;
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "command", szDetails, true);
+
         this.commandType = teachingtutorials.fundamentalTasks.commandType.valueOf(szDetails);
 
         //Listen out for difficulty - There will only be one difficulty listener per command to avoid bugs
@@ -139,7 +142,7 @@ public class Command extends Task implements Listener
         String command = event.getMessage();
 
         //Checks whether it is a new location
-        if (bNewLocation) //Set the answers
+        if (bCreatingNewLocation) //Set the answers
         {
             LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
 
@@ -333,9 +336,9 @@ public class Command extends Task implements Listener
             RegionSelector regionSelector = new CuboidRegionSelector(BukkitAdapter.adapt(world), selectionPoint1, selectionPoint2);
 
             //Calculates the virtual blocks
-            WorldEdit.BlocksCalculator(iTaskID, virtualBlocks, regionSelector, szTargetCommand, szTargetCommandArgs.split(" "), world, player, parentGroup.parentStep.parentStage.tutorialPlaythrough);
-        }
+            WorldEdit.BlocksCalculator(iTaskID, virtualBlocks, regionSelector, szTargetCommand, szTargetCommandArgs.split(" "), parentGroup.parentStep.parentStage.tutorialPlaythrough);
 
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] All virtual blocks for this task: "+virtualBlocks.size());
+            //It will create a new calculation object and add this to the queue. The plugin will calculate the blocks when available
+        }
     }
 }

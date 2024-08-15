@@ -113,6 +113,9 @@ public class Step
         return selectionCompleteHold;
     }
 
+    /**
+     * Displays the virtual blocks of all tasks is this step
+     */
     public void displayAllVirtualBlocks()
     {
         //Gets the groups from the DB
@@ -125,6 +128,11 @@ public class Step
         }
     }
 
+    /**
+     * Fetches the list of groups of this step from the database and stores this in {@link #groups}.
+     * <p> </p>
+     * The order of groups does not matter and as such the order that they are fetched and stored in doesn't matter.
+     */
     private void fetchAndInitialiseGroups()
     {
         groups = Group.fetchGroupsByStepID(player, plugin, this);
@@ -232,14 +240,14 @@ public class Step
             for (i = 0; i < iGroups; i++)
             {
                 final int I = i;
-                //Registers each group 0.2 seconds apart from each other - this is to allow all world edit block calculations to complete
-                //WE block calculations involves running the WE command over the console and detecting and recording changes, before
-                // then removing those changes from the actual world. This involves delicate use of listeners, hence this 0.1 second control
-                Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), () ->
-                {
+//                //Registers each group GroupRegistrationTimeGapTicks/20 seconds apart from each other - this is to allow all world edit block calculations to complete
+//                //WE block calculations involves running the WE command over the console and detecting and recording changes, before
+//                // then removing those changes from the actual world. This involves delicate use of listeners, hence this 0.1 second control
+//                Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), () ->
+//                {
                     groups.get(I).initialRegister();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Registered group "+(I+1));
-                }, i*4L);
+//                }, i*plugin.getConfig().getLong("GroupRegistrationTimeGapTicks"));
             }
 
             //TP to start location, and store this location for later use

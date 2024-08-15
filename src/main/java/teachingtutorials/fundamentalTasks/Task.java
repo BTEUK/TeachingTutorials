@@ -2,18 +2,18 @@ package teachingtutorials.fundamentalTasks;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.Lesson;
-import teachingtutorials.utils.VirtualBlock;
+import teachingtutorials.utils.VirtualBlockGroup;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.logging.Level;
 
 public class Task
 {
@@ -46,12 +46,13 @@ public class Task
 
     public boolean bActive;
 
-    protected boolean bNewLocation;
+    //This really ought to be made final
+    protected final boolean bCreatingNewLocation;
 
     /**
      * A list of virtual blocks which are to be displayed as a result of task completion
      */
-    protected HashSet<VirtualBlock> virtualBlocks;
+    protected VirtualBlockGroup<Location, BlockData> virtualBlocks;
 
     public void register()
     {
@@ -61,18 +62,40 @@ public class Task
     public Task(int iTaskID)
     {
         this.iTaskID = iTaskID;
+        this.bCreatingNewLocation = false;
     }
 
     public Task(String type, String szDetails)
     {
         this.type = type;
         this.szDetails = szDetails;
+        this.bCreatingNewLocation = false;
     }
 
-    public Task(TeachingTutorials plugin)
+    /**
+     * Used when creating a task object from the database when running a lesson. Any other use may cause issues.
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szType
+     * @param szDetails
+     * @param bCreatingNewLocation Whether this task is initialised during a new location creation
+     */
+    public Task(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szType, String szDetails, boolean bCreatingNewLocation)
     {
         this.plugin = plugin;
-        this.virtualBlocks = new HashSet<>();
+        this.player = player;
+        this.parentGroup = parentGroup;
+        this.iTaskID = iTaskID;
+        this.iOrder = iOrder;
+        this.szDetails = szDetails;
+        this.type = szType;
+
+        this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroup.parentStep.parentStage.tutorialPlaythrough);
+
+        this.bCreatingNewLocation = bCreatingNewLocation;
     }
 
     /**
@@ -101,27 +124,19 @@ public class Task
     }
 
     /**
-     * Adds all of the virtual blocks of this task to the plugin's virtual blocks list
+     * Adds the list of virtual blocks of this task to the plugin's virtual blocks list
      */
     public void displayVirtualBlocks()
     {
-        for (VirtualBlock virtualBlock: virtualBlocks)
-        {
-            //The put will overwrite any existing virtual blocks at this location
-            plugin.virtualBlocks.put(virtualBlock.blockLocation, virtualBlock.blockData);
-        }
+        plugin.addVirtualBlocks(virtualBlocks);
     }
 
     /**
-     * Removes all of the virtual blocks of this task from the plugin's virtual blocks list
+     * Removes the list of virtual blocks of this task from the plugin's list of virtual block groups
      */
     protected void removeVirtualBlocks()
     {
-        for (VirtualBlock virtualBlock: virtualBlocks)
-        {
-            plugin.virtualBlocks.remove(virtualBlock.blockLocation);
-        }
-        plugin.getLogger().info(ChatColor.AQUA +"All virtual blocks from task with task id " +iTaskID +" removed");
+        plugin.removeVirtualBlocks(virtualBlocks);
     }
 
     public void newLocationSpotHit()
@@ -157,6 +172,7 @@ public class Task
             while (resultSet.next())
             {
                 iCount++;
+                int iTaskID = resultSet.getInt("Tasks.TaskID");
                 String szType = resultSet.getString("Tasks.TaskType");
                 int iOrder = resultSet.getInt("Tasks.Order");
                 String szDetails = resultSet.getString("Tasks.Details");
@@ -173,23 +189,23 @@ public class Task
                 switch (szType)
                 {
                     case "tpll":
-                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fTpllDifficulty);
+                        TpllListener tpllListener = new TpllListener(plugin, player, parentGroup, iTaskID, iOrder, szDetails, szAnswers, fTpllDifficulty);
                         tasks.add(tpllListener);
                         break;
                     case "selection":
-                        Selection selection = new Selection(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty);
+                        Selection selection = new Selection(plugin, player, parentGroup, iTaskID, iOrder, szDetails, szAnswers, fWEDifficulty);
                         tasks.add(selection);
                         break;
                     case "command":
-                        Command command = new Command(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty, tasks);
+                        Command command = new Command(plugin, player, parentGroup, iTaskID, iOrder, szDetails, szAnswers, fWEDifficulty, tasks);
                         tasks.add(command);
                         break;
                     case "chat":
-                        Chat chat = new Chat(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fWEDifficulty);
+                        Chat chat = new Chat(plugin, player, parentGroup, iTaskID, iOrder, szDetails, szAnswers, fWEDifficulty);
                         tasks.add(chat);
                         break;
                     case "place":
-                        Place place = new Place(plugin, player, parentGroup, iOrder, szDetails, szAnswers, fColouringDifficulty);
+                        Place place = new Place(plugin, player, parentGroup, iTaskID, iOrder, szDetails, szAnswers, fColouringDifficulty);
                         tasks.add(place);
                         break;
                 }

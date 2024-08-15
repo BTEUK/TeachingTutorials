@@ -155,7 +155,11 @@ public class Lesson extends TutorialPlaythrough
         return true;
     }
 
-    //Resumes a previously started lesson
+    /**
+     * Resumes a previously started lesson
+     * @param bResetProgress Whether to reset the progress to stage 1 step 1
+     * @return Whether or not the lesson resumed successfully
+     */
     private boolean resumeLesson(boolean bResetProgress)
     {
         //Fetches the tutorial ID, the location, the stage and the step the player is at in their current tutorial
@@ -171,12 +175,16 @@ public class Lesson extends TutorialPlaythrough
                 +", Tutorial ID = " +this.tutorial.getTutorialID()
                 +" and LocationID = "+this.location.getLocationID());
 
-        //Redisplays all virtual blocks
+        //Redisplays virtual blocks of steps already completed
+        //Goes through all stages up to the current
         for (int i = 0 ; i < iStageIndex ; i++)
         {
+            //Checks whether we are at their current stage or not
             if (i != iStageIndex - 1)
+                //If this is not the current stage, display virtual blocks of all steps
                 stages.get(i).displayAllVirtualBlocks(0);
             else
+                //Displays virtual blocks up to the step they are on
                 stages.get(i).displayAllVirtualBlocks(iStepToStart);
         }
 

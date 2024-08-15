@@ -10,10 +10,9 @@ import teachingtutorials.tutorials.Stage;
 import teachingtutorials.tutorials.Tutorial;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
-import teachingtutorials.utils.VirtualBlockLocation;
+import teachingtutorials.utils.VirtualBlockGroup;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 //To be extended by lesson and new location
 //They both share a lot of data and processes, and they are also rather similar in the user experience as well
@@ -95,17 +94,25 @@ public abstract class TutorialPlaythrough
         playthroughCommandListeners.unregister();
 
         //Removes virtual blocks
-        HashMap<VirtualBlockLocation, BlockData> virtualBlocks = plugin.virtualBlocks;
-        int iSize;
-        iSize = virtualBlocks.size();
-        VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
+        ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups = plugin.getVirtualBlockGroups();
 
-        for (int i = 0 ; i < iSize ; i++)
+        VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlockGroup;
+
+        //Goes through the list of the plugins active virtual block groups
+        for (int i = 0 ; i < virtualBlockGroups.size() ; i++)
         {
-            if (locations[i].isFromTutorial(this))
+            virtualBlockGroup = virtualBlockGroups.get(i);
+
+            //Checks whether the virtual block group is of this tutorial playthrough
+            if (virtualBlockGroup.isOfPlaythrough(this))
             {
-                virtualBlocks.remove(locations[i]);
-                locations[i].removeAndReset();
+                //Removes the list from the plugin's list of lists
+                this.plugin.removeVirtualBlocks(virtualBlockGroup);
+
+                //Resets the blocks back to the original state for the players
+                virtualBlockGroup.removeBlocks();
+
+                i--;
             }
         }
 

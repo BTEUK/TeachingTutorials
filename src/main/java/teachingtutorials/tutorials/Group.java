@@ -149,6 +149,13 @@ public class Group
         currentTask.unregister();
     }
 
+    /**
+     * Retrieves from the database the list of groups for the specified step
+     * @param player The player playing through the tutorial
+     * @param plugin The instance of the plugin
+     * @param step The stage for which all groups must be retrieved
+     * @return A list of groups for this step
+     */
     public static ArrayList<Group> fetchGroupsByStepID(Player player, TeachingTutorials plugin, Step step)
     {
         ArrayList<Group> groups = new ArrayList<>();

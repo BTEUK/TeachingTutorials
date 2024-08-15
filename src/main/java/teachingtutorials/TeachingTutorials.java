@@ -2,6 +2,7 @@ package teachingtutorials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,6 +19,7 @@ import teachingtutorials.listeners.GlobalPlayerCommandProcess;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.*;
 import teachingtutorials.utils.*;
+import teachingtutorials.utils.plugins.WorldEditImplementation;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,6 +27,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TeachingTutorials extends JavaPlugin
 {
@@ -51,8 +54,26 @@ public class TeachingTutorials extends JavaPlugin
     //A list of all ongoing location creations
     public ArrayList<NewLocation> newLocations;
 
-    //A list of all virtual blocks
-    public HashMap<VirtualBlockLocation, BlockData> virtualBlocks;
+    //A list of all virtual block groups. Each task's virtual blocks are stored in a group and placed here when active
+    private ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups;
+
+    //Identifies which world edit is being used
+    public WorldEditImplementation worldEditImplementation;
+
+    public void addVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
+    {
+        virtualBlockGroups.add(virtualBlocks);
+    }
+
+    public void removeVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
+    {
+        virtualBlockGroups.remove(virtualBlocks);
+    }
+
+    public ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>>  getVirtualBlockGroups()
+    {
+        return virtualBlockGroups;
+    }
 
     @Override
     public void onEnable()
@@ -80,6 +101,29 @@ public class TeachingTutorials extends JavaPlugin
             return;
         }
 
+        if (Bukkit.getPluginManager().isPluginEnabled("FastAsyncWorldEdit"))
+        {
+            worldEditImplementation = WorldEditImplementation.FAWE;
+            getLogger().info("WorldEdit implementation detected as FAWE");
+        }
+        else if (Bukkit.getPluginManager().isPluginEnabled("WorldEdit"))
+        {
+            worldEditImplementation = WorldEditImplementation.WorldEdit;
+            getLogger().severe("WorldEdit implementation detected as WorldEdit (not FAWE). Please change to FAWE to continue.");
+            getLogger().severe("Contact the authors of the plugin for support");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+        else
+        {
+            worldEditImplementation = WorldEditImplementation.NONE;
+            getLogger().severe("*** No type of WorldEdit is loaded on the server. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
+
         // Plugin startup logic
         TeachingTutorials.instance = this;
         TeachingTutorials.config = this.getConfig();
@@ -88,7 +132,7 @@ public class TeachingTutorials extends JavaPlugin
         players = new ArrayList<>();
         lessons = new ArrayList<>();
         newLocations = new ArrayList<>();
-        virtualBlocks = new HashMap<>();
+        virtualBlockGroups = new ArrayList<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
@@ -181,7 +225,6 @@ public class TeachingTutorials extends JavaPlugin
         //----------Sets up event check----------
         //---------------------------------------
 
-        //3 second timer - checks events
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
             {
@@ -235,17 +278,42 @@ public class TeachingTutorials extends JavaPlugin
         //----------------------------------------
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
         {
-            int iSize;
-            iSize = virtualBlocks.size();
-            VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
-            BlockData[] blockData = virtualBlocks.values().toArray(BlockData[]::new);
+            //Declares the temporary list object
+            VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
 
-            for (int i = 0 ; i < iSize ; i++)
+            //Goes through all virtual block groups
+            int iTasksActive = virtualBlockGroups.size();
+            for (int j = 0 ; j < iTasksActive ; j++)
             {
-                locations[i].sendUpdate(blockData[i]);
+                //Extracts the jth virtual block group
+                virtualBlockGroup = virtualBlockGroups.get(j);
+
+                //Calls for the blocks to be displayed
+                virtualBlockGroup.displayBlocks();
             }
         }, 0, 10);
 
+
+        //-----------------------------------------
+        //------ Performs calculation events ------
+        //-----------------------------------------
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
+        {
+            if (!WorldEdit.isCurrentCalculationOngoing())
+            {
+                WorldEditCalculation worldEditCalculation = WorldEdit.pendingCalculations.peek();
+                if (worldEditCalculation !=null)
+                {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation not already in progress, a new one has been detected");
+                    WorldEdit.setCalculationInProgress();
+                    worldEditCalculation.runCalculation();
+                }
+            }
+            else
+            {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation ongoing, not initiating a new one");
+            }
+        }, 0, 4);
 
         //---------------------------------------
         //---------------Listeners---------------

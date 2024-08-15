@@ -20,31 +20,38 @@ public class Chat extends Task implements Listener
 
     private DifficultyListener difficultyListener;
 
-    //Used in a lesson
-    public Chat(TeachingTutorials plugin, Player player, Group parentGroup, int iOrder, String szDetails, String szAnswers, float fDifficulty)
+    /**
+     * Used in a lesson
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     * @param szAnswers
+     * @param fDifficulty
+     */
+    public Chat(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fDifficulty)
     {
-        super(plugin);
-        this.type = "chat";
-        this.player = player;
-        this.parentGroup = parentGroup;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "chat", szDetails, false);
         this.szTargetAnswer = szAnswers;
         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Target answer = "+szAnswers);
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+
         this.fDifficulty = fDifficulty;
-        this.bNewLocation = false;
     }
 
+    /**
+     * Used when creating a new location
+     * @param plugin
+     * @param player
+     * @param parentGroup
+     * @param iTaskID
+     * @param iOrder
+     * @param szDetails
+     */
     public Chat(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
     {
-        super(plugin);
-        this.type = "chat";
-        this.player = player;
-        this.bNewLocation = true;
-        this.parentGroup = parentGroup;
-        this.iTaskID = iTaskID;
-        this.iOrder = iOrder;
-        this.szDetails = szDetails;
+        super(plugin, player, parentGroup, iTaskID, iOrder, "chat", szDetails, true);
 
         //Listen out for difficulty - There will only be one difficulty listener per chat to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.chat);
@@ -72,7 +79,7 @@ public class Chat extends Task implements Listener
         String szChat = event.getMessage();
 
         //Checks whether it is a new location
-        if (bNewLocation) //Set the answers
+        if (bCreatingNewLocation) //Set the answers
         {
             //Creates a new locationTask object to hold the data that is to be stored in the LocationTasks table of the DB
             LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);

@@ -4,12 +4,11 @@ import com.google.common.base.Joiner;
 import com.sk89q.worldedit.regions.RegionSelector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import teachingtutorials.TutorialPlaythrough;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorldEdit
@@ -17,7 +16,7 @@ public class WorldEdit
     /**
      * A queue of pending calculations to be performed
      */
-    public static LinkedList<WorldEditCalculation> pendingCalculations = new LinkedList<>();
+    public static ConcurrentLinkedQueue<WorldEditCalculation> pendingCalculations = new ConcurrentLinkedQueue<>();
     private static AtomicBoolean bCurrentCalculationOngoing = new AtomicBoolean(false);
 
     //Records whether there are virtual blocks on the real world
@@ -74,7 +73,7 @@ public class WorldEdit
      * @param tutorialPlaythrough The tutorial playthrough which this task belongs to
      * @return
      */
-    public static void BlocksCalculator(int iTaskID, final ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks, RegionSelector correctSelectionRegion, String szCommandLabel, String[] szCommandArgs, TutorialPlaythrough tutorialPlaythrough)
+    public static void BlocksCalculator(int iTaskID, final VirtualBlockGroup<Location, BlockData> virtualBlocks, RegionSelector correctSelectionRegion, String szCommandLabel, String[] szCommandArgs, TutorialPlaythrough tutorialPlaythrough)
     {
         //1. Modifies the command
         //This code is taken from WorldEdit - See https://enginehub.org/

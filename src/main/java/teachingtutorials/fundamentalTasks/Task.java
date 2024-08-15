@@ -2,18 +2,18 @@ package teachingtutorials.fundamentalTasks;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.Lesson;
-import teachingtutorials.utils.VirtualBlockLocation;
+import teachingtutorials.utils.VirtualBlockGroup;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Task
 {
@@ -52,7 +52,7 @@ public class Task
     /**
      * A list of virtual blocks which are to be displayed as a result of task completion
      */
-    protected ConcurrentHashMap<VirtualBlockLocation, BlockData> virtualBlocks;
+    protected VirtualBlockGroup<Location, BlockData> virtualBlocks;
 
     public void register()
     {
@@ -93,7 +93,7 @@ public class Task
         this.szDetails = szDetails;
         this.type = szType;
 
-        this.virtualBlocks = new ConcurrentHashMap<>();
+        this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroup.parentStep.parentStage.tutorialPlaythrough);
 
         this.bCreatingNewLocation = bCreatingNewLocation;
     }
@@ -124,34 +124,19 @@ public class Task
     }
 
     /**
-     * Adds all of the virtual blocks of this task to the plugin's virtual blocks list
+     * Adds the list of virtual blocks of this task to the plugin's virtual blocks list
      */
     public void displayVirtualBlocks()
     {
-        int iSize = virtualBlocks.size();
-        VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
-        BlockData[] blockData = virtualBlocks.values().toArray(BlockData[]::new);
-
-        for (int i = 0; i < iSize; i++)
-        {
-            //The put will overwrite any existing virtual blocks at this location
-            plugin.virtualBlocks.put(locations[i], blockData[i]);
-        }
+        plugin.addVirtualBlocks(virtualBlocks);
     }
 
     /**
-     * Removes all of the virtual blocks of this task from the plugin's virtual blocks list
+     * Removes the list of virtual blocks of this task from the plugin's list of virtual block groups
      */
     protected void removeVirtualBlocks()
     {
-        int iSize = virtualBlocks.size();
-        VirtualBlockLocation[] locations = virtualBlocks.keySet().toArray(VirtualBlockLocation[]::new);
-
-        for (int i = 0; i < iSize; i++)
-        {
-            plugin.virtualBlocks.remove(locations[i]);
-        }
-        plugin.getLogger().info(ChatColor.AQUA +"All virtual blocks from task with task id " +iTaskID +" removed");
+        plugin.removeVirtualBlocks(virtualBlocks);
     }
 
     public void newLocationSpotHit()

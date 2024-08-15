@@ -15,7 +15,6 @@ import teachingtutorials.newlocation.DifficultyListener;
 import teachingtutorials.tutorials.Group;
 import teachingtutorials.tutorials.LocationTask;
 import teachingtutorials.utils.Display;
-import teachingtutorials.utils.VirtualBlock;
 
 
 public class Place extends Task implements Listener
@@ -53,7 +52,7 @@ public class Place extends Task implements Listener
         this.fDifficulty = fDifficulty;
 
         //Calculates the virtual block
-        calculateVirtualBlocks();
+        addVirtualBlock();
     }
 
     /**
@@ -146,8 +145,8 @@ public class Place extends Task implements Listener
             //SpotHit is then called from inside the difficulty listener once the difficulty has been established
             //This is what moves it onto the next task
 
-            //Calculates the list of virtual blocks
-            calculateVirtualBlocks();
+            //Adds the virtual block
+            addVirtualBlock();
 
             //Displays the virtual blocks
             displayVirtualBlocks();
@@ -229,11 +228,9 @@ public class Place extends Task implements Listener
     /**
      * Uses the target coords and target material to calculate the virtual block
      */
-    public void calculateVirtualBlocks()
+    public void addVirtualBlock()
     {
-        VirtualBlock virtualPlaceBlock = new VirtualBlock(this.parentGroup.parentStep.parentStage.tutorialPlaythrough, player, player.getWorld(),
-                                                        iTargetCoords[0], iTargetCoords[1], iTargetCoords[2],
-                                                        mTargetMaterial.createBlockData());
-        this.virtualBlocks.put(virtualPlaceBlock.blockLocation, virtualPlaceBlock.blockData);
+        Location location = new Location(this.parentGroup.parentStep.parentStage.tutorialPlaythrough.getLocation().getWorld(), iTargetCoords[0], iTargetCoords[1], iTargetCoords[2]);
+        this.virtualBlocks.put(location, mTargetMaterial.createBlockData());
     }
 }

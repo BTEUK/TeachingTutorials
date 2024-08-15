@@ -111,24 +111,36 @@ public class Stage
         return (iOrder == 1);
     }
 
+    /**
+     * Displays the virtual blocks of all tasks in all steps of this stage up to but not including the iStepToStartTH step
+     * @param iStepToStart The step at which to start the lesson at (this is not zero indexed. The first step has iStepToStart = 1).
+     *                     <p> </p>
+     *                     For clarity, if iStepToStart is 1, no virtual blocks from will be displayed from this stage.
+     *                     <p>If iStepToStart = 2, only the virtual blocks from the first step (and all previous stages) will be displayed at the start of the lesson.</p>
+     */
     public void displayAllVirtualBlocks(int iStepToStart)
     {
-        //Gets the steps from the DB
+        //Gets the steps of this stage from the DB
         fetchAndInitialiseSteps();
 
+        //The number of steps to display the virtual blocks for
         int iNumSteps;
 
-        if (iStepToStart == 0)
+        if (iStepToStart <= 1)
             iNumSteps = steps.size();
         else
             iNumSteps = iStepToStart - 1;
 
+        //Calls each step to display all relevant virtual blocks
         for (int i = 0 ; i < iNumSteps ; i++)
         {
             steps.get(i).displayAllVirtualBlocks();
         }
     }
 
+    /**
+     * Fetches the list of steps of this stage from the database and stores this in {@link #steps}. The list is ordered.
+     */
     private void fetchAndInitialiseSteps()
     {
         //Gets a list of all of the steps of the specified stage and loads each with the relevant data.

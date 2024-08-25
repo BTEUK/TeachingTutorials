@@ -25,9 +25,7 @@ import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.TutorialPlaythrough;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,9 +39,6 @@ public class WorldEditCalculation
     private final TutorialPlaythrough tutorialPlaythrough;
     private final int iTaskID;
 
-    //Records the default blocks of the world
-    public Map<Location, BlockData> realBlocks = new HashMap<>();
-
     //Indicates whether the blocks in the world need resetting
     private AtomicBoolean bBlocksRequireReset = new AtomicBoolean(false);
 
@@ -56,12 +51,6 @@ public class WorldEditCalculation
         //Checks whether the blocks have already been reset and if not then mark it as having been reset so that something else doesn't access it
         if (bBlocksRequireReset.getAndSet(false))
         {
-            //Extracts the real blocks
-            int iSize;
-            iSize = realBlocks.size();
-            Location[] locations = realBlocks.keySet().toArray(Location[]::new);
-            BlockData[] blockData = realBlocks.values().toArray(BlockData[]::new);
-
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] About to run the resetting of the blocks on the world for task: " +iTaskID);
 
             //Run the resetting
@@ -69,14 +58,29 @@ public class WorldEditCalculation
                 @Override
                 public void run()
                 {
+                    //Get the list of virtual blocks
+                    VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
+
+                    //Declares the temporary list object
+                    VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
+
                     Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] Running the resetting of the blocks on the world for task: " +iTaskID);
 
-                    //Set the blocks of the world back to the correct blocks
-                    World world = getWorld();
-                    for (int i = 0 ; i < iSize ; i++)
+                    //Goes through all virtual block groups - will do this going from end of tutorial to start
+                    int iTasksActive = virtualBlockGroups.length;
+                    for (int j = iTasksActive-1 ; j >=0 ; j--)
                     {
-                        world.setBlockData(locations[i], blockData[i]);
-//                        Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE +"[TeachingTutorials] Setting block at "+locations[i].toString()  +" to the correct block: "+blockData[i].getMaterial().toString());
+                        //Extracts the jth virtual block group
+                        virtualBlockGroup = virtualBlockGroups[j];
+
+                        //Checks whether this group and this calculation are part of the same lesson
+                        if (!virtualBlockGroup.isOfPlaythrough(tutorialPlaythrough))
+                        {
+                            continue;
+                        }
+
+                        //Call for the world blocks to be reset
+                        virtualBlockGroup.resetWorld();
                     }
 
                     //Wait a few ticks before saying that the blocks have been set to give it a chance to set the blocks before the next calculation
@@ -96,7 +100,7 @@ public class WorldEditCalculation
 
                             Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] Marked the blocks as having been reset for task: " +iTaskID);
                         }
-                    }, 5L);
+                    }, TeachingTutorials.getInstance().getConfig().getLong("BlockRecordDelay"));
                 }
             });
         }
@@ -251,59 +255,31 @@ public class WorldEditCalculation
                 }
             }, 1L);
         }
-        //If the virtual blocks are off the world then we can record the default world blocks now
+        //If the virtual blocks are off the world then we can set the next one now
         else
         {
-            // ---------------- Begin Recording Real World Blocks ----------------
-
-            //Extracts the current list of virtual blocks
-            ArrayList<VirtualBlockGroup<Location, BlockData>> virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups();
-
-            //Declares the temporary list object
-            VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
-
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Recording the world blocks for: "+iTaskID);
-
-            //Goes through all virtual block groups
-            int iTasksActive = virtualBlockGroups.size();
-            for (int j = 0 ; j < iTasksActive ; j++)
-            {
-                //Extracts the jth virtual block group
-                virtualBlockGroup = virtualBlockGroups.get(j);
-
-                //Checks whether this group and this calculation are part of the same lesson
-                if (!virtualBlockGroup.isOfPlaythrough(this.tutorialPlaythrough))
-                {
-                    continue;
-                }
-
-                //Gets all of the real blocks and adds this list to the list of lists
-                realBlocks.putAll(virtualBlockGroup.getRealBlocks());
-            }
-
             //Marks that virtual blocks have been placed on the real world
             teachingtutorials.utils.WorldEdit.setVirtualBlocksOnRealWorld();
 
-            //We set virtual blocks to the world so that it takes them into account in the WE calculation
-            //Wait ~25 ticks before setting the virtual blocks to the world because the recording of the blocks (see for loop above)
-            // often overruns by several ticks and ends up recording the blocks after they are set below
-
             // ---------------- Begin Placing Virtual Blocks ----------------
 
-            Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
+            Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), new Runnable() {
                 @Override
                 public void run() {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Setting the virtual blocks to the world on task: "+iTaskID);
 
-                    //Declares the temporary list object
+                    //Get the list of virtual blocks
+                    VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
+
+                    //Declares the temporary VirtualBlockGroup object
                     VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
 
-                    //Goes through all virtual block groups
-                    int iTasksActive = virtualBlockGroups.size();
-                    for (int j = 0 ; j < iTasksActive ; j++)
+                    //Goes through all virtual block groups - will do this going from start of tutorial to end
+                    int iTasksActive = virtualBlockGroups.length;
+                    for (int j = iTasksActive-1 ; j >=0 ; j--)
                     {
                         //Extracts the jth virtual block group
-                        virtualBlockGroup = virtualBlockGroups.get(j);
+                        virtualBlockGroup = virtualBlockGroups[j];
 
                         //Checks whether this group and this calculation are part of the same lesson
                         if (!virtualBlockGroup.isOfPlaythrough(tutorialPlaythrough))
@@ -339,7 +315,7 @@ public class WorldEditCalculation
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), szWorldEditCommand);
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Command sent for task: "+iTaskID);
                 }
-            }, TeachingTutorials.getInstance().getConfig().getLong("BlockRecordDelay"));
+            });
         }
     }
 

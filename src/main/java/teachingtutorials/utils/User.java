@@ -190,9 +190,9 @@ public class User
     }
 
 
-    //Updates the scoreboard with the current ratings stored in the User object
-    public void refreshScoreboard()
-    {
+//    //Updates the scoreboard with the current ratings stored in the User object
+//    public void refreshScoreboard()
+//    {
 //        //Get scoreboard
 //        Scoreboard SB;
 //
@@ -219,7 +219,7 @@ public class User
 //        scores.setDisplaySlot(DisplaySlot.SIDEBAR);
 //
 //        this.player.setScoreboard(SB);
-    }
+//    }
 
     public static User identifyUser(TeachingTutorials plugin, Player player)
     {

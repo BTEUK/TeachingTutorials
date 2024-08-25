@@ -512,12 +512,12 @@ public class Lesson extends TutorialPlaythrough
         //And trigger the scoreboard to refresh
         creatorOrStudent.calculateRatings(TeachingTutorials.getInstance().getDBConnection());
 
-        Bukkit.getScheduler().runTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                creatorOrStudent.refreshScoreboard();
-            }
-        });
+//        Bukkit.getScheduler().runTask(plugin, new Runnable() {
+//            @Override
+//            public void run() {
+//                creatorOrStudent.refreshScoreboard();
+//            }
+//        });
 
         //Updates the DB and user's boolean variable, notifies the player of completion
         if (bCompulsory)

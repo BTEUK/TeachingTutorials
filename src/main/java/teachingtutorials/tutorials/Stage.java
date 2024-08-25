@@ -180,15 +180,6 @@ public class Stage
                 //Save the positions of stage and step
                 ((Lesson) tutorialPlaythrough).savePositions();
             }
-
-            //Update tracker scoreboard
-            Bukkit.getScheduler().runTask(plugin, new Runnable() {
-                @Override
-                public void run()
-                {
-                    TrackerScoreboard.updateScoreboard(player, tutorialPlaythrough.getTutorial().szTutorialName, szName, currentStep.getName());
-                }
-            });
         }
         else
         {

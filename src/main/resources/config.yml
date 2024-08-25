@@ -20,5 +20,5 @@ Lobby_Pitch:
 Lobby_Yaw:
 Hologram_Max_Width: 40
 Min_Y: -100
-#Do not decrease below 25 unless you know what you are doing
-BlockRecordDelay: 25
+#Do not decrease below 60 unless you know what you are doing
+BlockRecordDelay: 60

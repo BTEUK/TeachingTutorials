@@ -6,7 +6,7 @@
 
     <groupId>me.bteuk</groupId>
     <artifactId>TeachingTutorials</artifactId>
-    <version>1.1.0-Beta9</version>
+    <version>1.1.0-Beta8.1.6</version>
     <packaging>jar</packaging>
 
     <name>TeachingTutorials</name>
@@ -145,13 +145,6 @@
             <version>5.4</version>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.sk89q.worldedit</groupId>-->
-<!--            <artifactId>worldedit-bukkit</artifactId>-->
-<!--            <version>7.2.10</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>com.fastasyncworldedit</groupId>
             <artifactId>FastAsyncWorldEdit-Core</artifactId>

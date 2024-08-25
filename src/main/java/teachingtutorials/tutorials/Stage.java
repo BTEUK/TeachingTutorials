@@ -124,15 +124,15 @@ public class Stage
         fetchAndInitialiseSteps();
 
         //The number of steps to display the virtual blocks for
-        int iNumSteps;
+        int iNumStepsToDisplay;
 
-        if (iStepToStart <= 1)
-            iNumSteps = steps.size();
+        if (iStepToStart == 0)
+            iNumStepsToDisplay = steps.size();
         else
-            iNumSteps = iStepToStart - 1;
+            iNumStepsToDisplay = iStepToStart - 1;
 
         //Calls each step to display all relevant virtual blocks
-        for (int i = 0 ; i < iNumSteps ; i++)
+        for (int i = 0 ; i < iNumStepsToDisplay ; i++)
         {
             steps.get(i).displayAllVirtualBlocks();
         }

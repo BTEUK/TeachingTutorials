@@ -27,7 +27,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class TeachingTutorials extends JavaPlugin
 {
@@ -55,7 +54,7 @@ public class TeachingTutorials extends JavaPlugin
     public ArrayList<NewLocation> newLocations;
 
     //A list of all virtual block groups. Each task's virtual blocks are stored in a group and placed here when active
-    private ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups;
+    private Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups;
 
     //Identifies which world edit is being used
     public WorldEditImplementation worldEditImplementation;
@@ -70,7 +69,7 @@ public class TeachingTutorials extends JavaPlugin
         virtualBlockGroups.remove(virtualBlocks);
     }
 
-    public ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>>  getVirtualBlockGroups()
+    public Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>>  getVirtualBlockGroups()
     {
         return virtualBlockGroups;
     }
@@ -132,7 +131,7 @@ public class TeachingTutorials extends JavaPlugin
         players = new ArrayList<>();
         lessons = new ArrayList<>();
         newLocations = new ArrayList<>();
-        virtualBlockGroups = new ArrayList<>();
+        virtualBlockGroups = new Stack<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
@@ -285,13 +284,14 @@ public class TeachingTutorials extends JavaPlugin
             int iTasksActive = virtualBlockGroups.size();
             for (int j = 0 ; j < iTasksActive ; j++)
             {
+//                virtualBlockGroups.
                 //Extracts the jth virtual block group
                 virtualBlockGroup = virtualBlockGroups.get(j);
 
                 //Calls for the blocks to be displayed
                 virtualBlockGroup.displayBlocks();
             }
-        }, 0, 10);
+        }, 0, 5);
 
 
         //-----------------------------------------
@@ -313,7 +313,38 @@ public class TeachingTutorials extends JavaPlugin
             {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation ongoing, not initiating a new one");
             }
-        }, 0, 4);
+        }, 0, 5L);
+
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
+        {
+            //Run the resetting
+            Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), new Runnable() {
+                @Override
+                public void run()
+                {
+                    if (WorldEdit.isCurrentCalculationOngoing())
+                    {
+                        //Get the list of virtual blocks
+                        VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
+
+                        //Declares the temporary list object
+                        VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
+
+                        //Goes through all virtual block groups - will do this going from end of tutorial to start
+                        int iTasksActive = virtualBlockGroups.length;
+                        for (int j = iTasksActive-1 ; j >=0 ; j--)
+                        {
+                            //Extracts the jth virtual block group
+                            virtualBlockGroup = virtualBlockGroups[j];
+
+                            //Call for the world blocks to be reset
+                            virtualBlockGroup.resetWorld();
+                            virtualBlockGroup.displayBlocks();
+                        }
+                    }
+                }
+            });
+        }, 0, 60L);
 
         //---------------------------------------
         //---------------Listeners---------------

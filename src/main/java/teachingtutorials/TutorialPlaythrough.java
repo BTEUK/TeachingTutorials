@@ -13,6 +13,7 @@ import teachingtutorials.utils.User;
 import teachingtutorials.utils.VirtualBlockGroup;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 //To be extended by lesson and new location
 //They both share a lot of data and processes, and they are also rather similar in the user experience as well
@@ -94,7 +95,7 @@ public abstract class TutorialPlaythrough
         playthroughCommandListeners.unregister();
 
         //Removes virtual blocks
-        ArrayList<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups = plugin.getVirtualBlockGroups();
+        Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups = plugin.getVirtualBlockGroups();
 
         VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlockGroup;
 

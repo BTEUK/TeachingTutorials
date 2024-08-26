@@ -78,17 +78,21 @@ public abstract class TutorialPlaythrough
             User spyUser = User.identifyUser(plugin, player);
             if (spyUser != null)
             {
-                //Check if they are already spying and if so, remove them from that
-                if (spyUser.isSpying())
-                    spyUser.disableSpying();
+                //Ensures they are idle
+                if (spyUser.currentMode.equals(Mode.Idle))
+                {
+                    //Check if they are already spying and if so, remove them from that
+                    if (spyUser.isSpying())
+                        spyUser.disableSpying();
 
-                //Add them as a spy to this tutorial playthrough
-                spies.add(player);
+                    //Add them as a spy to this tutorial playthrough
+                    spies.add(player);
 
-                //Mark the spy user's spy target to this playthrough
-                spyUser.setSpyTarget(this);
+                    //Mark the spy user's spy target to this playthrough
+                    spyUser.setSpyTarget(this);
 
-                //Refresh happens frequently so no need to call for an adhoc refresh
+                    //Refresh happens frequently so no need to call for an adhoc refresh
+                }
             }
         }
     }

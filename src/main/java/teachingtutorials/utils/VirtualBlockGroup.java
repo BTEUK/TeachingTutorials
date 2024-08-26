@@ -26,9 +26,6 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
     //WARNING: This may not hold the true value of the block. It is important to reset all virtual blocks groups in the reverse order to which they were created
     private ConcurrentHashMap<Location, BlockData> realWorldBlocks = new ConcurrentHashMap<>();
 
-    //A list of spies also viewing the virtual blocks
-    private ArrayList<Player> spies = new ArrayList<>();
-
     public VirtualBlockGroup(TutorialPlaythrough tutorialPlaythrough)
     {
         this.tutorialPlaythrough = tutorialPlaythrough;
@@ -71,6 +68,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
         tutorialPlaythrough.getCreatorOrStudent().player.sendMultiBlockChange((Map<Location, BlockData>) this);
 
         //Sends the changes to the spies
+        ArrayList<Player> spies = tutorialPlaythrough.getSpies();
         int iNumSpies = spies.size();
         int i;
         for (i = 0 ; i < iNumSpies ; i++)
@@ -91,12 +89,26 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
         tutorialPlaythrough.getCreatorOrStudent().player.sendMultiBlockChange(realWorldBlocks);
 
         //Sends the changes to the spies
+        ArrayList<Player> spies = tutorialPlaythrough.getSpies();
         int iNumSpies = spies.size();
         int i;
         for (i = 0 ; i < iNumSpies ; i++)
         {
             spies.get(i).sendMultiBlockChange(realWorldBlocks);
         }
+    }
+
+    /**
+     * Removes the virtual blocks from the given spy, sets their view back to the real world.
+     * @param spy The player to remove the virtual blocks for
+     */
+    public void removeVirtualBlocksForSpy(Player spy)
+    {
+        //Creates a map holding the world's real data at the locations of the virtual blocks
+        Map<Location, BlockData> realWorldBlocks = getRealBlocks();
+
+        //Sends the changes to the spies
+        spy.sendMultiBlockChange(realWorldBlocks);
     }
 
     /**

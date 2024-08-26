@@ -3,6 +3,7 @@ package teachingtutorials;
 import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.listeners.PlaythroughCommandListeners;
 import teachingtutorials.tutorials.Location;
@@ -37,6 +38,9 @@ public abstract class TutorialPlaythrough
     //Enables tpll, ll and blocks gmask
     protected PlaythroughCommandListeners playthroughCommandListeners;
 
+    //A list of spies also viewing the virtual blocks
+    private ArrayList<Player> spies = new ArrayList<>();
+
     public Tutorial getTutorial()
     {
         return tutorial;
@@ -50,6 +54,54 @@ public abstract class TutorialPlaythrough
     public User getCreatorOrStudent()
     {
         return creatorOrStudent;
+    }
+
+    /**
+     * Returns the list of spies on this playthrough
+     */
+    public ArrayList<Player> getSpies()
+    {
+        return spies;
+    }
+
+    /**
+     * Add a spy to the list of spies viewing virtual blocks for this playthrough
+     */
+    public void addSpy(Player player)
+    {
+        //Adds them to the list
+        if (player.hasPermission("teachingtutorials.canspy"))
+            spies.add(player);
+
+        //Refresh happens frequently so no need to call for an adhoc refresh
+    }
+
+    /**
+     * Removes a player to the list of spies viewing virtual blocks for this playthrough
+     */
+    public void removeSpy(Player player)
+    {
+        //Removes the player from the list of spies
+        if (spies.remove(player))
+        {
+            //Resets all of their blocks
+            //Get the list of virtual blocks
+            VirtualBlockGroup[] virtualBlockGroups = this.plugin.getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
+
+            //Declares the temporary list object
+            VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlockGroup;
+
+            //Goes through all virtual block groups - will do this going from end of tutorial to start
+            int iTasksActive = virtualBlockGroups.length;
+            for (int j = iTasksActive-1 ; j >=0 ; j--)
+            {
+                //Extracts the jth virtual block group
+                virtualBlockGroup = virtualBlockGroups[j];
+
+                //Call for the world blocks to be reset
+                virtualBlockGroup.removeVirtualBlocksForSpy(player);
+            }
+        }
     }
 
     public void setFallListenerSafeLocation(org.bukkit.Location location)

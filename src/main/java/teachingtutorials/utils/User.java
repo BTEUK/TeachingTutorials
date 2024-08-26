@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.TutorialPlaythrough;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorials.Lesson;
@@ -38,6 +39,9 @@ public class User
 
     //Holds a list of all the tutorials a user has created
     private Tutorial[] allTutorials;
+
+    //The tutorial which this user is spying on, null if they are not spying on any tutorial
+    private TutorialPlaythrough spyTarget;
 
     //Main gui, includes everything that is part of the navigator.
     public Gui mainGui;
@@ -285,6 +289,42 @@ public class User
             }, waitTimeTicks);
         }
 
+    }
+
+    /**
+     * Returns whether this user is currently spying on another
+     */
+    public boolean isSpying()
+    {
+        return (this.spyTarget != null);
+    }
+
+    /**
+     * If they are currently spying, removes this player as a spy from the current playthrough they are spying on, and sets the spy target to null
+     */
+    public void disableSpying()
+    {
+        if (isSpying())
+            //Removes this player as a spy from the current spy target
+            this.spyTarget.removeSpy(this.player);
+
+        //Else, Do nothing
+    }
+
+    /**
+     * Mark the player as spying on the given target. This method will perform a check to see whether the target does indeed have this user as a spy.
+     * @param tutorialPlaythrough The tutorial playthrough that this player is currently a spy on
+     */
+    public void setSpyTarget(TutorialPlaythrough tutorialPlaythrough)
+    {
+        if (tutorialPlaythrough == null)
+        {
+            this.spyTarget = null;
+        }
+        else if (tutorialPlaythrough.hasSpy(this.player))
+        {
+            this.spyTarget = tutorialPlaythrough;
+        }
     }
 
     //---------------------------------------------------

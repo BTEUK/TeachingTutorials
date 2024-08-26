@@ -65,19 +65,38 @@ public abstract class TutorialPlaythrough
     }
 
     /**
-     * Add a spy to the list of spies viewing virtual blocks for this playthrough
+     * Add a spy to the list of spies viewing virtual blocks for this playthrough.
+     * <P> </P>
+     * If a player is already in a separate tutorial, will remove them from that first and then add them to this.
      */
     public void addSpy(Player player)
     {
-        //Adds them to the list
+        //Check perms to spy
         if (player.hasPermission("teachingtutorials.canspy"))
-            spies.add(player);
+        {
+            //Identify the user instance
+            User spyUser = User.identifyUser(plugin, player);
+            if (spyUser != null)
+            {
+                //Check if they are already spying and if so, remove them from that
+                if (spyUser.isSpying())
+                    spyUser.disableSpying();
 
-        //Refresh happens frequently so no need to call for an adhoc refresh
+                //Add them as a spy to this tutorial playthrough
+                spies.add(player);
+
+                //Mark the spy user's spy target to this playthrough
+                spyUser.setSpyTarget(this);
+
+                //Refresh happens frequently so no need to call for an adhoc refresh
+            }
+        }
     }
 
     /**
-     * Removes a player to the list of spies viewing virtual blocks for this playthrough
+     * Removes a player from the list of spies viewing virtual blocks for this playthrough and resets their view.
+     * <P> </P>
+     * This method will also set the spy target of the User to null.
      */
     public void removeSpy(Player player)
     {
@@ -101,7 +120,21 @@ public abstract class TutorialPlaythrough
                 //Call for the world blocks to be reset
                 virtualBlockGroup.removeVirtualBlocksForSpy(player);
             }
+
+            //Identify the user instance and set the user's spy target to null
+            User spyUser = User.identifyUser(plugin, player);
+            if (spyUser != null)
+            {
+                spyUser.setSpyTarget(null);
+            }
         }
+    }
+    /**
+     * Returns whether this playthrough is being spied on by the given player
+     */
+    public boolean hasSpy(Player player)
+    {
+        return this.spies.contains(player);
     }
 
     public void setFallListenerSafeLocation(org.bukkit.Location location)

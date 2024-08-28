@@ -1,5 +1,8 @@
 package teachingtutorials.utils;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Location;
@@ -54,5 +57,23 @@ public class Display
     public enum DisplayType
     {
         hologram, chat, action_bar
+    }
+
+    /**
+     * Produces a non italitised red Component for the given text
+     * @param szText The text
+     */
+    public static Component errorText(String szText)
+    {
+        return Component.text(szText, NamedTextColor.RED).decoration(TextDecoration.ITALIC, false);
+    }
+
+    /**
+     * Produces a non italitised aqua Component for the given text
+     * @param szText The text
+     */
+    public static Component aquaText(String szText)
+    {
+        return Component.text(szText, NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false);
     }
 }

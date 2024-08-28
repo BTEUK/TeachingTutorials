@@ -207,7 +207,7 @@ public class Lesson extends TutorialPlaythrough
             if (!fetchCompulsoryID())
             {
                 creatorOrStudent.player.closeInventory();
-                Display display = new Display(creatorOrStudent.player, ChatColor.DARK_AQUA +"No compulsory tutorial was available");
+                Display display = new Display(creatorOrStudent.player, ChatColor.DARK_AQUA +"No starter tutorial was available");
                 display.Message();
                 return false;
             }
@@ -524,16 +524,17 @@ public class Lesson extends TutorialPlaythrough
         {
             creatorOrStudent.triggerCompulsory();
 
+            //Checks whether they have already completed the tutorial previously
             if (!creatorOrStudent.bHasCompletedCompulsory)
             {
-                //Informs the user that they have completed the tutorial
-                display = new Display(creatorOrStudent.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial. You may now start building.");
+                //Informs the user that they have completed the starter tutorial for the first time
+                display = new Display(creatorOrStudent.player, ChatColor.DARK_GREEN + "You have successfully completed the starter tutorial. You may now start building.");
                 display.Message();
             }
             else
             {
-                //Informs the user that they have completed the tutorial
-                display = new Display(creatorOrStudent.player, ChatColor.DARK_GREEN + "You have successfully completed the compulsory tutorial");
+                //Informs the user that they have completed the starter tutorial again
+                display = new Display(creatorOrStudent.player, ChatColor.DARK_GREEN + "You have successfully completed the starter tutorial");
                 display.ActionBar();
             }
 

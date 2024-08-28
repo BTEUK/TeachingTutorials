@@ -142,7 +142,7 @@ public class Lesson extends TutorialPlaythrough
         playthroughCommandListeners.register();
 
         //Signals the next stage to start, at the required step, as previously determined
-        nextStage(iStepToStart);
+        nextStage(iStepToStart, true);
 
         //Updates the user's mode, "In Lesson" status in RAM, and "In Lesson" status in the DB
         creatorOrStudent.currentMode = Mode.Doing_Tutorial; //Updates the user's current mode

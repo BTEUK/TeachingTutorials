@@ -168,7 +168,7 @@ public abstract class TutorialPlaythrough
     // Moves the tutorial on to the next stage
     // Accessed after the end of each stage (Called from Stage.endStage() asynchronously)
     // or at the start of the playthrough
-    public void nextStage(int iStepToStartStageOn)
+    public void nextStage(int iStepToStartStageOn, boolean bDelayTitle)
     {
         int iNumStages = stages.size();
 
@@ -177,7 +177,7 @@ public abstract class TutorialPlaythrough
         if (iStageIndex <= iNumStages)
         {
             currentStage = stages.get(iStageIndex-1);
-            currentStage.startStage(iStepToStartStageOn);
+            currentStage.startStage(iStepToStartStageOn, bDelayTitle);
             //Save the positions of stage and step after each stage is started
             // savePositions(); - Optional. Not needed since there is a save after each step
         }

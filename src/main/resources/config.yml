@@ -41,4 +41,7 @@ Events_Check_Period: 40
 #Tutorial menu item refresh - the time between each refresh of the tutorial menu (green emerald) in the player's hotbar
 Menu_Icon_Refresh_Period: 20
 
+#The time to delay displaying of the stage title when starting / resuming a lesson - this is added due to the delay in tping people to the start point
+Stage_Title_Delay_On_Start: 30
+
 SpyPermissionsErrorMessage: "You do not hold a high enough rank to spy on other tutorial lessons"

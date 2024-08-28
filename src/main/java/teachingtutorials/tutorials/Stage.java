@@ -148,21 +148,31 @@ public class Stage
         steps = Step.fetchStepsByStageID(player, plugin, this);
     }
 
-    public void startStage(int iStep)
+    public void startStage(int iStep, boolean bDelayTitle)
     {
         //Display the Stage title
         Display display = new Display(player, " ");
-        display.Title(ChatColor.AQUA +"Stage " +iOrder +" - " +szName, 10, 60, 12);
+        if (bDelayTitle)
+        {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
+                @Override
+                public void run() {
+                    display.Title(ChatColor.AQUA +"Stage " +iOrder +" - " +szName, 10, 60, 12);
+                }
+            }, this.plugin.getConfig().getLong("Stage_Title_Delay_On_Start"));
+        }
+        else
+            display.Title(ChatColor.AQUA +"Stage " +iOrder +" - " +szName, 10, 60, 12);
 
         //Get the steps
         fetchAndInitialiseSteps();
 
         //Takes the step back, for it to be increased in the next step
         iCurrentStep = iStep - 1;
-        nextStep();
+        nextStep(bDelayTitle);
     }
 
-    protected void nextStep()
+    protected void nextStep(boolean bDelayTitle)
     {
         //1 indexed
         iCurrentStep++;
@@ -173,7 +183,7 @@ public class Stage
 
             //Uses -1 because iCurrentStep is 1 indexed, so need it in computer terms
             currentStep = steps.get(iCurrentStep-1);
-            currentStep.startStep();
+            currentStep.startStep(bDelayTitle);
 
             if (bLocationCreation == false)
             {
@@ -184,7 +194,7 @@ public class Stage
         else
         {
             bStageFinished = true;
-            tutorialPlaythrough.nextStage(1);
+            tutorialPlaythrough.nextStage(1, false);
         }
     }
 

@@ -320,8 +320,7 @@ public class NewLocation extends TutorialPlaythrough
         this.iStageIndex = 0;
 
         //Starts the first stage
-        nextStage(1);
-
+        nextStage(1, true);
         this.stage = NewLocationProcess.inputtingAnswers;
     }
 

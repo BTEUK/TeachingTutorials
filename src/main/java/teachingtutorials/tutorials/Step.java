@@ -202,25 +202,32 @@ public class Step
      * Starts the player on this step. Sends them the title of the step, registers the fall listener,
      * teleports them to the start, displays the instructions and initialises the groups of tasks
      */
-    public void startStep()
+    public void startStep(boolean bDelayTitle)
     {
-        //Display step title
-        Display display = new Display(player, " ");
+        //Wait time
+        long lWaitTime = 0L;
 
-        //Wait a second before sending it if it is the first step in a stage. We don't want to override the stage title
+        //Display step title
+        final Display display = new Display(player, " ");
+
+        //Wait 72 ticks before sending it if it is the first step in a stage. We don't want to override the stage title
         if (iStepInStage == 1)
+            lWaitTime = lWaitTime + 76L;
+        //Add on the time it took for the stage title to be displayed
+        if (bDelayTitle)
+            lWaitTime = lWaitTime + this.plugin.getConfig().getLong("Stage_Title_Delay_On_Start");
+
+        //Display the title
+        if (lWaitTime == 0L)
+            display.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
+        else
         {
-            final Display finalDisplay = display;
             Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                 @Override
                 public void run() {
-                    finalDisplay.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
+                    display.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
                 }
-            }, 76L);
-        }
-        else
-        {
-            display.Title(ChatColor.AQUA +"Step " +iStepInStage +" - " +szName, 10, 60, 12);
+            }, lWaitTime);
         }
 
         //Fetches the details of groups and stores them in memory
@@ -352,7 +359,7 @@ public class Step
                     locationStep.removeInstructionsHologram();
 
                 //Calls stage to start the next step
-                parentStage.nextStep();
+                parentStage.nextStep(false);
             }
         }
     }
@@ -383,7 +390,7 @@ public class Step
                 menu = null;
 
                 locationStep.storeDetailsInDB();
-                parentStage.nextStep();
+                parentStage.nextStep(false);
             }
             else
             {

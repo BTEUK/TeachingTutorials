@@ -191,9 +191,6 @@ public abstract class TutorialPlaythrough
 
     protected void commonEndPlaythrough()
     {
-        //Remove tracker scoreboard
-        Bukkit.getScheduler().runTask(plugin, () -> creatorOrStudent.player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard()));
-
         //Change player mode
         creatorOrStudent.currentMode = Mode.Idle;
 

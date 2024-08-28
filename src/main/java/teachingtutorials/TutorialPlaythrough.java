@@ -121,8 +121,12 @@ public abstract class TutorialPlaythrough
                 //Extracts the jth virtual block group
                 virtualBlockGroup = virtualBlockGroups[j];
 
-                //Call for the world blocks to be reset
-                virtualBlockGroup.removeVirtualBlocksForSpy(player);
+                //Resets the virtual blocks to the real blocks of this spy on this tutorial
+                if (virtualBlockGroup.isOfPlaythrough(this))
+                {
+                    //Call for the world blocks to be reset
+                    virtualBlockGroup.removeVirtualBlocksForSpy(player);
+                }
             }
 
             //Identify the user instance and set the user's spy target to null
@@ -133,6 +137,20 @@ public abstract class TutorialPlaythrough
             }
         }
     }
+
+    /**
+     * Removes all spies and resets their view. Also sets the spytarget of their User instances to null.
+     */
+    private void removeAllSpies()
+    {
+        int iNumSpies = getSpies().size();
+        while (iNumSpies > 0)
+        {
+            removeSpy(getSpies().get(0).getPlayer());
+            iNumSpies--;
+        }
+    }
+
     /**
      * Returns whether this playthrough is being spied on by the given player
      */
@@ -188,7 +206,7 @@ public abstract class TutorialPlaythrough
 
         VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlockGroup;
 
-        //Goes through the list of the plugins active virtual block groups
+        //Goes through the list of the plugin's active virtual block groups
         for (int i = 0 ; i < virtualBlockGroups.size() ; i++)
         {
             virtualBlockGroup = virtualBlockGroups.get(i);
@@ -205,6 +223,9 @@ public abstract class TutorialPlaythrough
                 i--;
             }
         }
+
+        //Removes all spies
+        removeAllSpies();
 
         //Teleport the player back to the lobby area
         teleportToLobby();

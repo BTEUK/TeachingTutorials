@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import teachingtutorials.commands.Blockspy;
+import teachingtutorials.commands.PlayersPlayingTutorialsCompleter;
 import teachingtutorials.fundamentalTasks.Task;
 import teachingtutorials.guis.*;
 import teachingtutorials.listeners.InventoryClickedOrClosed;
@@ -219,6 +221,12 @@ public class TeachingTutorials extends JavaPlugin
                 }
             }
         }, 0L, 20L);
+
+        //---------------------------------------
+        //------------ Adds Commands ------------
+        //---------------------------------------
+        getCommand("blockspy").setTabCompleter(new PlayersPlayingTutorialsCompleter());
+        getCommand("blockspy").setExecutor(new Blockspy());
 
         //---------------------------------------
         //----------Sets up event check----------

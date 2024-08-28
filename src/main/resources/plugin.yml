@@ -9,6 +9,9 @@ commands:
   tutorials:
     usage: /<command>
     description: Deals will all tutorial related commands.
+  blockspy:
+    usage: /<command>
+    description: Allows players to spy on other player's virtual blocks
 website: https://github.com/BTEUK/TeachingTutorials
 softdepend:
   - HolographicDisplays

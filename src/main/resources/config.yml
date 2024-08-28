@@ -22,3 +22,4 @@ Hologram_Max_Width: 40
 Min_Y: -100
 #Do not decrease below 60 unless you know what you are doing
 BlockRecordDelay: 60
+SpyPermissionsErrorMessage: "You do not hold a high enough rank to spy on other tutorial lessons"

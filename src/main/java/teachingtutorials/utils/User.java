@@ -327,6 +327,18 @@ public class User
         }
     }
 
+    public String getNameOfSpyTarget()
+    {
+        if (isSpying())
+        {
+            return this.spyTarget.getCreatorOrStudent().player.getName();
+        }
+        else
+        {
+            return "";
+        }
+    }
+
     //---------------------------------------------------
     //--------------------SQL Fetches--------------------
     //---------------------------------------------------

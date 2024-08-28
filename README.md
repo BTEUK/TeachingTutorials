@@ -1,4 +1,6 @@
 # TeachingTutorials
+### Switch to Version 1.1.0 branch for latest releases!
+
 ## Overview
 * The BTE Teaching System or Teaching Tutorials is the next phase of tutorials on the BTE UK server and the first tutorial system to be implemented on the BTE network.
 * It is the next step up in teaching players on server with an interactive system.

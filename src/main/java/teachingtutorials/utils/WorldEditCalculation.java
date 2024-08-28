@@ -84,7 +84,7 @@ public class WorldEditCalculation
                     }
 
                     //Wait a few ticks before saying that the blocks have been set to give it a chance to set the blocks before the next calculation
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] In 5 ticks will mark the blocks as having been reset for task: " +iTaskID);
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] In " +TeachingTutorials.getInstance().getConfig().getLong("BlockResetDelay") +" ticks we will mark the blocks as having been reset for task: " +iTaskID);
 
                     //Mark blocks as reset after a time
                     Bukkit.getScheduler().runTaskLater(TeachingTutorials.getInstance(), new Runnable() {
@@ -100,7 +100,7 @@ public class WorldEditCalculation
 
                             Bukkit.getConsoleSender().sendMessage(ChatColor.DARK_PURPLE +"[TeachingTutorials] Marked the blocks as having been reset for task: " +iTaskID);
                         }
-                    }, TeachingTutorials.getInstance().getConfig().getLong("BlockRecordDelay"));
+                    }, TeachingTutorials.getInstance().getConfig().getLong("BlockResetDelay"));
                 }
             });
         }

@@ -220,7 +220,7 @@ public class TeachingTutorials extends JavaPlugin
                     }
                 }
             }
-        }, 0L, 20L);
+        }, 0L, config.getLong("Menu_Icon_Refresh_Period"));
 
         //---------------------------------------
         //------------ Adds Commands ------------
@@ -278,7 +278,8 @@ public class TeachingTutorials extends JavaPlugin
                     }
                 }
             }
-        }, 0L, 40L);
+        }, 0L, config.getLong("Events_Check_Period"));
+
 
         //----------------------------------------
         //--------Refreshes virtual blocks--------
@@ -299,7 +300,7 @@ public class TeachingTutorials extends JavaPlugin
                 //Calls for the blocks to be displayed
                 virtualBlockGroup.displayBlocks();
             }
-        }, 0, 5);
+        }, 0, config.getLong("Virtual_Block_Refresh"));
 
 
         //-----------------------------------------
@@ -352,7 +353,7 @@ public class TeachingTutorials extends JavaPlugin
                     }
                 }
             });
-        }, 0, 60L);
+        }, 0, config.getLong("World_Reset_Period"));
 
         //---------------------------------------
         //---------------Listeners---------------

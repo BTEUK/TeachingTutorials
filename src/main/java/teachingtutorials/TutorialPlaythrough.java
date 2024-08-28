@@ -240,14 +240,15 @@ public abstract class TutorialPlaythrough
         {
             String szServerName = config.getString("Server_Name");
 
-            //Switches the player's server after 2 seconds
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> creatorOrStudent.player.performCommand("server " +szServerName), 40L);
+            //Switches the player's server after a delay
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> creatorOrStudent.player.performCommand("server " +szServerName), config.getLong("Completion_TP_Wait"));
         }
 
         //If a player teleport is to occur
         else if (szLobbyTPType.equals("LobbyLocation"))
         {
-            User.teleportPlayerToLobby(creatorOrStudent.player, plugin, 40L);
+            //Teleports the player to the lobby after a delay
+            User.teleportPlayerToLobby(creatorOrStudent.player, plugin, config.getLong("Completion_TP_Wait"));
         }
     }
 }

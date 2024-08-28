@@ -18,8 +18,27 @@ Lobby_Y:
 Lobby_Z:
 Lobby_Pitch:
 Lobby_Yaw:
+
+#The amount of ticks between a player completing a tutorial and being teleported to the lobby
+Completion_TP_Wait: 40
+
 Hologram_Max_Width: 40
 Min_Y: -100
-#Do not decrease below 60 unless you know what you are doing
-BlockRecordDelay: 60
+
+#The time period between each call for the virtual blocks to be refreshed (in ticks)
+Virtual_Block_Refresh: 5
+
+#The time period between each call for the real world to be reset (in ticks)
+World_Reset_Period: 40
+
+#Do not decrease below 60 ticks unless you know what you are doing - this is designed to ensure that there is a gap between calling blocks
+  # as to be reset on the world after a WE calculation and the next calculation beginning
+BlockResetDelay: 60
+
+#The time period between each checking of the events database (in ticks)
+Events_Check_Period: 40
+
+#Tutorial menu item refresh - the time between each refresh of the tutorial menu (green emerald) in the player's hotbar
+Menu_Icon_Refresh_Period: 20
+
 SpyPermissionsErrorMessage: "You do not hold a high enough rank to spy on other tutorial lessons"

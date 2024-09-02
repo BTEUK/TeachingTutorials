@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class Lesson extends TutorialPlaythrough
 {
     private int iLessonID;
-    private final boolean bCompulsory;
+    private boolean bCompulsory;
 
     //Records whether the tutorial details were determined on lesson initialisation
     private final boolean bTutorialDetailsAlreadyEntered;
@@ -742,6 +742,11 @@ public class Lesson extends TutorialPlaythrough
                 this.iLessonID = resultSet.getInt("LessonID");
                 this.tutorial.setTutorialID(resultSet.getInt("TutorialID"));
                 this.tutorial.fetchByTutorialID(TeachingTutorials.getInstance().getDBConnection());
+
+                //Updates the compulsory status of this tutorial to that of the tutorial - a quick fix for compulsory not being set when resuming the tutorial
+                if (!creatorOrStudent.bHasCompletedCompulsory)
+                    this.bCompulsory = this.tutorial.bCompulsory;
+
                 if (bResetProgress)
                 {
                     this.iStageIndex = 1;

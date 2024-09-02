@@ -38,7 +38,7 @@ public class JoinLeaveEvent implements Listener
         //Set mode to idle
         user.currentMode = Mode.Idle;
 
-        User.teleportPlayerToLobby(event.getPlayer(), plugin, 1L);
+        User.teleportPlayerToLobby(event.getPlayer(), plugin, plugin.getConfig().getLong("PlayerJoinTPDelay"));
     }
 
     @EventHandler
@@ -62,6 +62,8 @@ public class JoinLeaveEvent implements Listener
                 // and this would finally clear them
             }
         }
+
+        User.teleportPlayerToLobby(event.getPlayer(), plugin, 0);
     }
 
 } //End Class

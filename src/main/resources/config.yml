@@ -19,6 +19,9 @@ Lobby_Z:
 Lobby_Pitch:
 Lobby_Yaw:
 
+#The amount of ticks between a player joining the server and being tped to the start
+PlayerJoinTPDelay: 20
+
 #The amount of ticks between a player completing a tutorial and being teleported to the lobby
 Completion_TP_Wait: 40
 

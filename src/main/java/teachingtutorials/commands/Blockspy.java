@@ -8,12 +8,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.TutorialPlaythrough;
+import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 
-import java.util.ArrayList;
 
 /**
  * A class to handle /blockspy commands - used for spying on virtual blocks of other player's lessons
@@ -36,6 +35,7 @@ public class Blockspy implements CommandExecutor
             return true;
         }
 
+        //Ensure the player has permissions to spy
         if (!player.hasPermission("teachingtutorials.canspy"))
         {
             player.sendMessage(Display.errorText(TeachingTutorials.getInstance().getConfig().getString("SpyPermissionsErrorMessage")));
@@ -46,7 +46,7 @@ public class Blockspy implements CommandExecutor
             User spyUser = User.identifyUser(TeachingTutorials.getInstance(), player);
             if (spyUser == null)
                 return true;
-            if (!spyUser.currentMode.equals(Mode.Idle))
+            if (!spyUser.getCurrentMode().equals(Mode.Idle))
             {
                 player.sendMessage(Display.errorText("You can only spy on other players if you are idle, you are currently in a lesson"));
                 return true;
@@ -86,17 +86,17 @@ public class Blockspy implements CommandExecutor
             }
 
             //Deals with if the target is not doing a lesson
-            if (!(targetUser.currentMode.equals(Mode.Creating_New_Location) || targetUser.currentMode.equals(Mode.Doing_Tutorial)))
+            if (!(targetUser.getCurrentMode().equals(Mode.Creating_New_Location) || targetUser.getCurrentMode().equals(Mode.Doing_Tutorial)))
             {
                 player.sendMessage(Display.errorText(targetPlayer.getName() +" is not in a lesson currently"));
                 return true;
             }
             else
             {
-                //Deal with if they are already spying on someone
+                //Deal with if they are already spying on someone - removes them as a spy
                 if (spyUser.isSpying())
                 {
-                    //Deals with if they are aleady spying on this user - assume they wish to unspy
+                    //Deals with if they are already spying on this user - assume they wish to unspy
                     if (spyUser.getNameOfSpyTarget().equals(targetUser.player.getName()))
                     {
                         player.sendMessage(Display.aquaText("Unspying from " +spyUser.getNameOfSpyTarget()));
@@ -109,26 +109,16 @@ public class Blockspy implements CommandExecutor
                 }
 
                 //Get the current playthrough of the target user to spy on
-
-                //Create a list of all active playthroughs
-                TeachingTutorials instance = TeachingTutorials.getInstance();
-                ArrayList<TutorialPlaythrough> playthroughs = new ArrayList<>();
-                playthroughs.addAll(instance.lessons);
-                playthroughs.addAll(instance.newLocations);
-
-                //Locates the playthrough of the target user and add the spy user as a spy
-                TutorialPlaythrough playthrough;
-                int i;
-                int iNumPlaythroughs = playthroughs.size();
-                for (i = 0 ; i < iNumPlaythroughs ; i++)
+                TutorialPlaythrough playthrough = targetUser.getCurrentPlaythrough();
+                if (playthrough != null)
                 {
-                    playthrough = playthroughs.get(i);
-                    if (playthrough.getCreatorOrStudent() == targetUser) //Note this checks the references which is fine, it's more efficient to do this
-                    {
-                        //Add the command sender as a spy to this playthough
-                        player.sendMessage(Display.aquaText("Adding you as a spy to " +targetPlayer.getName()));
-                        playthrough.addSpy(spyUser.player);
-                    }
+                    //Add the command sender as a spy to this playthough
+                    player.sendMessage(Display.aquaText("Adding you as a spy to " +targetPlayer.getName()));
+                    playthrough.addSpy(spyUser.player);
+                }
+                else
+                {
+                    player.sendMessage(Display.errorText("Could not find the current lesson of this player, please report this to staff"));
                 }
             }
         }

@@ -1,4 +1,4 @@
-package teachingtutorials.tutorials;
+package teachingtutorials.tutorialobjects;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -6,72 +6,103 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.GeometricUtils;
+import teachingtutorials.utils.GeometricUtils;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Hologram;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Holds step data specific to a location and contains some procedures related to utilising this data
  */
-public class LocationStep// extend step?
+public class LocationStep
 {
-    //Data stored in the LocationSteps table in the DB
-    private int iLocationID;
-    private int iStepID;
+    //Data stored in the LocationSteps table in the DB:
 
-    private double dStartLatitude;
-    private double dStartLongitude;
-    private float fStartYaw;
-    private float fStartPitch;
+    /** A reference to the step of this LocationStep */
+    private final Step step;
 
+    /** A reference to the location of this LocationStep */
+    private final Location location;
+
+    /** The geographical start coordinates of the LocationStep */
+    private double dStartLatitude, dStartLongitude;
+    /** The camera angles for the start location */
+    private float fStartYaw, fStartPitch;
+
+    /** The instructions for this LocationStep */
     private String szInstructions;
-    private double dHologramLocationX;
-    private double dHologramLocationY;
-    private double dHologramLocationZ;
+
+    /** The coordinates for the instructions hologram of this LocationStep */
+    private double dHologramLocationX, dHologramLocationY, dHologramLocationZ;
+
+    /** A Hologram oject for the hologram displaying the instructions of this LocationStep */
     private Hologram instructions;
+
+    /** Stores a link to the video walkthrough tutorial for this LocationStep */
     private String szVideoWalkthroughLink;
 
+    //Used when creating a new location:
+
+    /** Whether or not the start location has been set yet - when creating a new location */
     private boolean bLocationSet;
+
+    /** Whether or not the instructions have been set yet - when creating a new location */
     private boolean bInstructionsSet;
+
+    /** Whether or not the hologram location has been set yet - when creating a new location */
     private boolean bHologramLocationSet;
 
-    public LocationStep(int iLocationID, int iStepID, boolean bHologramNeeded)
+    /**
+     * Creates the location step from the Location and Step
+     * @param location A reference to the location of this LocationStep
+     * @param step A reference to the step of this LocationStep
+     */
+    public LocationStep(Location location, Step step)
     {
-        this.iLocationID = iLocationID;
-        this.iStepID = iStepID;
+        this.location = location;
+        this.step = step;
         this.szInstructions = "";
         this.szVideoWalkthroughLink = "";
 
         bLocationSet = false;
         bInstructionsSet = false;
+        boolean bHologramNeeded = step.getInstructionDisplayType().equals(Display.DisplayType.hologram);
+
+        //If a hologram is not needed then we set this to true, indicating that this is effectively 'done' already
         bHologramLocationSet = !bHologramNeeded;
+        //If hologram needed then we set this to false as the location is not set yet
 
         if (bHologramLocationSet)
-            Bukkit.getConsoleSender().sendMessage("Hologram location is set because no hologram is needed");
-        //If hologram needed then we set this to false as the location is not set yet
-        //If a hologram is not needed then we set this to true, indicating that this does not need to be done
+            TeachingTutorials.getInstance().getLogger().log(Level.FINE, "Hologram location is set because no hologram is needed");
     }
 
-    public boolean isOtherInformationSet()
+    /**
+     *
+     * @return A reference to the step of this LocationStep
+     */
+    public Step getStep()
     {
-        if (bLocationSet)
-            Bukkit.getConsoleSender().sendMessage("Location is set");
-        if (bInstructionsSet)
-            Bukkit.getConsoleSender().sendMessage("Instruction is set");
-        if (bHologramLocationSet)
-            Bukkit.getConsoleSender().sendMessage("Hologram location is set");
+        return this.step;
+    }
 
+    /**
+     * Checks whether all of the extra information is set - the start location, the instructions and the
+     * hologram instructions
+     * @return Whether all of the extra information is set
+     */
+    public boolean isOtherInformationSet(Logger logger)
+    {
         boolean bAllExtraInformationIsSet = (bLocationSet && bInstructionsSet) && bHologramLocationSet;
         if (bAllExtraInformationIsSet)
-            Bukkit.getConsoleSender().sendMessage("All extra information is set");
+            logger.log(Level.INFO, "All extra information is set");
 
         return bAllExtraInformationIsSet;
     }
@@ -81,14 +112,14 @@ public class LocationStep// extend step?
     //------------------------------------------------
 
     /**
-     * //Accesses the DB and fetches the information about the step location
-     * @param iStepID The step ID of the step
-     * @param iLocationID The location that is being played
+     * Accesses the DB and fetches the information about the step location
+     * @param step The tutorials step of the LocationStep
+     * @param location The tutorials location of the LocationStep
      * @return A LocationStep object with the details of the LocationStep for the inputted step and location
      */
-    public static LocationStep getFromStepAndLocation(int iStepID, int iLocationID, boolean bHologramNeeded)
+    public static LocationStep getFromStepAndLocation(Location location, Step step)
     {
-        LocationStep locationStep = new LocationStep(iLocationID, iStepID, bHologramNeeded);
+        LocationStep locationStep = new LocationStep(location, step);
 
         String sql;
         Statement SQL = null;
@@ -97,7 +128,7 @@ public class LocationStep// extend step?
         try
         {
             //Compiles the command to fetch the location step
-            sql = "SELECT * FROM `LocationSteps` WHERE `Step` = "+iStepID +" AND `Location` = " +iLocationID;
+            sql = "SELECT * FROM `LocationSteps` WHERE `Step` = "+step.getStepID() +" AND `Location` = " +location.getLocationID();
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
 
             //Executes the query
@@ -116,22 +147,24 @@ public class LocationStep// extend step?
                 locationStep.szVideoWalkthroughLink = resultSet.getString("VideoWalkthroughLink");
             }
         }
-        catch(SQLException se)
+        catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching Steps by StageID");
-            se.printStackTrace();
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL - SQL Error fetching Steps by StageID", se);
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL - Non-SQL Error fetching Steps by StageID", e);
         }
         return locationStep;
     }
 
     /**
      * Adds the location step to the DB
+     * @param plugin A reference to the instance of the TeachingTutorials plugin - used for accessing the DB and the
+     *               logger
+     * @return Whether the details were added successfully
      */
-    public boolean storeDetailsInDB()
+    public boolean storeDetailsInDB(TeachingTutorials plugin)
     {
         String sql;
         Statement SQL = null;
@@ -141,10 +174,10 @@ public class LocationStep// extend step?
 
         try
         {
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = plugin.getConnection().createStatement();
             sql = "INSERT INTO `LocationSteps` (`Location`, `Step`, `Latitude`, `Longitude`, `StartYaw`, `StartPitch`, `Instructions`, `InstructionsX`, `InstructionsY`, `InstructionsZ`, `VideoWalkthroughLink`) VALUES ("
-                    + iLocationID +", "
-                    + iStepID +", "
+                    + location.getLocationID() +", "
+                    + step.getStepID() +", "
                     + dStartLatitude +", "
                     + dStartLongitude +", "
                     + fStartYaw +", "
@@ -155,7 +188,6 @@ public class LocationStep// extend step?
                     + dHologramLocationZ +", '"
                     + szVideoWalkthroughLink +"'"
                     +")";
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             iCount = SQL.executeUpdate(sql);
 
             if (iCount != 1)
@@ -166,14 +198,12 @@ public class LocationStep// extend step?
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error adding new location step");
-            se.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "SQL - SQL Error adding new location step", se);
             return false;
         }
         catch (Exception e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Other error adding new location step");
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "SQL - Non-Sql error adding new location step", e);
             return false;
         }
     }
@@ -188,13 +218,13 @@ public class LocationStep// extend step?
      * @param world The world for the relevant location
      * @return The start location of the step
      */
-    public Location teleportPlayerToStartOfStep(Player player, World world, TeachingTutorials plugin)
+    public org.bukkit.Location teleportPlayerToStartOfStep(Player player, World world, TeachingTutorials plugin)
     {
-        Location location = getStartLocation(world);
+        org.bukkit.Location location = getStartLocation(world);
         if (location != null)
         {
             //Teleports the player
-            Location finalLocation = location;
+            org.bukkit.Location finalLocation = location;
             Bukkit.getScheduler().runTask(plugin, () -> player.teleport(finalLocation));
         }
         else
@@ -210,7 +240,7 @@ public class LocationStep// extend step?
      * Sets the step start location
      * @param location The location of the intended step start location
      */
-    public void setStartLocation(Location location)
+    public void setStartLocation(org.bukkit.Location location)
     {
         double[] longLat = GeometricUtils.convertToGeometricCoordinates(location.getX(), location.getZ());
 
@@ -234,9 +264,9 @@ public class LocationStep// extend step?
      *
      * @return The start location for the step as a bukkit object
      */
-    private Location getStartLocation(World world)
+    private org.bukkit.Location getStartLocation(World world)
     {
-        Location location = GeometricUtils.convertToBukkitLocation(world, dStartLatitude, dStartLongitude);
+        org.bukkit.Location location = GeometricUtils.convertToBukkitLocation(world, dStartLatitude, dStartLongitude);
 
         if (location != null)
         {
@@ -254,17 +284,13 @@ public class LocationStep// extend step?
      */
     public void displayInstructions(Display.DisplayType displayType, Player player, String szStepName, World world)
     {
-        Display display;
-
         switch (displayType)
         {
             case hologram:
-                display = new Display(player, this.szInstructions);
-                instructions = display.Hologram(ChatColor.AQUA +"" +ChatColor.UNDERLINE +ChatColor.BOLD +szStepName, getHologramLocation(world));
+                instructions = Display.Hologram(ChatColor.AQUA +"" +ChatColor.UNDERLINE +ChatColor.BOLD +szStepName, this.szInstructions, getHologramLocation(world), player);
                 break;
             default:
-                display = new Display(player, this.szInstructions);
-                display.Message();
+                player.sendMessage(this.szInstructions);
                 break;
         }
     }
@@ -286,7 +312,7 @@ public class LocationStep// extend step?
     public void setHologramLocationToThatOfPlayer(Player player, String szStepName)
     {
         //Sets the location
-        Location playerLocation = player.getLocation();
+        org.bukkit.Location playerLocation = player.getLocation();
         this.dHologramLocationX = playerLocation.getX();
         this.dHologramLocationY = playerLocation.getY();
         this.dHologramLocationZ = playerLocation.getZ();
@@ -302,9 +328,9 @@ public class LocationStep// extend step?
      *
      * @return The instructions' hologram location for the step as a bukkit object
      */
-    private Location getHologramLocation(World world)
+    private org.bukkit.Location getHologramLocation(World world)
     {
-        Location hologramLocation = new Location(world, dHologramLocationX, dHologramLocationY, dHologramLocationZ);
+        org.bukkit.Location hologramLocation = new org.bukkit.Location(world, dHologramLocationX, dHologramLocationY, dHologramLocationZ);
         return hologramLocation;
     }
 
@@ -329,11 +355,20 @@ public class LocationStep// extend step?
         this.bInstructionsSet = true;
     }
 
+    /**
+     * Sets the video walkthrough link for this LocationStep
+     * @param szLink The desired link
+     */
     public void setVideoLink(String szLink)
     {
         this.szVideoWalkthroughLink = szLink;
     }
 
+    /**
+     * Displays a message with a link embedded of the video tutorial for this LocationStep to the player, or message
+     * notifying the user that there is no video available.
+     * @param player The player to send the link to
+     */
     public void displayVideoLink(Player player)
     {
         TextComponent linkMessage;
@@ -343,9 +378,14 @@ public class LocationStep// extend step?
         else
         {
             linkMessage = Component.text("Click here to access a video walk-through for this step !", NamedTextColor.GREEN);
+
+            //Create the click event
             ClickEvent openLinkEvent = ClickEvent.clickEvent(ClickEvent.Action.OPEN_URL, this.szVideoWalkthroughLink);
+
+            //Add the click event to the message
             linkMessage = linkMessage.clickEvent(openLinkEvent);
         }
+        //Sends the message
         player.sendMessage(linkMessage);
     }
 }

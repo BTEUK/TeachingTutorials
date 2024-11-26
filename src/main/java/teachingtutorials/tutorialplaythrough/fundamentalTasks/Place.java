@@ -1,5 +1,6 @@
-package teachingtutorials.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough.fundamentalTasks;
 
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -9,39 +10,38 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.newlocation.DifficultyListener;
-import teachingtutorials.tutorials.Group;
-import teachingtutorials.tutorials.LocationTask;
+import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
-
-public class Place extends Task implements Listener
+/**
+ * Represents a type of Task where the user must place a block. Contains the relevant listeners used when the task is active.
+ */
+public class Place extends PlaythroughTask implements Listener
 {
-    //The minecraft coordinates of the intended block in x, y, z form
+    /** The minecraft coordinates of the intended location to place the block in x, y, z form */
     private final int iTargetCoords[] = new int[3];
+
+    /** The material which to place */
     private Material mTargetMaterial;
 
-    private DifficultyListener difficultyListener;
-
     /**
-     * Used in a lesson
-     * @param plugin
-     * @param player
-     * @param parentGroup
-     * @param iTaskID
-     * @param iOrder
-     * @param szDetails
-     * @param szAnswers
-     * @param fDifficulty
+     * Used when initialising a task for a lesson, i.e when the answers are already known
+     * @param plugin A reference to the TeachingTutorials plugin instance
+     * @param player A reference to the Bukkit player for which the task is for
+     * @param locationTask A reference to the location task object of this place
+     * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Place(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails, String szAnswers, float fDifficulty)
+    public Place(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
-        super(plugin, player, parentGroup, iTaskID, iOrder, "place", szDetails, false);
+        super(plugin, player, locationTask, groupPlaythrough);
 
         //Extracts the coordinates
-        String[] szCoordinates3AndMaterial = szAnswers.split(",");
+        String[] szCoordinates3AndMaterial = locationTask.getAnswer().split(",");
         iTargetCoords[0] = Integer.parseInt(szCoordinates3AndMaterial[0]);
         iTargetCoords[1] = Integer.parseInt(szCoordinates3AndMaterial[1]);
         iTargetCoords[2] = Integer.parseInt(szCoordinates3AndMaterial[2]);
@@ -49,41 +49,41 @@ public class Place extends Task implements Listener
         //Extracts the material
         mTargetMaterial = Material.getMaterial(szCoordinates3AndMaterial[3]);
 
-        this.fDifficulty = fDifficulty;
-
-        //Calculates the virtual block
+        //Adds the virtual block
         addVirtualBlock();
     }
 
     /**
-     * Used when creating a new location
-     * @param plugin
-     * @param player
-     * @param parentGroup
-     * @param iTaskID
-     * @param iOrder
-     * @param szDetails
+     * Used when initialising a task when creating a new location
+     * @param plugin A reference to the TeachingTutorials plugin instance
+     * @param player A reference to the Bukkit player for which the task is for
+     * @param task A reference to the task
+     * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Place(TeachingTutorials plugin, Player player, Group parentGroup, int iTaskID, int iOrder, String szDetails)
+    public Place(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
-        super(plugin, player, parentGroup, iTaskID, iOrder, "place", szDetails, true);
-
-        //Listen out for difficulty - There will only be one difficulty listener per place task to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this, FundamentalTaskType.tpll);
-        difficultyListener.register();
+        super(plugin, player, task, groupPlaythrough);
     }
 
+    /**
+     * Registers the task listener, activating the task
+     */
     @Override
     public void register()
     {
+        super.register();
+
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    //Want the tutorials place process to occur first
+    /**
+     * Detects player interact events, determines if it is from the player of this task, if it is a place, and if so performs necessary logic
+     * @param event A reference to a player interact event
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     public void interactEvent(PlayerInteractEvent event)
     {
-        //Checks that it is the correct player
+        //Checks that it is the relevant player and is a block place
         if (!event.getPlayer().getUniqueId().equals(player.getUniqueId()))
             return;
         else if (!event.hasBlock())
@@ -93,29 +93,29 @@ public class Place extends Task implements Listener
         else if (!event.getAction().isRightClick())
             return;
 
-        //It should now be a left click with a block against another block
+        //It should now be a right click with a block against another block
 
-        //Gets the location of the new virtual block to be placed
+        //Gets the location and material of the block being placed
         Location newBlockLocation = event.getClickedBlock().getLocation().add(event.getBlockFace().getDirection());
         Material newBlockMaterial = event.getItem().getType();
 
+        //Cancels the event before WorldGuard displays a message
         event.setCancelled(true);
 
+        //Handles logic
         blockPlaced(newBlockLocation, newBlockMaterial);
     }
 
-    //Want the tutorials place process to occur first
-//    @EventHandler(priority = EventPriority.LOW)
-//    public void placeEvent(BlockPlaceEvent event)
-//    {
-//
-//    }
-
+    /**
+     * Performs logic after a block was placed by a player in a lesson
+     * @param newBlockLocation The location of the newly placed block
+     * @param newBlockMaterial The material of the newly placed block
+     */
     private void blockPlaced(Location newBlockLocation, Material newBlockMaterial)
     {
         fPerformance = 0F;
 
-        //Get the location of the placed block
+        //Get the coordinates of the placed block
         int iBlockX = newBlockLocation.getBlockX();
         int iBlockY = newBlockLocation.getBlockY();
         int iBlockZ = newBlockLocation.getBlockZ();
@@ -132,25 +132,25 @@ public class Place extends Task implements Listener
             iTargetCoords[2] = iBlockZ;
 
             //Set the answers in the LocationTask
-            LocationTask locationTask = new LocationTask(this.parentGroup.parentStep.parentStage.getLocationID(), iTaskID);
+            LocationTask locationTask = getLocationTask();
             locationTask.setAnswers(iBlockX +"," +iBlockY +"," +iBlockZ +"," +mTargetMaterial);
-            difficultyListener.setLocationTask(locationTask);
 
             //Data is added to database once difficulty is provided
 
             //Prompt difficulty
-            Display difficultyPrompt = new Display(player, ChatColor.AQUA +"Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]");
-            difficultyPrompt.Message();
+            player.sendMessage(Display.colouredText("Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]", NamedTextColor.AQUA));
 
             //SpotHit is then called from inside the difficulty listener once the difficulty has been established
             //This is what moves it onto the next task
 
-            //Adds the virtual block
+            //Adds the virtual block to the list
             addVirtualBlock();
 
             //Displays the virtual blocks
             displayVirtualBlocks();
         }
+
+        //Blocks was placed during a lesson
         else
         {   //--Accuracy checker--
 
@@ -163,43 +163,44 @@ public class Place extends Task implements Listener
             //Check position
             bCorrectPosition = (iBlockX == iTargetCoords[0] && iBlockY == iTargetCoords[1] && iBlockZ == iTargetCoords[2]);
 
+            //Checks whether both position ad material are correct
             if (bCorrectMaterial && bCorrectPosition)
             {
                 //Correct everything
-                Display display = new Display(player, ChatColor.GREEN +"Correct");
-                display.ActionBar();
+                Display.ActionBar(player, Display.colouredText("Correct", NamedTextColor.GREEN));
                 fPerformance = 1; // Will be more comprehensive in future updates
 
                 //Displays the virtual block
                 displayVirtualBlocks();
 
+                //Calls for the completion of the task
                 spotHit();
             }
+
+            //Gives feedback
             else if (bCorrectMaterial)
             {
                 //Material correct, position wrong
-                Display display = new Display(player, ChatColor.GOLD +"Correct material, wrong position");
-                display.ActionBar();
+                Display.ActionBar(player, Display.colouredText("Correct material, wrong position", NamedTextColor.GOLD));
             }
             else if (bCorrectPosition)
             {
                 //Position correct, material wrong
-                Display display = new Display(player, ChatColor.GOLD +"Correct position, wrong material");
-                display.ActionBar();
+                Display.ActionBar(player, Display.colouredText("Correct position, wrong material", NamedTextColor.GOLD));
             }
             else
             {
                 //Nothing correct
-                Display display = new Display(player, ChatColor.GOLD +"Incorrect position and material");
-                display.ActionBar();
+                Display.ActionBar(player, Display.colouredText("Incorrect position and material", NamedTextColor.GOLD));
             }
         }
     }
 
+    /**
+     * Handles completion of the task - unregisters listeners and moves onto the next task
+     */
     private void spotHit()
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering place listener");
-
         //Unregisters this task
         HandlerList.unregisterAll(this);
 
@@ -207,11 +208,13 @@ public class Place extends Task implements Listener
         taskComplete();
     }
 
-    //Called when terminating early
-    @Override
+    /**
+     * Unregisters the listener, marks the task as inactive and removes the virtual blocks of this task
+     */
     public void unregister()
     {
-        super.unregister();
+        //Marks the task as inactive and removes the virtual blocks of this task
+        super.deactivate();
 
         //Unregisters this task
         HandlerList.unregisterAll(this);
@@ -219,18 +222,22 @@ public class Place extends Task implements Listener
 
     //A public version is required for when spotHit is called from the difficulty listener
     //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
-    @Override
+    /**
+     * To be called from a difficulty listener when the difficulty has been specified.
+     * <p> </p>
+     * Will unregister the place task and move forwards to the next task
+     */
     public void newLocationSpotHit()
     {
         spotHit();
     }
 
     /**
-     * Uses the target coords and target material to calculate the virtual block
+     * Uses the target coordinates and target material to calculate the virtual block, and adds this to the list
      */
     public void addVirtualBlock()
     {
-        Location location = new Location(this.parentGroup.parentStep.parentStage.tutorialPlaythrough.getLocation().getWorld(), iTargetCoords[0], iTargetCoords[1], iTargetCoords[2]);
+        Location location = new Location(this.parentGroupPlaythrough.getParentStep().getParentStage().getLocation().getWorld(), iTargetCoords[0], iTargetCoords[1], iTargetCoords[2]);
         this.virtualBlocks.put(location, mTargetMaterial.createBlockData());
     }
 }

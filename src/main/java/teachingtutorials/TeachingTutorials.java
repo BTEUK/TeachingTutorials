@@ -12,14 +12,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.commands.Blockspy;
 import teachingtutorials.commands.PlayersPlayingTutorialsCompleter;
-import teachingtutorials.fundamentalTasks.Task;
+import teachingtutorials.tutorialobjects.Group;
+import teachingtutorials.tutorialobjects.Stage;
+import teachingtutorials.tutorialobjects.Step;
+import teachingtutorials.tutorialobjects.Tutorial;
+import teachingtutorials.tutorialplaythrough.fundamentalTasks.FundamentalTaskType;
+import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
 import teachingtutorials.guis.*;
 import teachingtutorials.listeners.InventoryClickedOrClosed;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinLeaveEvent;
 import teachingtutorials.listeners.GlobalPlayerCommandProcess;
-import teachingtutorials.newlocation.NewLocation;
-import teachingtutorials.tutorials.*;
+import teachingtutorials.tutorialplaythrough.*;
 import teachingtutorials.utils.*;
 import teachingtutorials.utils.plugins.WorldEditImplementation;
 
@@ -29,57 +33,53 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Level;
 
+/**
+ * The main class of the TeachingTutorials plugin
+ */
 public class TeachingTutorials extends JavaPlugin
 {
-    static TeachingTutorials instance;
-    static FileConfiguration config;
+    /** A reference to the main instance of the plugin */
+    private static TeachingTutorials instance;
 
-    String sql;
+    /** A reference to the config of the main instance plugin */
+    private static FileConfiguration config;
 
-    Statement SQL = null;
-
-    //The connection for the database
+    /** A connection to the database */
     private DBConnection dbConnection;
 
-    public ItemStack learningMenuSlot;
+    /** An item stack for the menu opener icon */
     public static ItemStack menu;
+
+    /** The slot in which the menu opener icon should appear */
     private int iLearningMenuSlot;
 
-    //A list of all connected players
+    /** A list of all connected players */
     public ArrayList<User> players;
 
-    //A list of all ongoing lessons
-    public ArrayList<Lesson> lessons;
+    /** A list of all current tutorial playthroughs */
+    public ArrayList<TutorialPlaythrough> activePlaythroughs;
 
-    //A list of all ongoing location creations
-    public ArrayList<NewLocation> newLocations;
-
-    //A list of all virtual block groups. Each task's virtual blocks are stored in a group and placed here when active
+    /**
+     * A list of all active virtual block groups.
+     * Each task's virtual blocks are stored in a group and placed here when they are active and need to be displayed
+     */
     private Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups;
 
-    //Identifies which world edit is being used
+    /** Identifies which world edit is being used */
     public WorldEditImplementation worldEditImplementation;
 
-    public void addVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
-    {
-        virtualBlockGroups.add(virtualBlocks);
-    }
+    /** Stores how many calculations have been attempted since a success */
+    public int iFailedCalculations;
 
-    public void removeVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
-    {
-        virtualBlockGroups.remove(virtualBlocks);
-    }
-
-    public Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>>  getVirtualBlockGroups()
-    {
-        return virtualBlockGroups;
-    }
-
+    /**
+     * Performs all of the startup logic for this plugin
+     */
     @Override
     public void onEnable()
     {
-        //Dependency checkers
+        //Checks the existence of the soft dependencies
         if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays"))
         {
             getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
@@ -125,34 +125,37 @@ public class TeachingTutorials extends JavaPlugin
             return;
         }
 
-        // Plugin startup logic
+        //Set the static instance of the plugin to this
         TeachingTutorials.instance = this;
+
+        //Set the static instance of the config to the config of this instance
         TeachingTutorials.config = this.getConfig();
         saveDefaultConfig();
 
+        //Initialise the arrays
         players = new ArrayList<>();
-        lessons = new ArrayList<>();
-        newLocations = new ArrayList<>();
+        activePlaythroughs = new ArrayList<>();
         virtualBlockGroups = new Stack<>();
 
         //-------------------------------------------------------------------------
         //----------------------------------MySQL----------------------------------
         //-------------------------------------------------------------------------
+        //Records whether there were any failures connecting to the database
         boolean bSuccess;
 
-        //Initiate connection
+        //Initiate the DB connection object
         dbConnection = new DBConnection();
 
         //Attempt set up from config and connect
-        dbConnection.mysqlSetup(this);
+        dbConnection.mysqlSetup(this.getConfig());
         bSuccess = dbConnection.connect();
 
         //Test whether database connected
         if (bSuccess)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[Teaching Tutorials] MySQL Connected");
+            getLogger().log(Level.INFO, ChatColor.GREEN + "MySQL database connected");
 
-            //Only creates tables if database connected properly
+            //Creates the tables of the database
             createTables();
         }
 
@@ -176,51 +179,65 @@ public class TeachingTutorials extends JavaPlugin
             archiveFolder.mkdir();
         }
 
-        //Goes through the folder and if files are found, interpret it
+        //Goes through the folder and if files are found, load them into the database
         //Folder is sent as it is needed
-       // int iNumFiles = folder.list().length;
+//        int iNumFiles = folder.list().length;
 
-       //This will break when file moving is fixed. Solution could be to create a local array of all the files then iterate through in a for loop
+        // This will break when file moving is fixed. Solution could be to create a local array of all the files then iterate through in a for loop
         for (int i = 0 ; i < folder.list().length ; i++)
         {
             File file = folder.listFiles()[i];
             if (!file.isDirectory())
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Loading new tutorial file: "+file.getName());
+                getLogger().log(Level.INFO, ChatColor.AQUA +"Loading new tutorial file: "+file.getName());
                 interpretNewTutorial(file);
             }
         }
 
-        //---------------------------------------
-        //--------------Create GUIs--------------
-        //---------------------------------------
+        //------------------------------------------------
+        //-------------- Create menu opener --------------
+        //------------------------------------------------
 
-        //Create menu item
+        //Initiates the menu item as an emerald with "Learning Menu" name
         menu = new ItemStack(Material.EMERALD);
         ItemMeta meta = menu.getItemMeta();
         meta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Learning Menu");
         menu.setItemMeta(meta);
+
+        //Initiates the slot index where the menu should be placed
         iLearningMenuSlot = config.getInt("Learning_Menu_Slot");
 
-        //1 second timer - updates slot
-        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+        //Repeating schedule - updates the learning menu slot to make sure all player always have the learning menu icon
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable(){
             public void run()
             {
+                //Stores the item in the slot where the learning menu ought to be
+                ItemStack currentItemInSlot;
+
+                //Goes through all players
                 for (Player p : Bukkit.getOnlinePlayers())
                 {
-                    //Menu
-                    learningMenuSlot = p.getInventory().getItem(iLearningMenuSlot - 1);
-                    if (learningMenuSlot == null)
+                    //Gets the item in the slot where the learning menu ought to be
+                    currentItemInSlot = p.getInventory().getItem(iLearningMenuSlot - 1);
+
+                    //Updates the slot if necessary
+                    if (currentItemInSlot == null)
                     {
                         p.getInventory().setItem(iLearningMenuSlot - 1, menu);
                     }
-                    else if (!learningMenuSlot.equals(menu))
+                    else if (!currentItemInSlot.equals(menu))
                     {
+                        //Attempts to move the current item to a free slot if there is one available
+                        int iEmptySlot = Utils.getEmptyHotbarSlot(p);
+                        if (iEmptySlot != -1)
+                            p.getInventory().setItem(iEmptySlot, currentItemInSlot);
+
                         p.getInventory().setItem(iLearningMenuSlot - 1, menu);
                     }
                 }
             }
         }, 0L, config.getLong("Menu_Icon_Refresh_Period"));
+
 
         //---------------------------------------
         //------------ Adds Commands ------------
@@ -228,15 +245,15 @@ public class TeachingTutorials extends JavaPlugin
         getCommand("blockspy").setTabCompleter(new PlayersPlayingTutorialsCompleter());
         getCommand("blockspy").setExecutor(new Blockspy());
 
+
         //---------------------------------------
         //----------Sets up event check----------
         //---------------------------------------
-
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run()
             {
                 //Deal with external events in the DB
-                ArrayList<Event> events = Event.getLatestEvents(dbConnection);
+                ArrayList<Event> events = Event.getLatestEvents(dbConnection, instance.getLogger());
                 int iNumEvents = events.size();
                 Event event;
                 User user;
@@ -244,37 +261,43 @@ public class TeachingTutorials extends JavaPlugin
                 //Goes through all of the fetched events
                 for (int i = 0 ; i < iNumEvents ; i++)
                 {
-                    //Stores the event in it's own local variable
+                    //Stores the event in its own local variable
                     event = events.get(i);
 
                     //Gets the user from the list of the plugin's users based on the player
-                    user = User.identifyUser(instance, event.player);
+                    user = User.identifyUser(instance, event.getPlayer());
                     if (user != null)
                     {
-                        //Starts a lesson if the event was a library event type
-                        if (event.eventType.equals(EventType.LIBRARY))
+                        switch (event.getEventType())
                         {
-                            Tutorial specifiedTutorial = new Tutorial();
-                            specifiedTutorial.setTutorialID(event.iData);
-                            specifiedTutorial.fetchByTutorialID(dbConnection);
+                            case RESTART:
+                            case CONTINUE:
+                            case LIBRARY:
+                                //Extract the tutorial details
+                                Tutorial specifiedTutorial = Tutorial.fetchByTutorialID(event.getData(), dbConnection, getLogger());
 
-                            //Creates a Lesson object
-                            Lesson newLesson = new Lesson(user, instance, specifiedTutorial);
+                                //Creates a Lesson object
+                                Lesson newLesson = new Lesson(user, instance, specifiedTutorial);
 
-                            //Launches them into the new lesson
-                            newLesson.startLesson();
+                                //Starts the lesson, resetting the progress only if event is a restart event
+                                newLesson.startLesson(event.getEventType().equals(EventType.RESTART));
+                                break;
+                            case ADMIN_MENU:
+                                MainMenu.performEvent(EventType.ADMIN_MENU, user, TeachingTutorials.getInstance(), null);
+                                break;
                         }
 
-                        else
-                        {
-                            MainMenu.performEvent(event.eventType, user, instance);
-                        }
-
-                        //We only want the event to be removed if the player was on the server and the event took place
-                        //There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
-                        //So we want to keep the event around if that happens so on the next run through the user who might
-                        //Now be on the server will be taken to a tutorial or whatever
+                        /*
+                        We only want the event to be removed if the player was on the server and the event took place
+                        There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
+                        So we want to keep the event around if that happens so on the next run through the user who might
+                        Now be on the server will be taken to a tutorial or whatever
+                         */
                         event.remove();
+                    }
+                    else
+                    {
+                        //Do nothing, they may still be in server transport
                     }
                 }
             }
@@ -293,7 +316,6 @@ public class TeachingTutorials extends JavaPlugin
             int iTasksActive = virtualBlockGroups.size();
             for (int j = 0 ; j < iTasksActive ; j++)
             {
-//                virtualBlockGroups.
                 //Extracts the jth virtual block group
                 virtualBlockGroup = virtualBlockGroups.get(j);
 
@@ -306,24 +328,36 @@ public class TeachingTutorials extends JavaPlugin
         //-----------------------------------------
         //------ Performs calculation events ------
         //-----------------------------------------
+        iFailedCalculations = 0;
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
         {
             if (!WorldEdit.isCurrentCalculationOngoing())
             {
+                iFailedCalculations = 0;
+
                 WorldEditCalculation worldEditCalculation = WorldEdit.pendingCalculations.peek();
-                if (worldEditCalculation !=null)
+                if (worldEditCalculation != null)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation not already in progress, a new one has been detected");
-                    WorldEdit.setCalculationInProgress();
+                    getLogger().log(Level.INFO, ChatColor.YELLOW +"Calculation not already in progress, a new one has been detected");
                     worldEditCalculation.runCalculation();
                 }
             }
             else
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW +"[TeachingTutorials] Calculation ongoing, not initiating a new one");
+                iFailedCalculations++;
+                getLogger().log(Level.INFO, ChatColor.YELLOW +"Calculation ongoing, not initiating a new one");
+                long lSecondsPerLoop = 6L/20L; // = second per tick * ticks per loop
+                long iSecondsSinceFailedCalculation = iFailedCalculations * lSecondsPerLoop;
+                if (iSecondsSinceFailedCalculation >= 15)
+                {
+                    WorldEdit.pendingCalculations.peek().terminateCalculation();
+                }
             }
-        }, 0, 5L);
+        }, 0, 6L);
 
+        //Resets the world on a timer - when in a calculation, goes through all active virtual blocks and resets the
+        // world back to the state in which it was before the virtual blocks were added, then redisplays the virtual
+        // blocks to the viewers
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
         {
             //Run the resetting
@@ -331,7 +365,7 @@ public class TeachingTutorials extends JavaPlugin
                 @Override
                 public void run()
                 {
-                    if (WorldEdit.isCurrentCalculationOngoing())
+                    if (!WorldEdit.isCurrentCalculationOngoing())
                     {
                         //Get the list of virtual blocks
                         VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
@@ -348,6 +382,9 @@ public class TeachingTutorials extends JavaPlugin
 
                             //Call for the world blocks to be reset
                             virtualBlockGroup.resetWorld();
+                            //Todo: These don't get done in sync. All world setting needs to be waited on with events.
+                            //In order to solve this temporarily, make sure the virtual block refresh period occurs more frequently
+                            // than the world reset
                             virtualBlockGroup.displayBlocks();
                         }
                     }
@@ -372,15 +409,44 @@ public class TeachingTutorials extends JavaPlugin
         this.setEnabled(true);
     }
 
+    /**
+     * Add a group of virtual blocks to the active list
+     * @param virtualBlocks A reference to the list you want to add
+     */
+    public void addVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
+    {
+        this.getLogger().log(Level.INFO, "A group of virtual blocks have just been added to the list of active groups");
+        virtualBlockGroups.add(virtualBlocks);
+    }
+
+    /**
+     * Removes a group of virtual blocks from the active list
+     * @param virtualBlocks A reference to the list you want to remove
+     */
+    public void removeVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
+    {
+        virtualBlockGroups.remove(virtualBlocks);
+    }
+
+    /**
+     *
+     * @return A reference to the list of active virtual block groups
+     */
+    public Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>> getVirtualBlockGroups()
+    {
+        return virtualBlockGroups;
+    }
+
+    /**
+     * Interprets the data of a new tutorial
+     * @param file The file from which to interpret the new tutorial
+     */
     private void interpretNewTutorial(File file)
     {
         //Stores each line as a separate string
         String[] szLines;
 
-        //Holds all of the information for the new tutorial
-        Tutorial tutorial = new Tutorial();
-
-        //Read file into lines and fields
+        //Reads each line of the file into the string array
         int iLine;
         int iNumLines = 0;
         Scanner szFile;
@@ -407,53 +473,57 @@ public class TeachingTutorials extends JavaPlugin
         }
         catch (IOException e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - IO - IO Error whilst reading file, skipping file");
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "IO - IO Error whilst reading file, skipping file", e);
             return;
         }
 
         iLine = 0;
 
-        //Gets the tutorial name and author name
-        String[] szFields = szLines[iLine].split(",");
+        //-------------- Gets the tutorial name, author name and category relevance --------------
+        String szName;
+        UUID uuidAuthor;
+        int[] categoryUsage = new int[Category.values().length];
 
+        String[] szFields = szLines[iLine].split(",");
         if (szFields.length != 7)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"The tutorial name, author and relevance line does not have 7 fields");
+            getLogger().log(Level.WARNING, ChatColor.RED +"The tutorial name, author and relevance line does not have 7 fields");
             return;
         }
-        else
+
+        szName = szFields[0];
+        getLogger().log(Level.INFO, ChatColor.AQUA +"Tutorial name: "+szName);
+
+        try
         {
-            tutorial.szTutorialName = szFields[0];
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Tutorial name: "+tutorial.szTutorialName);
-
-            try
-            {
-                tutorial.uuidAuthor = UUID.fromString(szFields[1]);
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Tutorial author: "+tutorial.uuidAuthor.toString());
-            }
-            catch (IllegalArgumentException e)
-            {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Author UUID is not a real UUID: "+szFields[1]);
-                return;
-            }
-
-            for (int j = 2; j < 7 ; j++)
-            {
-                if (!szFields[j].matches("([0-9]|[1-9][0-9]|100)"))
-                {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly." +
-                            "Relevances must be between 0 and 100. Line: "+(iLine+1));
-                    return;
-                }
-                tutorial.categoryUsage[j-2] = Integer.parseInt(szFields[j]);
-            }
+            uuidAuthor = UUID.fromString(szFields[1]);
+            getLogger().log(Level.INFO, ChatColor.AQUA +"Tutorial author: "+uuidAuthor.toString());
+        }
+        catch (IllegalArgumentException e)
+        {
+            getLogger().log(Level.WARNING, "Author UUID is not a valid UUID: "+szFields[1]);
+            return;
         }
 
-        //Holds type of the last line interpreted
-        String szType = "";
+        //Get the category information
+        for (int j = 2; j < 7 ; j++)
+        {
+            if (!szFields[j].matches("([0-9]|[1-9][0-9]|100)"))
+            {
+                getLogger().log(Level.WARNING, "Tutorial config is not configured correctly." +
+                        "Relevances must be between 0 and 100. Line: "+(iLine+1));
+                return;
+            }
+            categoryUsage[j-2] = Integer.parseInt(szFields[j]);
+        }
 
-        //References the stage, step, group that we are currently creating
+        //Holds all of the tutorial information for the new tutorial
+        Tutorial tutorial = new Tutorial(szName, uuidAuthor.toString());
+
+        //Holds type of the last line interpreted
+        TutorialObject typeOfLastObjectDealtWith = TutorialObject.Stage;
+
+        //References the stage, step, group that we are currently compiling
         Stage lastStage = null;
         Step lastStep = null;
         Group lastGroup = null;
@@ -464,47 +534,48 @@ public class TeachingTutorials extends JavaPlugin
             //Stage
             if (szLines[iLine].startsWith("["))
             {
-                szType = "Stage";
-                Stage stage = new Stage(szLines[iLine].replace("[",""));
+                typeOfLastObjectDealtWith = TutorialObject.Stage;
+                Stage stage = new Stage(szLines[iLine].replace("[",""), tutorial.stages.size()+1);
                 tutorial.stages.add(stage);
                 lastStage = stage;
             }
             //Step
             else if(szLines[iLine].startsWith("("))
             {
-                if (!(szType.equals("Stage")||szType.equals("Task")))
+                if (!(typeOfLastObjectDealtWith.equals(TutorialObject.Stage)||typeOfLastObjectDealtWith.equals(TutorialObject.Task)))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
+                    getLogger().log(Level.WARNING, "Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 szFields = szLines[iLine].split(",");
+
                 //Field 1 is step name, field 2 is display type
                 if (szFields.length < 2)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
+                    getLogger().log(Level.WARNING, "Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
-                szType = "Step";
+                typeOfLastObjectDealtWith = TutorialObject.Step;
 
-                Step step = new Step(szFields[0].replace("(",""), szFields[1]);
+                Step step = new Step(szFields[0].replace("(",""), lastStage.steps.size()+1, szFields[1]);
                 lastStage.steps.add(step);
                 lastStep = step;
             }
             //Group
             else if(szLines[iLine].startsWith("{"))
             {
-                if (!(szType.equals("Step")||szType.equals("Task")))
+                if (!(typeOfLastObjectDealtWith.equals(TutorialObject.Step)||typeOfLastObjectDealtWith.equals(TutorialObject.Task)))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
+                    getLogger().log(Level.WARNING, "Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 szFields = szLines[iLine].split(",");
                 if (szFields.length != 1)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
+                    getLogger().log(Level.WARNING, "Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
-                szType = "Group";
+                typeOfLastObjectDealtWith = TutorialObject.Group;
                 Group group = new Group(szFields[0].replace("(",""));
                 lastStep.groups.add(group);
                 lastGroup = group;
@@ -512,31 +583,42 @@ public class TeachingTutorials extends JavaPlugin
             //Task
             else if(szLines[iLine].startsWith("~"))
             {
-                if (!(szType.equals("Group")||szType.equals("Task")))
+                if (!(typeOfLastObjectDealtWith.equals(TutorialObject.Group)||typeOfLastObjectDealtWith.equals(TutorialObject.Task)))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Tutorial config is not configured correctly, line: "+(iLine+1));
+                    getLogger().log(Level.WARNING, "Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
-                szType = "Task";
+                typeOfLastObjectDealtWith = TutorialObject.Task;
                 Task task;
 
+                //1 is ~TaskType and 2 is the extra details
                 szFields = szLines[iLine].split(",");
 
                 String szTaskType = szFields[0].replace("~", "");
-                switch (szTaskType)
+                FundamentalTaskType taskType = null;
+                try
                 {
-                    case "tpll":
+                    taskType = FundamentalTaskType.valueOf(szTaskType);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    getLogger().log(Level.WARNING, "Invalid task type (\'" +szTaskType +"\') line: "+(iLine+1));
+                }
+
+                switch (taskType)
+                {
+                    case tpll:
                         //Checks the format of the details
                         if (szFields.length != 2)
                         {
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, you must specify the tpll accuracy, line: "+(iLine+1));
+                            getLogger().log(Level.WARNING, "Invalid tpll accuracy, you must specify the tpll accuracy, line: "+(iLine+1));
                             return;
                         }
 
                         String[] szPrecisions = szFields[1].split(";");
                         if (szPrecisions.length != 2)
                         {
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, you must have 2 floats separated by a ; with no spaces, line: "+(iLine+1));
+                            getLogger().log(Level.WARNING, "Invalid tpll accuracy, you must have 2 floats separated by a ; with no spaces, line: "+(iLine+1));
                             return;
                         }
                         try
@@ -546,45 +628,45 @@ public class TeachingTutorials extends JavaPlugin
 
                             if (iLimit < iPerfectDistance)
                             {
-                                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, the limit must be greater than or equal to the perfect distance, line: "+(iLine+1));
+                                getLogger().log(Level.WARNING, "Invalid tpll accuracy, the limit must be greater than or equal to the perfect distance, line: "+(iLine+1));
                             }
                         }
                         catch (NumberFormatException e)
                         {
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid tpll accuracy, the accuracies must be integers or floats, line: "+(iLine+1));
+                            getLogger().log(Level.WARNING, "Invalid tpll accuracy, the accuracies must be integers or floats, line: "+(iLine+1));
                             return;
                         }
 
                         //Adds the task to the list
-                        task = new Task(szTaskType, szFields[1]);
-                        lastGroup.addTaskCreation(task);
+                        task = new Task(taskType, lastGroup.tasks.size()+1, szFields[1], lastGroup);
+                        lastGroup.tasks.add(task);
                         break;
-                    case "selection":
-                    case "place":
-                    case "chat":
-                        task = new Task(szTaskType, " ");
-                        lastGroup.addTaskCreation(task);
+                    //There are no extra details on the 3 following task types:
+                    case selection:
+                    case place:
+                    case chat:
+                        task = new Task(taskType, lastGroup.tasks.size()+1, " ", lastGroup);
+                        lastGroup.tasks.add(task);
                         break;
-                    case "command":
+                    case command:
                         //Checks the format of the command details
                         if (!(szFields[1].equals("none") || szFields[1].equals("virtualBlocks") || szFields[1].equals("full")))
                         {
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid command type, line: "+(iLine+1));
+                            getLogger().log(Level.WARNING, "Invalid command type, line: "+(iLine+1));
                             return;
                         }
 
                         //Adds the task to the list
-                        task = new Task(szTaskType, szFields[1]);
-                        lastGroup.addTaskCreation(task);
+                        task = new Task(taskType, lastGroup.tasks.size()+1, szFields[1], lastGroup);
+                        lastGroup.tasks.add(task);
                         break;
                     default:
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Invalid task type, line: "+(iLine+1));
+
                 } //End type switch
             } //End task handler
         } //End iteration through lines
 
         //If it has got to this stage, then the details are all sorted and stored in the tutorial object
-
         if (addNewTutorialToDB(tutorial))
         {
             //Moves file to the archive folder
@@ -592,20 +674,25 @@ public class TeachingTutorials extends JavaPlugin
         }
     }
 
+    /**
+     * Adds a given tutorial to the DB
+     * @param tutorial A tutorial, with all of the relevant information loaded
+     * @return Whether it was successully added to the tutorials table of the database
+     */
     public boolean addNewTutorialToDB(Tutorial tutorial)
     {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Inserting new tutorial into DB. Tutorial: "+tutorial.szTutorialName);
+        getLogger().log(Level.INFO, "Inserting new tutorial into DB. Tutorial: "+tutorial.getTutorialName() +" by "+tutorial.getUUIDOfAuthor().toString());
+
+        //Integers used in for loops
         int i, j, k, l;
 
-        int iStages;
-        int iSteps;
-        int iGroups;
-        int iTasks;
+        int iNumStages;
+        int iNumSteps;
+        int iNumGroups;
+        int iNumTasks;
 
-        int iTutorialID;
-        int iStageID;
-        int iStepID;
-        int iGroupID;
+        //Notes the ID of the current tutorial objects we are within
+        int iTutorialID, iStageID, iStepID, iGroupID;
 
         String sql;
         Statement SQL = null;
@@ -615,9 +702,10 @@ public class TeachingTutorials extends JavaPlugin
         try
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+tutorial.szTutorialName+"', '"+tutorial.uuidAuthor +"')";
+            sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+tutorial.getTutorialName()+"', '"+tutorial.getUUIDOfAuthor() +"')";
             SQL.executeUpdate(sql);
 
+            //Gets the Tutorial of the tutorial just inserted
             sql = "Select LAST_INSERT_ID()";
             resultSet = SQL.executeQuery(sql);
             resultSet.next();
@@ -625,8 +713,7 @@ public class TeachingTutorials extends JavaPlugin
         }
         catch (Exception e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new tutorial into DB. Name: "+tutorial.szTutorialName);
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Could not insert new tutorial into DB. Name: "+tutorial.getTutorialName(), e);
             return false;
         }
 
@@ -635,30 +722,27 @@ public class TeachingTutorials extends JavaPlugin
         {
             try
             {
-                sql = "INSERT INTO `CategoryPoints` (`TutorialID`, `Category`, `Relevance`) VALUES (" + iTutorialID + ", '" + tutorial.szCategoryEnumsInOrder[i] + "', " +((float) tutorial.categoryUsage[i])/100+ ")";
-                Bukkit.getConsoleSender().sendMessage(sql);
+                sql = "INSERT INTO `CategoryPoints` (`TutorialID`, `Category`, `Relevance`) VALUES (" + iTutorialID + ", '" + tutorial.szCategoryEnumsInOrder[i] + "', " +((float) tutorial.getCategoryUsage(i))/100f+ ")";
                 SQL.executeUpdate(sql);
             }
             catch (Exception e)
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert relevance into DB. Tutorial: "+tutorial.szTutorialName);
-                e.printStackTrace();
-                continue;
+                getLogger().log(Level.SEVERE, "Could not insert relevances into DB. Name: "+tutorial.getTutorialName(), e);
+                break;
             }
         }
 
         ArrayList<Stage> stages = tutorial.stages;
-        iStages = stages.size();
-
+        iNumStages = stages.size();
+        getLogger().log(Level.INFO, iNumStages+" stages in this tutorials");
         //Go through stages
-        for (i = 0 ; i < iStages ; i++)
+        for (i = 0 ; i < iNumStages ; i++)
         {
             //Insert the new stage into the stages table
             Stage stage = stages.get(i);
             try
             {
-                sql = "INSERT INTO `Stages` (`StageName`, `TutorialID`, `Order`) VALUES ('"+stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
-                Bukkit.getConsoleSender().sendMessage(sql);
+                sql = "INSERT INTO `Stages` (`StageName`, `TutorialID`, `Order`) VALUES ('"+ stage.getName()+"', "+iTutorialID+", "+(i+1)+")";
                 SQL.executeUpdate(sql);
 
                 sql = "Select LAST_INSERT_ID()";
@@ -668,16 +752,15 @@ public class TeachingTutorials extends JavaPlugin
             }
             catch (Exception e)
             {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new stage into DB. Tutorial: "+tutorial.szTutorialName);
-                e.printStackTrace();
+                getLogger().log(Level.SEVERE, "Could not insert new stage into DB. Name: "+tutorial.getTutorialName(), e);
                 continue;
             }
 
             ArrayList<Step> steps = stage.steps;
-            iSteps = steps.size();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iSteps+" steps in this stage");
+            iNumSteps = steps.size();
+            getLogger().log(Level.INFO, iNumSteps+" steps in this stage");
             //Go through steps
-            for (j = 0 ; j < iSteps ; j++)
+            for (j = 0 ; j < iNumSteps ; j++)
             {
                 //Insert the new step into the steps table
                 Step step = steps.get(j);
@@ -685,8 +768,7 @@ public class TeachingTutorials extends JavaPlugin
                 {
                     Display.DisplayType instructionDisplayType = step.getInstructionDisplayType();
 
-                    sql = "INSERT INTO `Steps` (`StepName`, `StageID`, `StepInStage`, `InstructionDisplay`) VALUES ('"+step.getName()+"', "+iStageID+", "+(j+1)+",'" +instructionDisplayType +"')";
-                    Bukkit.getConsoleSender().sendMessage(sql);
+                    sql = "INSERT INTO `Steps` (`StepName`, `StageID`, `StepInStage`, `InstructionDisplay`) VALUES ('"+ step.getName()+"', "+iStageID+", "+(j+1)+",'" +instructionDisplayType +"')";
                     SQL.executeUpdate(sql);
 
                     sql = "Select LAST_INSERT_ID()";
@@ -696,26 +778,24 @@ public class TeachingTutorials extends JavaPlugin
                 }
                 catch (Exception e)
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new step into DB. Tutorial: "+tutorial.szTutorialName);
-                    e.printStackTrace();
+                    getLogger().log(Level.SEVERE, "Could not insert new step into DB. Name: "+tutorial.getTutorialName(), e);
                     continue;
                 }
 
                 ArrayList<Group> groups = step.groups;
-                iGroups = groups.size();
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iGroups+" groups in this step");
+                iNumGroups = groups.size();
+                getLogger().log(Level.INFO, iNumGroups+" groups in this step");
                 //Go through groups
-                for (k = 0 ; k < iGroups ; k++)
+                for (k = 0 ; k < iNumGroups ; k++)
                 {
                     //Insert the new group into the groups table
                     Group group = groups.get(k);
 
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Adding group "+k +". Name: "+group.getName());
+                    getLogger().log(Level.INFO, "Adding group "+k +". Name: "+ group.getName());
                     try
                     {
                         sql = "INSERT INTO `Groups` (`StepID`)" +
                                 " VALUES (" +iStepID+")";
-                        Bukkit.getConsoleSender().sendMessage(sql);
                         SQL.executeUpdate(sql);
 
                         sql = "Select LAST_INSERT_ID()";
@@ -725,16 +805,15 @@ public class TeachingTutorials extends JavaPlugin
                     }
                     catch (Exception e)
                     {
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new group into DB. Tutorial: "+tutorial.szTutorialName);
-                        e.printStackTrace();
+                        getLogger().log(Level.SEVERE, "Could not insert new group into DB. Name: "+tutorial.getTutorialName(), e);
                         continue; // Doesn't attempt to then store the tasks
                     }
 
-                    ArrayList<Task> tasks = group.getTasks();
-                    iTasks = tasks.size();
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"" +iTasks+" tasks in this group");
+                    ArrayList<Task> tasks = group.tasks;
+                    iNumTasks = tasks.size();
+                    getLogger().log(Level.INFO, iNumTasks+" tasks in this group");
                     //Go through tasks
-                    for (l = 0 ; l < iTasks ; l++)
+                    for (l = 0 ; l < iNumTasks ; l++)
                     {
                         //Insert the new group into the groups table
                         Task task = tasks.get(l);
@@ -750,14 +829,11 @@ public class TeachingTutorials extends JavaPlugin
                         {
                             sql = "INSERT INTO `Tasks` (`GroupID`, `TaskType`, `Order`, `Details`)" +
                                     " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1) +", '" +szDetails +"')";
-                            Bukkit.getConsoleSender().sendMessage(sql);
                             SQL.executeUpdate(sql);
                         }
                         catch (Exception e)
                         {
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"Could not insert new task into DB. Tutorial: "+tutorial.szTutorialName);
-                            e.printStackTrace();
-                            continue;
+                            getLogger().log(Level.SEVERE, "Could not insert new task into DB. Name: "+tutorial.getTutorialName(), e);
                         }
                     }
                 }
@@ -766,30 +842,47 @@ public class TeachingTutorials extends JavaPlugin
         return true;
     }
 
+    /**
+     * Plugin disable logic
+     */
     @Override
     public void onDisable()
     {
         // Plugin shutdown logic
     }
 
+    /**
+     * @return A reference to the main instance of the TeachingTutorials plugin
+     */
     public static TeachingTutorials getInstance()
     {
         return instance;
     }
 
+    /**
+     * @return A reference to the main DB connection object of the TeachingTutorials plugin
+     */
     public DBConnection getDBConnection()
     {
         return dbConnection;
     }
 
+    /**
+     * @return A reference to the main SQL connection object of the TeachingTutorials plugin
+     */
     public Connection getConnection()
     {
         return (dbConnection.getConnection());
     }
 
+    /**
+     * Creates the necessary tables in the database from the file in config, if the tables don't already exist.
+     * @return Whether the tables were created successfully
+     */
     private boolean createTables()
     {
-        sql = "";
+        String sql;
+        Statement SQL = null;
 
         FileReader fileReader = null;
         BufferedReader bufferedReader = null;
@@ -821,28 +914,24 @@ public class TeachingTutorials extends JavaPlugin
             for (int i = 0 ; i < statements.length - 1 ; i++)
             {
                 SQL = dbConnection.getConnection().createStatement();
-
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - SQL - DB Creation, Statement "+i +" \n" + statements[i]);
+                getLogger().log(Level.FINE, ChatColor.AQUA +"SQL - DB Creation, Statement "+i +" \n" + statements[i]);
 
                 //Executes the update and returns how many rows were changed
                 SQL.executeUpdate(statements[i]);
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] - Executed command\n");
+                getLogger().log(Level.INFO,ChatColor.AQUA +"Executed command\n");
             }
         }
         catch (IOException e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - IO - IO Error Creating Tables");
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "IO - IO Error Creating Tables", e);
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - SQL Error Creating Tables");
-            se.printStackTrace();
+            getLogger().log(Level.SEVERE, "SQL - SQL Error Creating Tables", se);
         }
         catch (Exception e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] - SQL - Error Creating Tables");
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "SQL - Non-SQL Error Creating Tables", e);
         }
         finally
         {
@@ -865,6 +954,11 @@ public class TeachingTutorials extends JavaPlugin
         return true;
     }
 
+    /**
+     * Reads in all of the text from a buffered reader into one string
+     * @param br The buffered reader to read the data in from
+     * @return A string representation of the data loaded from the buffered reader
+     */
     private String readAll(BufferedReader br)
     {
         StringBuilder sb = new StringBuilder("");
@@ -890,4 +984,12 @@ public class TeachingTutorials extends JavaPlugin
         }
         return sb.toString();
     }
+}
+
+/**
+ * A type of tutorial object
+ */
+enum TutorialObject
+{
+    Stage, Step, Group, Task
 }

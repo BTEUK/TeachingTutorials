@@ -1,7 +1,6 @@
-package teachingtutorials.tutorials;
+package teachingtutorials.tutorialobjects;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.DBConnection;
@@ -9,12 +8,21 @@ import teachingtutorials.utils.DBConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ * Represents a Tutorials Location
+ */
 public class Location
 {
+    /** The ID of this location in the DB */
     private int iLocationID;
-    private int iTutorialID;
-    private float fDifficulty;
+
+    /** The ID of the tutorial for which this is a location of */
+    private final int iTutorialID;
+
+    /** A reference to the bukkit world for this location */
     private World world;
 
     //--------------------------------------------------
@@ -22,16 +30,29 @@ public class Location
     //--------------------------------------------------
 
     //Used for creating a new location
+
+    /**
+     * Used for creating a new location
+     * @param iTutorialID The ID of the tutorial for which this is a location of
+     * @param bNew Whether it is new or not. It always is in this case, this gets round the overloading issue, see
+     *             constructor below this one would have the same parameters.
+     */
     public Location(int iTutorialID, boolean bNew)
     {
         this.iTutorialID = iTutorialID;
     }
 
-    //Used for fetching a location
-    public Location(int iLocationID)
+    /**
+     * Used for loading a location from the DB
+     * @param iLocationID The locationID of the location to load from the DB
+     * @param iTutorialID The tutorialID of the location's tutorial
+     */
+    public Location(int iLocationID, int iTutorialID)
     {
         this.iLocationID = iLocationID;
-        fetchDetailsByLocationID();
+        this.iTutorialID = iTutorialID;
+
+        //Loads the bukkit world for this location
         this.world = Bukkit.getWorld(this.getLocationID()+"");
     }
 
@@ -50,6 +71,10 @@ public class Location
         return iLocationID;
     }
 
+    /**
+     * Gets the bukkit world for this location if it is not already loaded
+     * @return The bukkit world for this location
+     */
     public World getWorld()
     {
         if (world == null)
@@ -57,15 +82,13 @@ public class Location
         return world;
     }
 
-    public int getTutorialID()
-    {
-        return iTutorialID;
-    }
-
     //---------------------------------------------------
     //----------------------Setters----------------------
     //---------------------------------------------------
-
+    /**
+     * Sets the bukkit world object for this location
+     * @param world
+     */
     public void setWorld(World world)
     {
         this.world = world;
@@ -75,36 +98,13 @@ public class Location
     //--------------------SQL Fetches--------------------
     //---------------------------------------------------
 
-    private void fetchDetailsByLocationID()
-    {
-        String sql;
-        Statement SQL = null;
-        ResultSet resultSet = null;
-
-        try
-        {
-            //Compiles the command to fetch location
-            sql = "SELECT * FROM `Locations` WHERE `Locations`.`LocationID` = " +iLocationID;
-
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-
-            //Move the cursor to the first row
-            resultSet.next();
-
-            //Stores the information
-            this.fDifficulty = resultSet.getFloat("Difficulty");;
-            this.iTutorialID = resultSet.getInt("TutorialID");
-        }
-        catch (Exception e)
-        {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] Error fetching location information of location ID " +this.iLocationID);
-        }
-    }
-
-    public static int[] getAllLocationIDsForTutorial(int iTutorialID, DBConnection dbConnection)
+    /**
+     * Fetches a list of locationIDs for all of the Locations of a given Tutorial
+     * @param iTutorialID The tutorial ID of the tutorial for which to fetch the locations for
+     * @param dbConnection A DB connection object
+     * @return A list of locationIDs
+     */
+    public static int[] getAllLocationIDsForTutorial(int iTutorialID, DBConnection dbConnection, Logger logger)
     {
         String sql;
         Statement SQL = null;
@@ -117,7 +117,6 @@ public class Location
         {
             //Compiles the command to fetch all the locations for the tutorial
             sql = "SELECT * FROM `Locations` WHERE `TutorialID` = " +iTutorialID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             SQL = dbConnection.getConnection().createStatement();
 
             //Executes the query
@@ -139,8 +138,12 @@ public class Location
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error fetching location IDs for tutorial with ID: "+iTutorialID);
-            se.printStackTrace();
+            logger.log(Level.SEVERE, "SQL - SQL Error fetching location IDs for tutorial with ID: "+iTutorialID, se);
+            iLocationIDs = new int[0];
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching location IDs for tutorial with ID: "+iTutorialID, e);
             iLocationIDs = new int[0];
         }
         return iLocationIDs;
@@ -149,6 +152,11 @@ public class Location
     //---------------------------------------------------
     //--------------------SQL Updates--------------------
     //---------------------------------------------------
+
+    /**
+     * Inserts a new location into the database based on the data in this object
+     * @return Whether the new location was successfully added to the database
+     */
     public boolean insertNewLocation()
     {
         String sql;
@@ -161,7 +169,6 @@ public class Location
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             sql = "INSERT INTO `Locations` (`TutorialID`) VALUES (" +iTutorialID+")";
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +sql);
             iCount = SQL.executeUpdate(sql);
 
             if (iCount != 1)
@@ -174,25 +181,28 @@ public class Location
             resultSet = SQL.executeQuery(sql);
             resultSet.next();
             iLocationID = resultSet.getInt(1);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "LocationID of new location = "+iLocationID);
             return true;
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error adding new location");
-            se.printStackTrace();
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL - SQL Error adding new location", se);
             return false;
         }
         catch (Exception e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Other error adding new location");
-            e.printStackTrace();
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL - Non-SQL Error adding new location", e);
             return false;
         }
     }
 
+    /**
+     * Deletes a location from the DB
+     * @param iLocationID The location ID of the location to delete
+     * @return Whether the location was successfully deleted
+     */
     public static boolean deleteLocationByID(int iLocationID)
     {
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, "Removing location " +iLocationID +" from the DB");
         String sql;
         Statement SQL = null;
 
@@ -204,19 +214,16 @@ public class Location
 
             //Removes the answers
             sql = "DELETE FROM `LocationTasks` WHERE `LocationID` = " +iLocationID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
             iCount = SQL.executeUpdate(sql);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationTasks were deleted");
+            TeachingTutorials.getInstance().getLogger().log(Level.INFO, iCount +" LocationTasks were deleted");
 
             //Removes the location specific step details
             sql = "DELETE FROM `LocationSteps` WHERE `LocationID` = " +iLocationID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
             iCount = SQL.executeUpdate(sql);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +iCount +" LocationSteps were deleted");
+            TeachingTutorials.getInstance().getLogger().log(Level.INFO, iCount +" LocationSteps were deleted");
 
             //Removes the location
             sql = "DELETE FROM `Locations` WHERE `LocationID` = " +iLocationID;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] " +sql);
             iCount = SQL.executeUpdate(sql);
 
             if (iCount != 1)
@@ -228,14 +235,12 @@ public class Location
         }
         catch (SQLException se)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - SQL Error deleting location with LocationID = "+iLocationID);
-            se.printStackTrace();
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL Error deleting location with LocationID = "+iLocationID, se);
             return false;
         }
         catch (Exception e)
         {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[TeachingTutorials] - SQL - Non-SQL Error deleting location with LocationID = "+iLocationID);
-            e.printStackTrace();
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "Non-SQL Error deleting location with LocationID = "+iLocationID, e);
             return false;
         }
     }

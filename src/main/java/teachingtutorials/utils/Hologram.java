@@ -7,11 +7,25 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 
+/**
+ * Represents a hologram within the Tutorials system
+ */
 public class Hologram
 {
+    //Gets an instance of the holographic displays API
     HolographicDisplaysAPI api = HolographicDisplaysAPI.get(TeachingTutorials.getInstance());
     me.filoghost.holographicdisplays.api.hologram.Hologram hologram;
 
+    //Todo: This class needs to be modified to use DecentHolograms instead of HolographicDisplays since it is
+    // depreciated
+
+    /**
+     *
+     * @param location A reference to a bukkit location object at which this hologram should be displayed
+     * @param player A reference to the player to which this hologram should exclusively be displayed to
+     * @param szTitle The title of the hologram - will appear on the first line
+     * @param szText The main body of the hologram
+     */
     public Hologram(Location location, Player player, String szTitle, String szText)
     {
         //Performs the hologram creation synchronously
@@ -141,9 +155,11 @@ public class Hologram
         });
     }
 
+    /**
+     * Deletes the holographic displays hologram
+     */
     public void removeHologram()
     {
-        //Deletes the hologram
         //Performs the hologram deletion synchronously
         Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), new Runnable()
         {

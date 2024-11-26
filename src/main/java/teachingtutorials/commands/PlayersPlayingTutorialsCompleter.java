@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A class to handle tab completers needing a list of online players who are currently playing through a tutorials
+ * A class to handle tab completers needing a list of online players who are currently playing through a tutorial
  */
 public class PlayersPlayingTutorialsCompleter implements TabCompleter
 {
@@ -40,7 +40,7 @@ public class PlayersPlayingTutorialsCompleter implements TabCompleter
         {
             user = onlineUsers.get(i);
             //Checks whether they are running a tutorial
-            if (user.currentMode.equals(Mode.Creating_New_Location) || user.currentMode.equals(Mode.Doing_Tutorial))
+            if (user.getCurrentMode().equals(Mode.Creating_New_Location) || user.getCurrentMode().equals(Mode.Doing_Tutorial))
             {
                 //Adds them to the list
                 activePlayers.add(user.player.getName());

@@ -35,7 +35,8 @@ Virtual_Block_Refresh: 5
 World_Reset_Period: 40
 
 #Do not decrease below 60 ticks unless you know what you are doing - this is designed to ensure that there is a gap between calling blocks
-  # as to be reset on the world after a WE calculation and the next calculation beginning
+  # as to be reset on the world after a WE calculation and the next calculation beginning. It also ensures there is sufficient time for 'original'
+  # blocks to be recorded before the next calculation then applies blocks to the world.
 BlockResetDelay: 60
 
 #The time period between each checking of the events database (in ticks)

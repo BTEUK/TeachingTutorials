@@ -1,40 +1,58 @@
 package teachingtutorials.guis;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.tutorials.Tutorial;
+import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
-
+/**
+ * A menu which allows an admin to select the compulsory tutorial. The menu is of a reverse whack-a-mole design
+ * - only one tutorial can be compulsory at a time and if another is selected the original will be replaced
+ */
 public class CompulsoryTutorialMenu extends Gui
 {
-    private static final Component inventoryName = Component.text("Select Compulsory Tutorial", Style.style(TextDecoration.BOLD, NamedTextColor.DARK_AQUA));
+    /** Stores the name of the inventory */
+    private static final Component inventoryName = TutorialGUIUtils.inventoryTitle("Select Compulsory Tutorial");
+
+    /** A reference to the TeachingTutorials plugin instance */
     private final TeachingTutorials plugin;
+
+    /** A reference to the user for which this menu is for */
     private final User user;
 
+    /** Stores a list of all in use tutorials */
     private Tutorial[] tutorials;
 
+    /** The material used as the icon of the compulsory tutorial */
     private static final Material compulsoryBlock = Material.LECTERN;
+
+    /** The material used as the icon of the tutorial currently not selected as the compulsory tutorial */
     private static final Material nonCompulsoryBlock = Material.BOOKSHELF;
 
     public CompulsoryTutorialMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
     {
+        //Sets up the menu with the icons already in place
         super(getGUI(tutorials));
         this.plugin = plugin;
         this.user = user;
         this.tutorials = tutorials;
 
+        //Adds the actions to the slots of the menu
         setActions();
     }
 
+    /**
+     * Creates an inventory design for the current status of tutorials
+     * @param tutorials A list of tutorials to include in the menu
+     * @return An inventory filled with icons, informing the user of the current state of tutorials, including which
+     * one is currently selected as compulsory
+     */
     private static Inventory getGUI (Tutorial[] tutorials)
     {
         //Declare variables
@@ -43,7 +61,6 @@ public class CompulsoryTutorialMenu extends Gui
         int iDiv;
         int iMod;
         int iRows;
-
         Inventory inventory;
 
         //Works out how many rows in the inventory are needed
@@ -56,53 +73,57 @@ public class CompulsoryTutorialMenu extends Gui
             iDiv = iDiv + 1;
         }
 
-        //Enables an empty row and then a row for the back button
+        //Adds an empty row and then a row for the back button
         iRows = iDiv+2;
 
-        //Create inventories
+        //Creates the inventories - one to add items to and one to return to the user
         inventory = Bukkit.createInventory(null, iRows * 9);
         inventory.clear();
 
         Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventoryName);
 
-        //Indicates that the creator has no tutorials if they don't own any
+        //Adds an indicator icon if there are no tutorials to select as compulsory
         if (iTutorials == 0)
         {
             ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1,
                     TutorialGUIUtils.optionTitle("There are no in-use tutorials on the system"));
-            inventory.setItem(5-1, noTutorials);
+            inventory.setItem(5-1, noTutorials); //Sets the item in the middle
         }
 
-        //Adds back button
+        //Adds a back button
         ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1,
                 TutorialGUIUtils.backButton("Back to creator menu"));
         inventory.setItem((iRows * 9)-1, back);
 
-        //Inv slot 0 = the first one
+        //Inv slot 0 = the top left place
         //Add the tutorials to the gui
         for (i = 0 ; i < tutorials.length ; i++)
         {
             ItemStack tutorial;
-            if (tutorials[i].bCompulsory)
+            if (tutorials[i].isCompulsory())
             {
                 tutorial = Utils.createItem(compulsoryBlock, 1,
-                        TutorialGUIUtils.optionTitle(tutorials[i].szTutorialName).decoration(TextDecoration.BOLD, true),
-                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName()));
+                        TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()).decoration(TextDecoration.BOLD, true),
+                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].getUUIDOfAuthor()).getName()));
             }
             else
             {
                 tutorial = Utils.createItem(nonCompulsoryBlock, 1,
-                        TutorialGUIUtils.optionTitle(tutorials[i].szTutorialName),
-                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].uuidAuthor).getName()));
+                        TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()),
+                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].getUUIDOfAuthor()).getName()));
             }
             inventory.setItem(i, tutorial);
         }
 
+        //Copies the inventory to the inventory to return
         toReturn.setContents(inventory.getContents());
 
         return toReturn;
     }
 
+    /**
+     * Sets the actions to the selection menu
+     */
     private void setActions()
     {
         //Declare variables
@@ -122,7 +143,7 @@ public class CompulsoryTutorialMenu extends Gui
             iDiv = iDiv + 1;
         }
 
-        //Enables an empty row and then a row for the back button
+        //Adds an empty row and then a row for the back button
         iRows = iDiv+2;
 
         //Adds back button
@@ -135,7 +156,7 @@ public class CompulsoryTutorialMenu extends Gui
             @Override
             public void leftClick(User u) {
                 delete();
-                u.mainGui = new AdminMenu(plugin, user);
+                u.mainGui = new CreatorMenu(plugin, user);
                 u.mainGui.open(u);
             }
         });
@@ -155,7 +176,7 @@ public class CompulsoryTutorialMenu extends Gui
                 public void leftClick(User u)
                 {
                     //Toggles whether the tutorial is compulsory
-                    tutorials[iSlot].toggleCompulsory();
+                    tutorials[iSlot].toggleCompulsory(plugin);
 
                     //Refreshes the display
                     refresh();
@@ -164,11 +185,21 @@ public class CompulsoryTutorialMenu extends Gui
         }
     }
 
+    /**
+     * Clears items from the GUI, re-adds the items and then opens the menu
+     */
     @Override
     public void refresh() {
+        //Clears the gui
         this.clearGui();
+
+        //Sets the icons
         this.getInventory().setContents(getGUI(tutorials).getContents());
+
+        //Sets the actions
         this.setActions();
+
+        //Opens the gui
         this.open(user);
     }
 }

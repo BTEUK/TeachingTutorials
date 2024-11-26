@@ -17,3 +17,4 @@ softdepend:
   - HolographicDisplays
   - Multiverse-Core
   - WorldGuard
+  - FastAsyncWorldEdit

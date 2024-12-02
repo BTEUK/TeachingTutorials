@@ -63,7 +63,7 @@
         </repository>
         <repository>
             <id>sonatype</id>
-            <url>https://oss.sonatype.org/content/groupPlaythroughs/public/</url>
+            <url>https://oss.sonatype.org/content/group/public/</url>
         </repository>
         <repository>
             <id>jitpack.io</id>
@@ -79,7 +79,7 @@
         </repository>
         <repository>
             <id>OnARandomBox</id>
-            <url>https://repo.onarandombox.com/content/groupPlaythroughs/public/</url>
+            <url>https://repo.onarandombox.com/content/group/public/</url>
         </repository>
         <repository>
             <id>Lib</id>

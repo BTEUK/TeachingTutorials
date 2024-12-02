@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -65,11 +66,8 @@ public class Selection extends PlaythroughTask implements Listener
      */
     public int[] iSelectedBlockCoordinates2 = new int[]{0, 0, 0};
 
-    //Variables used by new location procedures
-    boolean bSelection1Made;
-    boolean bSelection2Made;
-
-    float fWEDifficulty;
+    /** Variables used by new location procedures */
+    boolean bSelection1Made, bSelection2Made;
 
     /**
      * Used when initialising a task for a lesson, i.e when the answers are already known
@@ -91,7 +89,12 @@ public class Selection extends PlaythroughTask implements Listener
         this.dTargetCoords2[1] = Double.parseDouble(cords[4]);
         this.dTargetCoords2[2] = Double.parseDouble(cords[5]);
 
-        this.fWEDifficulty = fWEDifficulty;
+        //Output the required selection point coordinates to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target point 1 (lat, long, height) = ("+dTargetCoords1[0]+","+dTargetCoords1[1]+","+dTargetCoords1[2]+")"
+                +". Target point 2 (lat, long, height) = ("+dTargetCoords2[0]+","+dTargetCoords2[1]+","+dTargetCoords2[2]+")"
+        );
 
         this.bSelection1Made = false;
         this.bSelection2Made = false;

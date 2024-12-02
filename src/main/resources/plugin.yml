@@ -1,7 +1,7 @@
 name: TeachingTutorials
 version: '${project.version}'
 main: teachingtutorials.TeachingTutorials
-description: Provides a system for propsective builders of the Build the Earth project to learn skills
+description: Provides a system for prospective builders of the Build the Earth project to learn skills
 api-version: 1.18
 author: George112n
 database: true
@@ -11,7 +11,7 @@ commands:
     description: Deals will all tutorial related commands.
   blockspy:
     usage: /<command>
-    description: Allows players to spy on other player's virtual blocks
+    description: Allows players to spy on other player's virtual blocks.
 website: https://github.com/BTEUK/TeachingTutorials
 softdepend:
   - HolographicDisplays

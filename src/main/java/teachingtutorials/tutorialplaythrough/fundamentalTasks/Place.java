@@ -36,7 +36,7 @@ public class Place extends PlaythroughTask implements Listener
      * @param locationTask A reference to the location task object of this place
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Place(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
+    Place(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, locationTask, groupPlaythrough);
 
@@ -60,7 +60,7 @@ public class Place extends PlaythroughTask implements Listener
      * @param task A reference to the task
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Place(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
+    Place(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
     }

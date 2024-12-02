@@ -60,7 +60,7 @@ public class Command extends PlaythroughTask implements Listener
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      * @param previousTasks A reference to the list of play-through tasks for the group which this task belongs to
      */
-    public Command(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough, ArrayList<PlaythroughTask> previousTasks)
+    Command(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough, ArrayList<PlaythroughTask> previousTasks)
     {
         super(plugin, player, locationTask, groupPlaythrough);
 
@@ -105,7 +105,7 @@ public class Command extends PlaythroughTask implements Listener
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      * @param tasks Stores a list of tasks within the parent group
      */
-    public Command(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough, ArrayList<PlaythroughTask> tasks)
+    Command(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough, ArrayList<PlaythroughTask> tasks)
     {
         super(plugin, player, task, groupPlaythrough);
 

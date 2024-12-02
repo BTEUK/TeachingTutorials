@@ -42,7 +42,7 @@ public class GroupPlaythrough
      * @param plugin A reference to the instance of the TeachingTutorials plugin
      * @param parentStepPlaythrough A reference to the step which this group belongs to
      */
-    public GroupPlaythrough(Group group, TeachingTutorials plugin, StepPlaythrough parentStepPlaythrough)
+    GroupPlaythrough(Group group, TeachingTutorials plugin, StepPlaythrough parentStepPlaythrough)
     {
         this.plugin = plugin;
         this.parentStepPlaythrough = parentStepPlaythrough;

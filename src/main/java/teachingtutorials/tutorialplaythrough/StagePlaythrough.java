@@ -57,7 +57,7 @@ public class StagePlaythrough
      * @param stage A reference to the stage which this stage playthrough is a play-through of
      * @param tutorialPlaythrough A reference to the playthrough which this stage is a part of
      */
-    public StagePlaythrough(Player player, TeachingTutorials plugin, Stage stage, TutorialPlaythrough tutorialPlaythrough)
+    StagePlaythrough(Player player, TeachingTutorials plugin, Stage stage, TutorialPlaythrough tutorialPlaythrough)
     {
         //Inherited properties from the lesson
         this.plugin = plugin;

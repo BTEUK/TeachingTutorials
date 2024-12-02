@@ -30,7 +30,7 @@ public class Chat extends PlaythroughTask implements Listener
      * @param locationTask A reference to the location task object of this chat
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Chat(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
+    Chat(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, locationTask, groupPlaythrough);
         this.szTargetAnswer = locationTask.getAnswer();
@@ -43,7 +43,7 @@ public class Chat extends PlaythroughTask implements Listener
      * @param task A reference to the task
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Chat(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
+    Chat(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
     }

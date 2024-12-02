@@ -78,7 +78,7 @@ public class Selection extends PlaythroughTask implements Listener
      * @param locationTask A reference to the location task object of this selection
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Selection(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
+    Selection(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, locationTask, groupPlaythrough);
 
@@ -104,7 +104,7 @@ public class Selection extends PlaythroughTask implements Listener
      * @param task A reference to the task
      * @param groupPlaythrough A reference to the parent group play-through object which this task is a member of
      */
-    public Selection(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
+    Selection(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
 

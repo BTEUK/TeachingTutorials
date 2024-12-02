@@ -78,7 +78,7 @@ public class StepPlaythrough
      * @param parentStagePlaythrough A reference to the parent stage which this step playthrough is a member of
      * @param step A reference to the step of which this is a play-through
      */
-    public StepPlaythrough(Player player, TeachingTutorials plugin, StagePlaythrough parentStagePlaythrough, Step step)
+    StepPlaythrough(Player player, TeachingTutorials plugin, StagePlaythrough parentStagePlaythrough, Step step)
     {
         this.player = player;
         this.plugin = plugin;

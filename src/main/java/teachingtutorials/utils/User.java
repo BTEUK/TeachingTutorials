@@ -263,9 +263,10 @@ public class User
      */
     public static void teleportPlayerToLobby(Player player, TeachingTutorials plugin, long waitTimeTicks)
     {
+        //Gets a reference to the config
         FileConfiguration config = plugin.getConfig();
 
-        World tpWorld = Bukkit.getWorld(config.getString("Lobby_World"));
+        World tpWorld = Bukkit.getWorld(config.getString("Spawn_Information.Lobby_World"));
         if (tpWorld == null)
         {
             player.sendMessage(Display.errorText("Cannot tp you to lobby"));
@@ -273,7 +274,9 @@ public class User
         }
         else
         {
-            org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Lobby_X"), config.getDouble("Lobby_Y"), config.getDouble("Lobby_Z"), config.getInt("Lobby_Yaw"), config.getInt("Lobby_Pitch"));
+            //Creates an object representing the location of the lobby - note we don't make this a static member of
+            // TeachingTutorials because we want to allow it to change mid-game
+            org.bukkit.Location location = new org.bukkit.Location(tpWorld, config.getDouble("Spawn_Information.Lobby_X"), config.getDouble("Spawn_Information.Lobby_Y"), config.getDouble("Spawn_Information.Lobby_Z"), config.getInt("Spawn_Information.Lobby_Yaw"), config.getInt("Spawn_Information.Lobby_Pitch"));
 
             //Teleports the player
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()

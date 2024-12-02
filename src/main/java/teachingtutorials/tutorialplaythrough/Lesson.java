@@ -463,11 +463,11 @@ public class Lesson extends TutorialPlaythrough
 
             //Retrieves the relevant information from config
             FileConfiguration config = plugin.getConfig();
-            String szCompulsoryTutorialPromotionType = config.getString("Compulsory_Tutorial_Promotion_Type");
-            String szRankOld = config.getString("Compulsory_Tutorial_RankOld");
-            String szRankNew = config.getString("Compulsory_Tutorial_RankNew");
-            String szTrack = config.getString("Compulsory_Tutorial_Track");
-            String[] szTracks = config.getString("Compulsory_Tutorial_TrackOutline").split(",");
+            String szCompulsoryTutorialPromotionType = config.getString("Compulsory_Tutorial.Promotion_Type");
+            String szRankOld = config.getString("Compulsory_Tutorial.RankOld");
+            String szRankNew = config.getString("Compulsory_Tutorial.RankNew");
+            String szTrack = config.getString("Compulsory_Tutorial.Track");
+            String[] szTracks = config.getString("Compulsory_Tutorial.TrackOutline").split(",");
 
             //Gets a local reference to the console sender
             ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();

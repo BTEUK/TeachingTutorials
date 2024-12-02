@@ -59,8 +59,9 @@ public class MainMenu extends Gui
         if (nextTutorial == null)
             return;
 
-        FileConfiguration config = TeachingTutorials.getInstance().getConfig();
-        boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial");
+        //Gets a reference to the config
+        FileConfiguration config = plugin.getConfig();
+        boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial.Enabled");
 
         //Get compulsory tutorial ID
         int iCompulsoryTutorialID;

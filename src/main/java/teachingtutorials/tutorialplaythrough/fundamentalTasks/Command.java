@@ -85,11 +85,6 @@ public class Command extends PlaythroughTask implements Listener
             this.szTargetCommandArgs = " " + szTargetCommandArgs;
         }
 
-        //Output the required command to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target command = "+this.szTargetCommand +this.szTargetCommandArgs);
-
         //Uses the details of the command from the DB and determines what action should be taken after completion
         this.actionType = CommandActionType.valueOf(locationTask.szDetails);
 
@@ -125,6 +120,11 @@ public class Command extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required command to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target command = "+this.szTargetCommand +this.szTargetCommandArgs);
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

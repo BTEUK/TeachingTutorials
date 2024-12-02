@@ -50,12 +50,6 @@ public class Tpll extends PlaythroughTask implements Listener
         this.dTargetCoords[0] = Double.parseDouble(cords[0]);
         this.dTargetCoords[1] = Double.parseDouble(cords[1]);
 
-        //Output the required tpll coordinates to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
-        );
-
         //Extracts the details - required accuracies
         if (locationTask.szDetails.equals("")) // Deals with pre 1.1.0 tutorials
         {
@@ -93,6 +87,12 @@ public class Tpll extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required tpll coordinates to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
+        );
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

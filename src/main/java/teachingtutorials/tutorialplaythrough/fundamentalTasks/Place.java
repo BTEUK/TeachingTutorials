@@ -52,11 +52,6 @@ public class Place extends PlaythroughTask implements Listener
         //Extracts the material
         mTargetMaterial = Material.getMaterial(szCoordinates3AndMaterial[3]);
 
-        //Output the required block and location to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: "+((Lesson) groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
-
         //Adds the virtual block
         addVirtualBlock();
     }
@@ -79,6 +74,11 @@ public class Place extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required block and location to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: "+((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

@@ -37,11 +37,6 @@ public class Chat extends PlaythroughTask implements Listener
     {
         super(plugin, player, locationTask, groupPlaythrough);
         this.szTargetAnswer = locationTask.getAnswer();
-
-        //Output the required chat to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target chat = "+this.szTargetAnswer);
     }
 
     /**
@@ -62,6 +57,11 @@ public class Chat extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required chat to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target chat = "+this.szTargetAnswer);
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

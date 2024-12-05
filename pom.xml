@@ -79,7 +79,7 @@
         </repository>
         <repository>
             <id>OnARandomBox</id>
-            <url>https://repo.onarandombox.com/content/group/public/</url>
+            <url>https://repo.onarandombox.com/content/groups/public/</url>
         </repository>
         <repository>
             <id>Lib</id>

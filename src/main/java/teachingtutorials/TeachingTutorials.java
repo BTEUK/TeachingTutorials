@@ -12,6 +12,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.commands.Blockspy;
 import teachingtutorials.commands.PlayersPlayingTutorialsCompleter;
+import teachingtutorials.services.PromotionService;
+import teachingtutorials.services.TutorialsPromotionService;
 import teachingtutorials.tutorialobjects.Group;
 import teachingtutorials.tutorialobjects.Stage;
 import teachingtutorials.tutorialobjects.Step;
@@ -72,6 +74,9 @@ public class TeachingTutorials extends JavaPlugin
 
     /** Stores how many calculations have been attempted since a success */
     public int iFailedCalculations;
+
+    /** Service to promote players after completing the compulsary tutorial */
+    private PromotionService promotionService;
 
     /**
      * Performs all of the startup logic for this plugin
@@ -245,6 +250,17 @@ public class TeachingTutorials extends JavaPlugin
         getCommand("blockspy").setTabCompleter(new PlayersPlayingTutorialsCompleter());
         getCommand("blockspy").setExecutor(new Blockspy());
 
+        //---------------------------------------
+        //------------ Enable Services ----------
+        //---------------------------------------
+        ServiceLoader<PromotionService> promotionServiceLoader = ServiceLoader.load(PromotionService.class);
+        Optional<PromotionService> optionalExternalPromotionService = promotionServiceLoader.findFirst();
+        if (optionalExternalPromotionService.isPresent()) {
+            promotionService = optionalExternalPromotionService.get();
+        } else {
+            promotionService = new TutorialsPromotionService(this);
+        }
+        getLogger().info(String.format("Loaded promotion service: %s", promotionService.getDescription()));
 
         //---------------------------------------
         //----------Sets up event check----------
@@ -873,6 +889,13 @@ public class TeachingTutorials extends JavaPlugin
     public Connection getConnection()
     {
         return (dbConnection.getConnection());
+    }
+
+    /**
+     * @return The promotion service that is enabled.
+     */
+    public PromotionService getPromotionService() {
+        return promotionService;
     }
 
     /**

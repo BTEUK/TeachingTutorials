@@ -57,7 +57,7 @@ public class Task
      * @param szDetails The details of the task
      * @param group The group which this task is a member of
      */
-    Task(FundamentalTaskType type, int iTaskID, int iOrder, String szDetails, Group group)
+    public Task(FundamentalTaskType type, int iTaskID, int iOrder, String szDetails, Group group)
     {
         this.type = type;
         this.szDetails = szDetails;

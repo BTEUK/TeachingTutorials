@@ -67,6 +67,15 @@ public class StepEditorMenu extends Gui
     }
 
     /**
+     *
+     * @return A reference to the step playthrough managing this menu
+     */
+    public StepPlaythrough getStepPlaythrough()
+    {
+        return stepPlaythrough;
+    }
+
+    /**
      * Creates and adds the menu options to this gui
      */
     public void addMenuOptions()
@@ -139,7 +148,7 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    locationStep.setHologramLocationToThatOfPlayer(u.player, stepPlaythrough.getStep().getName());
+                    locationStep.setHologramLocationToThatOfPlayer(stepPlaythrough, u.player, stepPlaythrough.getStep().getName());
                     stepPlaythrough.tryNextStep();
                 }
             });

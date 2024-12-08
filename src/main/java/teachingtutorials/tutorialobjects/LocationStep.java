@@ -9,9 +9,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialplaythrough.StepPlaythrough;
 import teachingtutorials.utils.GeometricUtils;
 import teachingtutorials.utils.Display;
-import teachingtutorials.utils.Hologram;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,9 +42,6 @@ public class LocationStep
 
     /** The coordinates for the instructions hologram of this LocationStep */
     private double dHologramLocationX, dHologramLocationY, dHologramLocationZ;
-
-    /** A Hologram oject for the hologram displaying the instructions of this LocationStep */
-    private Hologram instructions;
 
     /** Stores a link to the video walkthrough tutorial for this LocationStep */
     private String szVideoWalkthroughLink;
@@ -91,6 +88,15 @@ public class LocationStep
     public Step getStep()
     {
         return this.step;
+    }
+
+    /**
+     *
+     * @return A copy of the instructions of the hologram
+     */
+    public String getInstructions()
+    {
+        return this.szInstructions;
     }
 
     /**
@@ -278,38 +284,12 @@ public class LocationStep
     }
 
     /**
-     * Displays the instructions to the player
-     * @param displayType The way the instruction should be displayed
-     * @param player The player to which the instruction should be displayed
-     */
-    public void displayInstructions(Display.DisplayType displayType, Player player, String szStepName, World world)
-    {
-        switch (displayType)
-        {
-            case hologram:
-                instructions = Display.Hologram(ChatColor.AQUA +"" +ChatColor.UNDERLINE +ChatColor.BOLD +szStepName, this.szInstructions, getHologramLocation(world), player);
-                break;
-            default:
-                player.sendMessage(this.szInstructions);
-                break;
-        }
-    }
-
-    /**
-     * Removes the hologram from view if it is displayed
-     */
-    public void removeInstructionsHologram()
-    {
-        if (instructions != null)
-            instructions.removeHologram();
-    }
-
-    /**
      * Sets the location of the instructions hologram and displays the instructions to the creator
+     * @param stepPlaythrough A reference to the StepPlaythrough managing this change
      * @param player The player to which the location must be set to
      * @param szStepName The name of the step, so that the instructions can then be displayed
      */
-    public void setHologramLocationToThatOfPlayer(Player player, String szStepName)
+    public void setHologramLocationToThatOfPlayer(StepPlaythrough stepPlaythrough, Player player, String szStepName)
     {
         //Sets the location
         org.bukkit.Location playerLocation = player.getLocation();
@@ -318,8 +298,8 @@ public class LocationStep
         this.dHologramLocationZ = playerLocation.getZ();
 
         //Displays the instructions
-        removeInstructionsHologram();
-        displayInstructions(Display.DisplayType.hologram, player, szStepName, player.getWorld());
+        stepPlaythrough.removeInstructionsHologram();
+        stepPlaythrough.displayInstructions(Display.DisplayType.hologram, player, szStepName, player.getWorld());
 
         this.bHologramLocationSet = true;
     }
@@ -328,27 +308,28 @@ public class LocationStep
      *
      * @return The instructions' hologram location for the step as a bukkit object
      */
-    private org.bukkit.Location getHologramLocation(World world)
+    public org.bukkit.Location getHologramLocation(World world)
     {
-        org.bukkit.Location hologramLocation = new org.bukkit.Location(world, dHologramLocationX, dHologramLocationY, dHologramLocationZ);
+        final org.bukkit.Location hologramLocation = new org.bukkit.Location(world, dHologramLocationX, dHologramLocationY, dHologramLocationZ);
         return hologramLocation;
     }
 
     /**
      * Sets the instructions of the step and displays the instructions
+     * @param stepPlaythrough A reference to the StepPlaythrough managing this change
      * @param szInstructions The desired instructions
      * @param displayType The display type, so the instructions can be displayed
      * @param player The player, so the instructions can be displayed
      * @param szStepName The player, so the instructions can be displayed
      */
-    public void setInstruction(String szInstructions, Display.DisplayType displayType, Player player, String szStepName)
+    public void setInstruction(StepPlaythrough stepPlaythrough, String szInstructions, Display.DisplayType displayType, Player player, String szStepName)
     {
         //Sets the instructions
         this.szInstructions = szInstructions;
 
         //Displays the instructions
-        removeInstructionsHologram();
-        displayInstructions(displayType, player, szStepName, player.getWorld());
+        stepPlaythrough.removeInstructionsHologram();
+        stepPlaythrough.displayInstructions(displayType, player, szStepName, player.getWorld());
 
         //Instructions may be blank at this point, but this is fine and is displayed blank on the hologram
 

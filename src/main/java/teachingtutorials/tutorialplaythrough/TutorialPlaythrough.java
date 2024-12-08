@@ -132,6 +132,9 @@ public abstract class TutorialPlaythrough
                     //Mark the spy user's spy target to this playthrough
                     spyUser.setSpyTarget(this);
 
+                    //Refreshes the hologram visible list
+                    this.currentStagePlaythrough.currentStepPlaythrough.refreshHologramViewers();
+
                     //Refresh happens frequently so no need to call for an adhoc refresh
                 }
             }
@@ -141,6 +144,8 @@ public abstract class TutorialPlaythrough
     /**
      * Removes a player from the list of spies viewing virtual blocks for this playthrough and resets their view.
      * <P> </P>
+     * Also stops the spy from viewing the holograms of this playthrough
+     * <p> </p>
      * This method will also set the spy target of the User to null.
      * @param player The player to remove
      */
@@ -150,7 +155,7 @@ public abstract class TutorialPlaythrough
         if (spies.remove(player))
         {
             //Resets all of their blocks
-            //Get the list of virtual blocks
+            //Get the list of virtual block groups
             VirtualBlockGroup[] virtualBlockGroups = this.plugin.getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
 
             //Declares the temporary list object
@@ -170,6 +175,9 @@ public abstract class TutorialPlaythrough
                     virtualBlockGroup.removeVirtualBlocksForSpy(player);
                 }
             }
+
+            //Makes the visible hologram invisible to the spy
+            this.currentStagePlaythrough.currentStepPlaythrough.removePlayerFromHologram(player);
 
             //Identify the user instance and set the user's spy target to null
             User spyUser = User.identifyUser(plugin, player);

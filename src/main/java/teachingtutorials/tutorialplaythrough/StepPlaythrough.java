@@ -4,6 +4,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialobjects.LocationStep;
@@ -11,6 +12,7 @@ import teachingtutorials.tutorialobjects.Step;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.Tpll;
 import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.Hologram;
 import teachingtutorials.utils.User;
 
 import java.sql.ResultSet;
@@ -59,6 +61,8 @@ public class StepPlaythrough
     /** A listener used to listen for the video link command */
     private VideoLinkCommandListener videoLinkListener;
 
+    /** A Hologram object for the hologram displaying the instructions of this LocationStep */
+    private Hologram instructions;
 
     //--- New Locations---
 
@@ -139,6 +143,50 @@ public class StepPlaythrough
         {
             groupPlaythroughs.get(i).displayAllVirtualBlocks();
         }
+    }
+
+    /**
+     * Displays the instructions to the player
+     * @param displayType The way the instruction should be displayed
+     * @param player The player to which the instruction should be displayed
+     */
+    public void displayInstructions(Display.DisplayType displayType, Player player, String szStepName, World world)
+    {
+        switch (displayType)
+        {
+            case hologram:
+                instructions = new Hologram(this.locationStep.getHologramLocation(world), this.parentStagePlaythrough.tutorialPlaythrough, ChatColor.AQUA +"" +ChatColor.UNDERLINE +ChatColor.BOLD +szStepName, this.locationStep.getInstructions(), this.step.getStepID());
+                instructions.showHologram();
+                break;
+            default:
+                player.sendMessage(this.locationStep.getInstructions());
+                break;
+        }
+    }
+
+    /**
+     * Removes the hologram from view if it is displayed
+     */
+    public void removeInstructionsHologram()
+    {
+        if (instructions != null)
+            instructions.removeHologram();
+    }
+
+    /**
+     * Removes the given player from being able to view the hologram
+     */
+    void removePlayerFromHologram(Player player)
+    {
+        this.instructions.removePlayerVisibility(player);
+    }
+
+    /**
+     * Refreshes the hologram view list based on the spy list of the master playthrough
+     */
+    void refreshHologramViewers()
+    {
+        this.instructions.showHologram();
     }
 
     /**
@@ -304,7 +352,7 @@ public class StepPlaythrough
             parentStagePlaythrough.tutorialPlaythrough.setFallListenerSafeLocation(startLocation);
 
             //Displays the step instructions
-            this.locationStep.displayInstructions(step.getInstructionDisplayType(), player, step.getName(), parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld());
+            displayInstructions(step.getInstructionDisplayType(), player, step.getName(), parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld());
         }
 
         //Player is a creator creating a new location for a tutorial
@@ -401,7 +449,7 @@ public class StepPlaythrough
 
                 //Remove hologram
                 if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
-                    locationStep.removeInstructionsHologram();
+                    removeInstructionsHologram();
 
                 //Calls stage to start the next step
                 parentStagePlaythrough.nextStep(false);
@@ -428,7 +476,7 @@ public class StepPlaythrough
             {
                 //Remove hologram
                 if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
-                    locationStep.removeInstructionsHologram();
+                    removeInstructionsHologram();
 
                 //Deletes menu
                 menu.delete();
@@ -481,7 +529,7 @@ public class StepPlaythrough
 
         //Remove holograms
         if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
-            this.locationStep.removeInstructionsHologram();
+            removeInstructionsHologram();
     }
 
     /**

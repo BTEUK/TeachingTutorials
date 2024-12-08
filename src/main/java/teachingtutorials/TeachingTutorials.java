@@ -85,9 +85,9 @@ public class TeachingTutorials extends JavaPlugin
     public void onEnable()
     {
         //Checks the existence of the soft dependencies
-        if (!Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays"))
+        if (!Bukkit.getPluginManager().isPluginEnabled("DecentHolograms"))
         {
-            getLogger().severe("*** HolographicDisplays is not installed or not enabled. ***");
+            getLogger().severe("*** DecentHolograms is not installed or not enabled. ***");
             getLogger().severe("*** This plugin will be disabled. ***");
             this.setEnabled(false);
             return;

@@ -125,7 +125,7 @@ public class TextEditorBookListener implements Listener
 
         //Edits the step instructions or video link
         if (bWasInstructions)
-            locationStep.setInstruction(szNewContent, locationStep.getStep().getInstructionDisplayType(), user.player, locationStep.getStep().getName());
+            locationStep.setInstruction(stepEditorMenu.getStepPlaythrough(), szNewContent, locationStep.getStep().getInstructionDisplayType(), user.player, locationStep.getStep().getName());
         else
             locationStep.setVideoLink(szNewContent);
 

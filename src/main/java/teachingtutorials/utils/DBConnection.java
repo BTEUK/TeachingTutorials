@@ -63,11 +63,11 @@ public class DBConnection
      */
     public void mysqlSetup(FileConfiguration config)
     {
-        this.HOST = config.getString("MySQL_host");
-        this.PORT = config.getInt("MySQL_port");
-        this.Database = config.getString("MySQL_database");
-        this.USER = config.getString("MySQL_username");
-        this.PASSWORD = config.getString("MySQL_password");
+        this.HOST = config.getString("MySQL_Database_Information.host");
+        this.PORT = config.getInt("MySQL_Database_Information.port");
+        this.Database = config.getString("MySQL_Database_Information.database");
+        this.USER = config.getString("MySQL_Database_Information.username");
+        this.PASSWORD = config.getString("MySQL_Database_Information.password");
 
         this.DB_CON = "jdbc:mysql://" + this.HOST + ":"
                 + this.PORT + "/" + this.Database + "?&useSSL=false&";

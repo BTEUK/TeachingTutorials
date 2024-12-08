@@ -39,7 +39,7 @@ public class StagePlaythrough
     private int iCurrentStep;
 
     /** A reference to the current step playthrough which the player is on */
-    private StepPlaythrough currentStepPlaythrough;
+    StepPlaythrough currentStepPlaythrough;
 
     /** Records whether this stage playthrough is part of a location creation */
     public final boolean bLocationCreation;

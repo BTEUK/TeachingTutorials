@@ -241,6 +241,18 @@ public class StepPlaythrough
      */
     public void startStep(boolean bDelayTitle)
     {
+        //Starting new step message
+        if (this.parentStagePlaythrough.getTutorialPlaythrough() instanceof Lesson lesson)
+        {
+            plugin.getLogger().log(Level.INFO, "Lesson: "+lesson.getLessonID() +". Player: "+this.player.getName() +". Step " +this.step.getStepInStage()
+                    +" (" +this.step.getName() +") of stage "+this.parentStagePlaythrough.getStage().getOrder() +" starting.");
+        }
+        else
+        {
+            plugin.getLogger().log(Level.INFO, "New location of " +this.player.getName() +". Step " +this.step.getStepInStage()
+                    +" (" +this.step.getName() +") of stage "+this.parentStagePlaythrough.getStage().getOrder() +" starting.");
+        }
+
         //Wait time
         long lWaitTime = 0L;
 

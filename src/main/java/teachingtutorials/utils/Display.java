@@ -7,7 +7,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 /**
@@ -78,20 +77,6 @@ public class Display
     {
         //The title is the szText of the display
         player.sendTitle(szTitle, szSubtitle, iFadeInTicks, iStayTicks, iFadeOutTicks);
-    }
-
-    /**
-     * Creates a new hologram object based on the given title, next, location, and viewing player
-     * @param szTitle The title of the hologram
-     * @param szText The text of the hologram
-     * @param location The location that the hologram should be placed
-     * @param player The player who exclusively is to be able to view the hologram
-     * @return A reference to the hologram object created
-     */
-    public static Hologram Hologram(String szTitle, String szText, Location location, Player player)
-    {
-        Hologram hologram = new Hologram(location, player, szTitle, szText);
-        return hologram;
     }
 
     /**

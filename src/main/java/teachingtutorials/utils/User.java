@@ -204,6 +204,10 @@ public class User
                 }
 
                 plugin.getLogger().log(Level.INFO, ChatColor.LIGHT_PURPLE +"Paused all tutorial playthroughs for player "+player.getName());
+
+                //Removes the player from any spy lists
+                this.disableSpying();
+
                 break;
             case Creating_New_Tutorial:
             default:
@@ -305,8 +309,10 @@ public class User
     public void disableSpying()
     {
         if (isSpying())
-            //Removes this player as a spy from the current spy target
+        {
+            //Removes this player as a spy from the current spy target, and sets the spy target to null
             this.spyTarget.removeSpy(this.player);
+        }
 
         //Else, Do nothing
     }

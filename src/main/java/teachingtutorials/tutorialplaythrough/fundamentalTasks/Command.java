@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -69,7 +70,6 @@ public class Command extends PlaythroughTask implements Listener
 
         //Extracts the root command
         this.szTargetCommand = commandAnswers[0];
-//        plugin.getLogger().log(Level.INFO, ChatColor.AQUA +"Target command = "+this.szTargetCommand);
 
         //Builds the string of command args
         this.szTargetCommandArgs = "";
@@ -77,8 +77,6 @@ public class Command extends PlaythroughTask implements Listener
         {
             this.szTargetCommandArgs = this.szTargetCommandArgs + commandAnswers[i];
         }
-
-//        plugin.getLogger().log(Level.INFO, ChatColor.AQUA +"Target command args = "+this.szTargetCommandArgs);
 
         //Adds a space before the correct command arguments if there is an argument required
         //This is needed because a command with no argument will have no trailing space, but a command with arguments does have a space after the base command
@@ -122,6 +120,11 @@ public class Command extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required command to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target command = "+this.szTargetCommand +this.szTargetCommandArgs);
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

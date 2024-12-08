@@ -166,6 +166,18 @@ public class StagePlaythrough
      */
     public void startStage(int iStepToStartStageOn, boolean bDelayTitle)
     {
+        //Starting new stage message
+        if (this.getTutorialPlaythrough() instanceof Lesson lesson)
+        {
+            plugin.getLogger().log(Level.INFO, "Lesson: "+lesson.getLessonID() +". Stage " +this.stage.getOrder()
+                    +" (" +this.stage.getName() +") of tutorial with ID "+this.getTutorialPlaythrough().getTutorial().getTutorialID() +" starting.");
+        }
+        else
+        {
+            plugin.getLogger().log(Level.INFO, "New location of " +this.getTutorialPlaythrough().creatorOrStudent.player.getName() +". Stage " +this.stage.getOrder()
+                    +" (" +this.stage.getName() +") of tutorial with ID "+this.getTutorialPlaythrough().getTutorial().getTutorialID() +" starting.");
+        }
+
         //Display the Stage title
         if (bDelayTitle)
         {
@@ -200,8 +212,6 @@ public class StagePlaythrough
 
         if (iCurrentStep <= stepPlaythroughs.size())
         {
-            plugin.getLogger().log(Level.INFO, tutorialPlaythrough.getCreatorOrStudent().player.getName() +" has started step " +iCurrentStep +" of stage " +stage.getName());
-
             //Uses -1 because iCurrentStep is 1 indexed, so need it in computer terms
             currentStepPlaythrough = stepPlaythroughs.get(iCurrentStep-1);
             currentStepPlaythrough.startStep(bDelayTitle);

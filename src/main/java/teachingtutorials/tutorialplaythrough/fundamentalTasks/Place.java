@@ -15,8 +15,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
+
+import java.util.logging.Level;
 
 /**
  * Represents a type of Task where the user must place a block. Contains the relevant listeners used when the task is active.
@@ -71,6 +74,11 @@ public class Place extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required block and location to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: "+((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

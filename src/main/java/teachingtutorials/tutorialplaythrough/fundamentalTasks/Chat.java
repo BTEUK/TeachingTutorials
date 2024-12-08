@@ -12,8 +12,11 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
+
+import java.util.logging.Level;
 
 /**
  * Represents a type of Task where the user must enter a message into chat. Contains the relevant listeners used when the task is active.
@@ -54,6 +57,11 @@ public class Chat extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required chat to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target chat = "+this.szTargetAnswer);
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

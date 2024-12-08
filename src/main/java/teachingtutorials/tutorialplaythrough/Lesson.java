@@ -58,6 +58,11 @@ public class Lesson extends TutorialPlaythrough
         super(plugin, player, tutorial);
     }
 
+    public int getLessonID()
+    {
+        return iLessonID;
+    }
+
     /**
      * Used for starting the Lesson. Will determine a location to do the Tutorial in, determine what step and stage to start the tutorial at, and then launch the lesson
      * @param bResetProgress Determines whether or not to reset the player's progress to stage 1 step 1.

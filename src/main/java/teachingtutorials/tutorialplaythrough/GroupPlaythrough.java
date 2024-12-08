@@ -110,9 +110,9 @@ public class GroupPlaythrough
     {
         if (this.parentStepPlaythrough.getParentStage().bLocationCreation)
         {
-            plugin.getLogger().log(Level.INFO,"Fetching tasks without answers");
+            plugin.getLogger().log(Level.FINE,"GroupPlaythrough.fetchAndInitialiseTasks(): Fetching tasks without answers");
             tasks = Task.fetchTasksWithoutAnswers(plugin, plugin.getDBConnection(), this, parentStepPlaythrough.parentStagePlaythrough.getPlayer());
-            plugin.getLogger().log(Level.INFO,"Group.FetchAndInitialiseTasks: "+tasks.size() +" tasks found");
+            plugin.getLogger().log(Level.INFO,"Group with ID + " +this.group.getGroupID() +": "+tasks.size() +" tasks found");
         }
         else
         {
@@ -141,7 +141,8 @@ public class GroupPlaythrough
      */
     public void startGroupPlaythrough()
     {
-        plugin.getLogger().log(Level.INFO, "Group.startGroupPlaythrough: Setting up group playthough");
+        //Log to console
+        plugin.getLogger().log(Level.INFO, "Setting up group playthrough of group with Group ID "+this.group.getGroupID());
 
         //Ensures that the tasks are fetched and initialised
         if (tasks.size() == 0)
@@ -152,8 +153,6 @@ public class GroupPlaythrough
         else
             plugin.getLogger().log(Level.FINE, "Tasks already fetched and initialised for this grouo");
 
-        plugin.getLogger().log(Level.INFO, "This group has "+tasks.size() +" tasks");
-
         //Checks whether there are actually any tasks in the group
         if (tasks.size() > 0)
         {
@@ -162,12 +161,26 @@ public class GroupPlaythrough
 
             //Registers the first tasks. Tasks unregister themselves once complete
             currentTask.register();
-            plugin.getLogger().log(Level.INFO, "First task registered: "+currentTask.getLocationTask().type);
+            plugin.getLogger().log(Level.FINE, "First task registered: "+currentTask.getLocationTask().type);
         }
         else //If there are no tasks in the group, move on
         {
             //Signal that group is complete before it even started
             groupFinished = true;
+
+            //Log to console
+            if (this.getParentStep().parentStagePlaythrough.getTutorialPlaythrough() instanceof Lesson lesson)
+            {
+                plugin.getLogger().log(Level.INFO, "Lesson: "+lesson.getLessonID() +". Group with GroupID "
+                        +this.getGroup().getGroupID() +" (of step with StepID "+this.getParentStep().getStep().getStepID()
+                        +") has been completed");
+            }
+            else
+            {
+                plugin.getLogger().log(Level.INFO, "New location of " +this.getParentStep().getParentStage().getPlayer().getName() +". Group with GroupID "
+                        +this.getGroup().getGroupID() +" (of step with StepID "+this.getParentStep().getStep().getStepID()
+                        +") has been completed");
+            }
             parentStepPlaythrough.groupFinished();
         }
         //Sets the current task number to the first task
@@ -187,6 +200,20 @@ public class GroupPlaythrough
         {
             //Signal that group is complete
             groupFinished = true;
+
+            //Log to console
+            if (this.getParentStep().parentStagePlaythrough.getTutorialPlaythrough() instanceof Lesson lesson)
+            {
+                plugin.getLogger().log(Level.INFO, "Lesson: "+lesson.getLessonID() +". Group with GroupID "
+                        +this.getGroup().getGroupID() +" (of step with StepID "+this.getParentStep().getStep().getStepID()
+                        +") has been completed");
+            }
+            else
+            {
+                plugin.getLogger().log(Level.INFO, "New location of " +this.getParentStep().getParentStage().getPlayer().getName() +". Group with GroupID "
+                        +this.getGroup().getGroupID() +" (of step with StepID "+this.getParentStep().getStep().getStepID()
+                        +") has been completed");
+            }
             parentStepPlaythrough.groupFinished();
         }
         else //Registers the next task

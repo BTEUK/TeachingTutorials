@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -86,6 +87,12 @@ public class Tpll extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Output the required tpll coordinates to assist debugging
+        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID
+                +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
+        );
+
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

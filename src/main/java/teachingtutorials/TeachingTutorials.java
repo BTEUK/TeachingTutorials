@@ -75,7 +75,7 @@ public class TeachingTutorials extends JavaPlugin
     /** Stores how many calculations have been attempted since a success */
     public int iFailedCalculations;
 
-    /** Service to promote players after completing the compulsary tutorial */
+    /** Service to promote players after completing the compulsory tutorial */
     private PromotionService promotionService;
 
     /**

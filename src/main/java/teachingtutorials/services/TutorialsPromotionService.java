@@ -13,8 +13,12 @@ import teachingtutorials.utils.plugins.Luckperms;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * A default promotion mechanism
+ */
 public class TutorialsPromotionService implements PromotionService {
 
+    /** A reference to the instance of the TeachingTutorials plugin */
     private final TeachingTutorials plugin;
 
     public TutorialsPromotionService(TeachingTutorials plugin) {

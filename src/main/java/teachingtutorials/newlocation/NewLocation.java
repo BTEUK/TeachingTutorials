@@ -104,6 +104,10 @@ public class NewLocation extends TutorialPlaythrough
         //Log start
         plugin.getLogger().log(Level.INFO, "Starting new location adding on tutorial "+tutorial.getTutorialID() +" (\"" +tutorial.getTutorialName()+"\") by " +creatorOrStudent.player.getName());
 
+        //Disables spying if they are currently spying
+        if (creatorOrStudent.isSpying())
+            creatorOrStudent.disableSpying();
+
         //Register the tpll and ll command and the gmask blocker
         playthroughCommandListeners = new PlaythroughCommandListeners(plugin);
         playthroughCommandListeners.register();

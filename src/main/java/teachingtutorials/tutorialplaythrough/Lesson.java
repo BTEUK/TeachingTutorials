@@ -78,6 +78,10 @@ public class Lesson extends TutorialPlaythrough
             return false;
         }
 
+        //Disables spying if they are currently spying
+        if (creatorOrStudent.isSpying())
+            creatorOrStudent.disableSpying();
+
         //Checks to see whether a student has a lesson to finish - if so, will replace the tutorial with that one and resume it
         if (creatorOrStudent.hasIncompleteLessons())
         {

@@ -258,11 +258,11 @@ public class MainMenu extends Gui
                     {
                         restartCompulsory = Utils.createItem(Material.BOOK, 1,
                                 TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
-                                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial_RankNew") +" rank"));
+                                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
 
                         resumeCompulsory = Utils.createItem(Material.WRITABLE_BOOK, 1,
                                 TutorialGUIUtils.optionTitle("Resume the Starter Tutorial"),
-                                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial_RankNew") +" rank"));
+                                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
 
                         super.setItem(12 - 1, restartCompulsory, new guiAction() {
                             @Override
@@ -295,7 +295,7 @@ public class MainMenu extends Gui
                 {
                     beginCompulsory = Utils.createItem(Material.BOOK, 1,
                             TutorialGUIUtils.optionTitle("Begin the Starter Tutorial"),
-                            TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial_RankNew") +" rank"));
+                            TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
 
                     super.setItem(14 - 1, beginCompulsory, new guiAction() {
                         @Override

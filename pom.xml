@@ -79,7 +79,7 @@
         </repository>
         <repository>
             <id>OnARandomBox</id>
-            <url>https://repo.onarandombox.com/content/group/public/</url>
+            <url>https://repo.onarandombox.com/content/groups/public/</url>
         </repository>
         <repository>
             <id>Lib</id>
@@ -122,6 +122,11 @@
             <groupId>com.github.SmylerMC</groupId>
             <artifactId>terraminusminus</artifactId>
             <version>e92dc85e64</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.BTEUK</groupId>
+            <artifactId>TeachingTutorialsAPI</artifactId>
+            <version>970d3dc3f7</version>
         </dependency>
         <dependency>
             <groupId>com.onarandombox.multiversecore</groupId>

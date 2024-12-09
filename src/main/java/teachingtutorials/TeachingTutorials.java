@@ -1,5 +1,6 @@
 package teachingtutorials;
 
+import net.bteuk.teachingtutorials.services.PromotionService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -9,9 +10,13 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.commands.Blockspy;
 import teachingtutorials.commands.PlayersPlayingTutorialsCompleter;
+import teachingtutorials.services.TutorialsPromotionService;
 import teachingtutorials.tutorialobjects.Group;
 import teachingtutorials.tutorialobjects.Stage;
 import teachingtutorials.tutorialobjects.Step;
@@ -72,6 +77,9 @@ public class TeachingTutorials extends JavaPlugin
 
     /** Stores how many calculations have been attempted since a success */
     public int iFailedCalculations;
+
+    /** Service to promote players after completing the compulsory tutorial */
+    private PromotionService promotionService;
 
     /**
      * Performs all of the startup logic for this plugin
@@ -245,6 +253,22 @@ public class TeachingTutorials extends JavaPlugin
         getCommand("blockspy").setTabCompleter(new PlayersPlayingTutorialsCompleter());
         getCommand("blockspy").setExecutor(new Blockspy());
 
+        //---------------------------------------
+        //------------ Enable Services ----------
+        //---------------------------------------
+        ServicesManager servicesManager = this.getServer().getServicesManager();
+        // Register backup promotion service.
+        servicesManager.register(PromotionService.class, new TutorialsPromotionService(this), this, ServicePriority.Lowest);
+        RegisteredServiceProvider<PromotionService> registeredPromotionService = servicesManager.getRegistration(PromotionService.class);
+        if (registeredPromotionService != null) {
+            promotionService = registeredPromotionService.getProvider();
+            getLogger().info(String.format("Loaded promotion service: %s", promotionService.getDescription()));
+        } else {
+            getLogger().severe("*** Promotion service was not loaded. ***");
+            getLogger().severe("*** This plugin will be disabled. ***");
+            this.setEnabled(false);
+            return;
+        }
 
         //---------------------------------------
         //----------Sets up event check----------
@@ -873,6 +897,13 @@ public class TeachingTutorials extends JavaPlugin
     public Connection getConnection()
     {
         return (dbConnection.getConnection());
+    }
+
+    /**
+     * @return The promotion service that is enabled.
+     */
+    public PromotionService getPromotionService() {
+        return promotionService;
     }
 
     /**

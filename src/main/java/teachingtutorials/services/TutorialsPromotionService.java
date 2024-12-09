@@ -1,5 +1,6 @@
 package teachingtutorials.services;
 
+import net.bteuk.teachingtutorials.services.PromotionService;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.Bukkit;

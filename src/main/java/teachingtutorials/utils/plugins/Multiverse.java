@@ -8,15 +8,25 @@ import com.onarandombox.MultiverseCore.MultiverseCore;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.Utils;
 
+import java.util.logging.Level;
+
+/**
+ * Handles all Multiverse operations
+ */
 public class Multiverse
 {
+    /**
+     * Creates a void world using multiverse and void gen
+     * @param name The name of the new world
+     * @return Whether the new world was created successfully
+     */
     public static boolean createVoidWorld(String name)
     {
         MultiverseCore core = (MultiverseCore) Bukkit.getServer().getPluginManager().getPlugin("Multiverse-Core");
 
         if (core == null)
         {
-            TeachingTutorials.getInstance().getLogger().severe(Utils.chat("&cMultiverse is a dependency of TeachingTutorials!"));
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "Multiverse is a dependency of TeachingTutorials!");
             return false;
         }
 
@@ -38,6 +48,9 @@ public class Multiverse
         MVWorld.setDifficulty(Difficulty.PEACEFUL);
         MVWorld.setEnableWeather(false);
         MVWorld.setHunger(false);
+        MVWorld.setAllowFlight(true);
+        MVWorld.setKeepSpawnInMemory(false);
+        MVWorld.setEnableWeather(false);
 
         //Get world from bukkit.
         World world = Bukkit.getWorld(name);
@@ -62,12 +75,17 @@ public class Multiverse
         return true;
     }
 
-    public static boolean hasWorld(String name) {
-
+    /**
+     * Returns whether there is a world which exists with the given name
+     * @param name
+     * @return Whether such a world exists
+     */
+    public static boolean hasWorld(String name)
+    {
         MultiverseCore core = (MultiverseCore) Bukkit.getServer().getPluginManager().getPlugin("Multiverse-Core");
 
         if (core == null) {
-            Bukkit.getLogger().severe(Utils.chat("&cMultiverse is a dependency of TeachingTutorials!"));
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "Multiverse is a dependency of TeachingTutorials!");
             return false;
         }
 
@@ -80,12 +98,17 @@ public class Multiverse
         return world != null;
     }
 
-    public static boolean deleteWorld(String name) {
-
+    /**
+     * Deletes the given world
+     * @param name The name of the world to delete
+     * @return Whether the world was deleted
+     */
+    public static boolean deleteWorld(String name)
+    {
         MultiverseCore core = (MultiverseCore) Bukkit.getServer().getPluginManager().getPlugin("Multiverse-Core");
 
         if (core == null) {
-            Bukkit.getLogger().severe(Utils.chat("&cMultiverse is a dependency of TeachingTutorials!"));
+            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "Multiverse is a dependency of TeachingTutorials!");
             return false;
         }
 

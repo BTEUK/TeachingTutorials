@@ -112,7 +112,6 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Locations` (
   `LocationID` INT NOT NULL AUTO_INCREMENT,
-  `Difficulty` FLOAT NULL DEFAULT NULL,
   `Latitude` DOUBLE NULL DEFAULT NULL,
   `Longitude` DOUBLE NULL DEFAULT NULL,
   `TutorialID` INT NOT NULL,
@@ -127,7 +126,6 @@ DEFAULT CHARACTER SET = latin1;
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Players` (
   `UUID` CHAR(36) NOT NULL,
   `CompletedCompulsory` TINYINT NOT NULL DEFAULT '0',
-  `InLesson` TINYINT NOT NULL DEFAULT '0',
   PRIMARY KEY (`UUID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;

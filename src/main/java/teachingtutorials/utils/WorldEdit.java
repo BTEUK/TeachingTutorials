@@ -2,76 +2,102 @@ package teachingtutorials.utils;
 
 import com.google.common.base.Joiner;
 import com.sk89q.worldedit.regions.RegionSelector;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
-import teachingtutorials.TutorialPlaythrough;
+import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 
+/**
+ * Manages WorldEdit calculations within the Tutorials system
+ */
 public class WorldEdit
 {
-    /**
-     * A queue of pending calculations to be performed
-     */
+    /** A queue of pending calculations to be performed */
     public static ConcurrentLinkedQueue<WorldEditCalculation> pendingCalculations = new ConcurrentLinkedQueue<>();
-    private static AtomicBoolean bCurrentCalculationOngoing = new AtomicBoolean(false);
 
-    //Records whether there are virtual blocks on the real world
-    private static AtomicBoolean bVirtualBlocksOnRealWorld = new AtomicBoolean(false);
-
-    /**
+    /** Marks whether there is a calculation currently ongoing
+     * <p> </p>
      * Current calculation refers to whether a calculation is already in the process from listening to the
      * EditSessionEvent to waiting for the first sign that the calculation has been complete and still having blocks on
      * the world which need to be removed after using them for calculation.
-     * @return
-     */
+     * */
+    private static AtomicBoolean bCurrentCalculationOngoing = new AtomicBoolean(false);
 
+    /** Marks whether there are virtual blocks currently on the real world */
+    private static AtomicBoolean bVirtualBlocksOnRealWorld = new AtomicBoolean(false);
+
+    /**
+     *
+     * @return Whether there is a calculation currently ongoing.
+     * <p> </p>
+     * Current calculation refers to whether a calculation is already in the process from listening to the
+     * EditSessionEvent to waiting for the first sign that the calculation has been complete and still having blocks on
+     * the world which need to be removed after using them for calculation.
+     */
     public static boolean isCurrentCalculationOngoing()
     {
         return bCurrentCalculationOngoing.get();
     }
 
+    /**
+     * Sets that there is currently a calculation in progress
+     */
     public static void setCalculationInProgress()
     {
         bCurrentCalculationOngoing.set(true);
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"[TeachingTutorials] The calculations queue has been blocked - calculation in progress");
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, ChatColor.RED +"The calculations queue has been blocked - calculation in progress");
     }
 
+    /**
+     * Sets that there is no longer a calculation in progress
+     */
     public static void setCalculationFinished()
     {
         bCurrentCalculationOngoing.set(false);
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] The calculations queue has been unblocked!");
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, ChatColor.GREEN +"The calculations queue has been unblocked!");
     }
 
+    /**
+     * @return Whether there are virtual blocks currently on the world
+     */
     public static boolean areVirtualBlocksOnRealWorld()
     {
         return bVirtualBlocksOnRealWorld.get();
     }
 
+    /**
+     * Sets that there are currently virtual blocks on the real world
+     */
     public static void setVirtualBlocksOnRealWorld()
     {
         bVirtualBlocksOnRealWorld.set(true);
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] Blocks have been marked as on the world");
-    }
-
-    public static void setVirtualBlocksOffRealWorld()
-    {
-        bVirtualBlocksOnRealWorld.set(false);
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN +"[TeachingTutorials] Blocks have been marked as taken off the world");
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, ChatColor.GREEN +"Virtual blocks been marked as no longer on the world");
     }
 
     /**
-     * Creates a world edit event listener which catches the block changes arising from world edit commands owned by the given player
-     * and creates virtual block objects from these. The specific command parsed is then run, triggering the calculation of all blocks
-     * changes from this command.
-     * @param virtualBlocks The list of virtual blocks for the calling task
+     * Sets that there are no longer virtual blocks on the real world
+     */
+    public static void setVirtualBlocksOffRealWorld()
+    {
+        bVirtualBlocksOnRealWorld.set(false);
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, ChatColor.GREEN +"Virtual blocks been marked as on the world");
+    }
+
+    /**
+     * Creates a WorldEditCalculation which catches the block changes arising from WorldEdit commands owned by the
+     * given player, and adds this to the queue of calculations to be performed
+     * @param iTaskID The ID of the task for which the calculation is for
+     * @param virtualBlocks The list of virtual blocks for the calling task, to which any virtual blocks calculated will
+     *                      be added to
+     * @param correctSelectionRegion The selection region associated with the command
      * @param szCommandLabel The command label (first word) of the command
-     * @param szCommandArgs The command args
+     * @param szCommandArgs The command args (the reset of the command)
      * @param tutorialPlaythrough The tutorial playthrough which this task belongs to
-     * @return
      */
     public static void BlocksCalculator(int iTaskID, final VirtualBlockGroup<Location, BlockData> virtualBlocks, RegionSelector correctSelectionRegion, String szCommandLabel, String[] szCommandArgs, TutorialPlaythrough tutorialPlaythrough)
     {
@@ -86,12 +112,12 @@ public class WorldEdit
         String szWorldEditCommand = Joiner.on(" ").appendTo(sb, szCommandArgs).toString();
 
         //The command is now fully formatted correctly
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] Upcoming command being run via the console: "+szWorldEditCommand);
-
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, "Upcoming command being run via the console: "+szWorldEditCommand);
 
         //Create a new calculation manager for this calculation and add to the list
         WorldEditCalculation newCalculation = new WorldEditCalculation(szWorldEditCommand, correctSelectionRegion, tutorialPlaythrough, iTaskID, virtualBlocks);
         WorldEdit.pendingCalculations.add(newCalculation);
-        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"[TeachingTutorials] This calculation has been added to the queue: "+szWorldEditCommand);
+
+        TeachingTutorials.getInstance().getLogger().log(Level.INFO, "This calculation has been added to the queue: "+szWorldEditCommand);
     }
 }

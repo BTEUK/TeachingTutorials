@@ -1,4 +1,4 @@
-package teachingtutorials.tutorials;
+package teachingtutorials.tutorialplaythrough;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -8,16 +8,28 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialobjects.LocationStep;
 
 /**
     Listens out for /link when a tutorial is being played
  */
 public class VideoLinkCommandListener implements Listener
 {
-    private TeachingTutorials plugin;
-    private Player player;
-    private LocationStep locationStep;
+    /** A reference to the instance of the TeachingTutorials plugin */
+    private final TeachingTutorials plugin;
 
+    /** A reference to the player who is completing the relevant step */
+    private final Player player;
+
+    /** A reference to the location step */
+    private final LocationStep locationStep;
+
+    /**
+     * Constructs the listener
+     * @param plugin
+     * @param player
+     * @param locationStep
+     */
     public VideoLinkCommandListener(TeachingTutorials plugin, Player player, LocationStep locationStep)
     {
         this.plugin = plugin;
@@ -25,7 +37,10 @@ public class VideoLinkCommandListener implements Listener
         this.locationStep = locationStep;
     }
 
-    //On command
+    /**
+     * Detects /link and /video commands if they are from the relevant player, and then displays the video link in chat
+     * @param event A command preprocess event
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
@@ -42,15 +57,19 @@ public class VideoLinkCommandListener implements Listener
         }
     }
 
+    /**
+     * Registers the listener with the server's event listener system
+     */
     public void register()
     {
-        //Registers the listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
+    /**
+     * Unregisters the listener with the server's event listener system
+     */
     public void unregister()
     {
-        //Unregisters the listener
         HandlerList.unregisterAll(this);
     }
 }

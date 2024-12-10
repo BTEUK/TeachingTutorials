@@ -1,26 +1,35 @@
 package teachingtutorials.guis;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.tutorials.Lesson;
-import teachingtutorials.tutorials.Tutorial;
+import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialobjects.Tutorial;
+import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
+import java.util.logging.Level;
+
+/**
+ * A menu which displays all of the tutorials available for a player to play through and allows them to select one to do
+ */
 public class LibraryMenu extends Gui
 {
-    private static final Component inventoryName = Component.text("Library", Style.style(TextDecoration.BOLD, NamedTextColor.DARK_AQUA));
+    /** Stores the name of the inventory */
+    private static final Component inventoryName = TutorialGUIUtils.inventoryTitle("Library");
+
+    /** A reference to the TeachingTutorials plugin instance */
     private final TeachingTutorials plugin;
+
+    /** A reference to the user for which this menu is for */
     private final User user;
 
+    /** Stores a list of all in use tutorials */
     private Tutorial[] tutorials;
 
     /**
@@ -31,14 +40,21 @@ public class LibraryMenu extends Gui
      */
     public LibraryMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
     {
+        //Sets up the menu with the icons already in place
         super(getGUI(tutorials));
         this.plugin = plugin;
         this.user = user;
         this.tutorials = tutorials;
 
+        //Adds the click-actions to the menu
         setActions();
     }
 
+    /**
+     * Creates an inventory with icons representing a library of available tutorials
+     * @param tutorials A list of all in-use tutorials
+     * @return An inventory of icons
+     */
     public static Inventory getGUI (Tutorial[] tutorials)
     {
         //Declare variables
@@ -79,24 +95,27 @@ public class LibraryMenu extends Gui
         }
 
         //Adds the tutorials to the menu options
+        //Inv slot 0 = the first one
         ItemStack tutorial;
         for (i = 0 ; i < iTutorials ; i++)
         {
             tutorial = Utils.createItem(Material.KNOWLEDGE_BOOK, 1,
-                    TutorialGUIUtils.optionTitle(tutorials[i].szTutorialName).decoration(TextDecoration.BOLD, true),
-                    TutorialGUIUtils.optionLore("Tutor - " +Bukkit.getOfflinePlayer(tutorials[i].uuidAuthor).getName()));
+                    TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()).decoration(TextDecoration.BOLD, true),
+                    TutorialGUIUtils.optionLore("Tutor - " +Bukkit.getOfflinePlayer(tutorials[i].getUUIDOfAuthor()).getName()));
             inventory.setItem(i, tutorial);
         }
 
-        //Adds back button
+        //Adds a back button
         ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.backButton("Back to main menu"));
         inventory.setItem((iRows * 9) - 1, back);
 
-        //Inv slot 0 = the first one
         toReturn.setContents(inventory.getContents());
         return toReturn;
     }
 
+    /**
+     * Adds the click-actions to the menu slots of this library menu
+     */
     private void setActions()
     {
         //Declare variables
@@ -135,19 +154,14 @@ public class LibraryMenu extends Gui
         });
 
         //Initiates the current tutorial object
-        Tutorial currentTutorial = new Tutorial();
+//        Tutorial currentTutorial = null;
 
-        if (user.bInLesson)
+        int iTutorialIDCurrentLesson = -1;
+
+        if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
         {
             //Get current lesson's tutorial ID and sets up the tutorial object from this
-            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), TeachingTutorials.getInstance().getDBConnection());
-            if (iTutorialIDCurrentLesson == -1)
-            {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED +"An error occurred. Player is in lesson but has no lesson in the database");
-            }
-            Bukkit.getConsoleSender().sendMessage("Current TutorialID: "+iTutorialIDCurrentLesson);
-            currentTutorial.setTutorialID(iTutorialIDCurrentLesson);
-            currentTutorial.fetchByTutorialID(TeachingTutorials.getInstance().getDBConnection());
+            iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
         }
 
         //Inv slot 0 = the first one
@@ -155,6 +169,7 @@ public class LibraryMenu extends Gui
         for (i = 0 ; i < tutorials.length ; i++)
         {
             int iSlot = i;
+            int finalITutorialIDCurrentLesson = iTutorialIDCurrentLesson;
             setAction(iSlot, new Gui.guiAction() {
                 @Override
                 public void rightClick(User user) {
@@ -163,14 +178,12 @@ public class LibraryMenu extends Gui
 
                 @Override
                 public void leftClick(User user) {
-                    Bukkit.getConsoleSender().sendMessage("Current TutorialID: "+currentTutorial.getTutorialID());
-                    Bukkit.getConsoleSender().sendMessage("TutorialID of slot: " +tutorials[iSlot].getTutorialID());
                     boolean startTheLesson = false;
 
-                    if (user.bInLesson)
+                    if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                     {
-                        if (currentTutorial.getTutorialID() != tutorials[iSlot].getTutorialID())
-                            user.player.sendMessage(ChatColor.RED +"You cannot start a new tutorial before you finish your current one");
+                        if (finalITutorialIDCurrentLesson != tutorials[iSlot].getTutorialID())
+                            user.player.sendMessage(Display.errorText("You cannot start a new tutorial before you finish your current one"));
                         else
                             startTheLesson = true;
                     }
@@ -179,32 +192,45 @@ public class LibraryMenu extends Gui
                         startTheLesson = true;
                     }
 
-                    if(startTheLesson)
+                    if (startTheLesson)
                     {
                         //Creates a Lesson object
                         Lesson newLesson = new Lesson(user, plugin, tutorials[iSlot]);
 
                         //Launches them into the new lesson
-                        if (newLesson.startLesson())
+                        if (newLesson.startLesson(false))
                         {
+                            //Delete the gui
                             delete();
                             user.mainGui = null;
                         }
-                        else
+                        //It might fail due to the user being in a lesson currently, in which case a message will already have been displayed
+                        else if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                         {
-                            user.player.sendMessage(ChatColor.RED +"A problem occurred, please let staff know");
                         }
+                        else
+                            user.player.sendMessage(Display.errorText("A problem occurred, please let staff know"));
                     }
                 }
             });
         }
     }
 
+    /**
+     * Clears items from the GUI, recreates the items and then opens the menu
+     */
     @Override
     public void refresh() {
+        //Clears items from the gui
         this.clearGui();
+
+        //Adds icons to the gui
         this.getInventory().setContents(getGUI(tutorials).getContents());
+
+        //Adds click actions to the gui
         this.setActions();
+
+        //Opens the gui
         this.open(user);
     }
 }

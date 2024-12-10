@@ -1,24 +1,104 @@
-MySQL_host: LocalHost
-MySQL_port: 3306
-MySQL_database: TeachingTutorials
-MySQL_username: newuser1
-MySQL_password: xxxx
+# The connection information for the database
+MySQL_Database_Information:
+  host: LocalHost
+  port: 3306
+  database: TeachingTutorials
+  username: newuser1
+  password: xxxx
+
+# The slot in which the learning menu icon should appear in
 Learning_Menu_Slot: 5
-Compulsory_Tutorial: false
-Compulsory_Tutorial_Promotion_Type: track
-Compulsory_Tutorial_RankOld: default
-Compulsory_Tutorial_RankNew: applicant
-Compulsory_Tutorial_Track: builder
-Compulsory_Tutorial_TrackOutline: default,applicant,apprentice,jrbuilder,builder,architect,reviewer
+
+# The settings related to the compulsory tutorial
+Compulsory_Tutorial:
+  # Whether or not the player must complete a compulsory tutorial before doing other tutorials
+  # true or false
+  # If you have selected this as true then you must specify a promotion type (below)
+  # If you have selected this as false then the options below can be blank or anything. They will be ignored.
+  Enabled: false
+
+  # Specifies the type of promotion that occurs on completion of the compulsory tutorial
+  # Can be one of 4 options:
+  # 'none' - No promotion occurs
+  # 'track' - User is promoted along an LP track
+  # 'manualpromote' - User is stripped of one rank and given another
+  # 'rank' - User is given a rank (Added to an LP group)
+  Promotion_Type: track
+
+  # Used if 'track' or 'manualpromote' are selected
+  #
+  # Specifies the rank to remove from the player in a manual promote or a track promotion.
+  # In a track promotion it is less applicable, and if in doubt can be set to the rank below that of the new rank
+  RankOld: default
+
+  # Used if 'track' or 'manualpromote' are selected
+  #
+  # Specifies the rank to give to a player in a manual promote or a track promotion.
+  # In a track promotion, the tutorials plugin will promote a player through the track up to this rank.
+  # If a player is already of this rank or higher, then it won't promote them further.
+  RankNew: applicant
+
+  # Used if 'track' is selected
+  #
+  # Specifies the name of the track to promote a player through
+  Track: builder
+
+  # Used if 'track' is selected
+  #
+  # Outlines the order of ranks in the track.
+  # It is very important that this is kept up to date as it gives the plugin vital information about the nature of ranks in the track.
+  TrackOutline: default,applicant,apprentice,jrbuilder,builder,architect,reviewer
+
+# Specifies what type of TP is to occur on lesson/new-location completion
+#
+# 'Server' - Sends a /server command to the console and transfers the player to a different server
+# 'LobbyLocation' - Used when you want to have the user teleport to the tutorials server lobby
 Lobby_TP_Type: Server
-Server_Name: tutorials
-Lobby_World:
-Lobby_X:
-Lobby_Y:
-Lobby_Z:
-Lobby_Pitch:
-Lobby_Yaw:
+
+# Used if selecting 'Server' above - Specifies the server to connect to
+Server_Name: YourLobbyServerName
+
+# Defines the spawn location of the lobby - the place to tp players to on joining the server, and after completing a
+# tutorial if 'Lobby_TP_Type' is set to "LobbyLocation".
+Spawn_Information:
+  Lobby_World:
+  Lobby_X:
+  Lobby_Y:
+  Lobby_Z:
+  Lobby_Pitch:
+  Lobby_Yaw:
+
+# The amount of ticks between a player joining the server and being tped to the spawn
+PlayerJoinTPDelay: 20
+
+# The amount of ticks between a player completing a tutorial and being teleported to the lobby
+Completion_TP_Wait: 40
+
+# The maximum amount of characters that one line of a hologram can be
 Hologram_Max_Width: 40
+
+# The value below which a player moving will be teleported to the start location of the step that they are currently playing
 Min_Y: -100
-#Do not decrease below 60 unless you know what you are doing
-BlockRecordDelay: 60
+
+# The time period between each call for the virtual blocks to be refreshed (in ticks)
+Virtual_Block_Refresh: 5
+
+# The time period between each call for the real world to be reset (in ticks)
+World_Reset_Period: 40
+
+# Do not decrease below 60 ticks unless you know what you are doing - this is designed to ensure that there is a gap between calling blocks
+  # as to be reset on the world after a WE calculation and the next calculation beginning. It also ensures there is sufficient time for 'original'
+  # blocks to be recorded before the next calculation then applies blocks to the world.
+BlockResetDelay: 60
+
+# The time period between each checking of the events database (in ticks)
+Events_Check_Period: 40
+
+# Tutorial menu item refresh - the time between each refresh of the tutorial menu (green emerald) in the player's hotbar
+Menu_Icon_Refresh_Period: 20
+
+# The time to delay displaying of the stage title when starting / resuming a lesson - this is added due to the delay in tping people to the start point
+Stage_Title_Delay_On_Start: 30
+
+# The message displayed to users who attempt to blockspy without the appropriate permissions
+SpyPermissionsErrorMessage: "You do not hold a high enough rank to spy on other tutorial lessons"

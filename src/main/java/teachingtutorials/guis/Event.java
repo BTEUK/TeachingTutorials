@@ -3,6 +3,7 @@ package teachingtutorials.guis;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.DBConnection;
 
 import java.sql.*;
@@ -98,9 +99,34 @@ public class Event
                 Player player = Bukkit.getPlayer(UUID.fromString(resultSet.getString("UUID")));
                 if (player == null)
                     continue;
-                EventType eventType = EventType.valueOf(resultSet.getString("EventName"));
-                Timestamp timestamp = resultSet.getTimestamp("Timestamp");
                 int iData = resultSet.getInt("Data");
+
+                EventType eventType;
+                String szEventType = resultSet.getString("EventName");
+                logger.log(Level.INFO, "Event name = " +szEventType);
+                //Handle depreciated value
+                if (szEventType.equalsIgnoreCase("COMPULSORY"))
+                {
+                    logger.log(Level.INFO, "Event detected as compulsory, handling this old mechanism. Note: " +
+                            "please ask the author(s) of the event sender plugin to use the new values");
+
+                    //Get compulsory tutorial ID
+                    int iCompulsoryTutorialID;
+
+                    Tutorial[] compulsoryTutorials = Tutorial.fetchAll(true, true, null, dbConnection, logger);
+                    if (compulsoryTutorials.length == 0)
+                        iCompulsoryTutorialID = -1;
+                    else
+                        iCompulsoryTutorialID = compulsoryTutorials[0].getTutorialID();
+
+                    iData = iCompulsoryTutorialID;
+                    eventType = EventType.RESTART;
+                }
+                else
+                {
+                    eventType = EventType.valueOf(szEventType);
+                }
+                Timestamp timestamp = resultSet.getTimestamp("Timestamp");
 
                 //Creates an event object to store the details of this entry
                 Event event = new Event(player, eventType, timestamp, iData);

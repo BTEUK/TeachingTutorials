@@ -74,10 +74,10 @@ public class MainMenu extends Gui
 
         //'Continue' menu button
         ItemStack continueLearning_CompulsoryComplete;
-        if (user.hasIncompleteLessons())
+        if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
         {
             //Get current tutorial ID and sets up the tutorial object from this
-            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin);
+            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
             plugin.getLogger().log(Level.INFO, "Player is currently playing a lesson on tutorial: "+iTutorialIDCurrentLesson);
             currentTutorial = Tutorial.fetchByTutorialID(iTutorialIDCurrentLesson, plugin.getDBConnection(), plugin.getLogger());
 
@@ -117,7 +117,7 @@ public class MainMenu extends Gui
                 ItemStack compulsory;
 
                 boolean bUserRedoingCompulsoryTutorial;
-                if (user.hasIncompleteLessons())
+                if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                     bUserRedoingCompulsoryTutorial = currentTutorial.getTutorialID() == iCompulsoryTutorialID;
                 else
                     bUserRedoingCompulsoryTutorial = false;
@@ -142,7 +142,7 @@ public class MainMenu extends Gui
                     });
                 }
                 //User is currently in a different tutorial
-                else if (user.hasIncompleteLessons())
+                else if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                 {
                     compulsory = Utils.createItem(Material.ENCHANTED_BOOK, 1,
                             TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
@@ -198,7 +198,7 @@ public class MainMenu extends Gui
 
                 //Decide on continue option
                 Tutorial tutorialForContinue;
-                if (user.hasIncompleteLessons())
+                if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                     tutorialForContinue = currentTutorial;
                 else
                     tutorialForContinue = nextTutorial;
@@ -229,7 +229,7 @@ public class MainMenu extends Gui
 
                 //They are currently in the compulsory tutorial for the first time
                 //OR: The user was in another lesson and someone added a compulsory tutorial to the system
-                if (user.hasIncompleteLessons())
+                if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                 {
                     //Player is in a lesson other than the compulsory but hasn't started the compulsory (compulsory added to system)
                     if (currentTutorial.getTutorialID() != iCompulsoryTutorialID)
@@ -316,7 +316,7 @@ public class MainMenu extends Gui
         {
             //Decide on continue option
             Tutorial tutorialForContinue;
-            if (user.hasIncompleteLessons())
+            if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                 tutorialForContinue = currentTutorial;
             else
                 tutorialForContinue = nextTutorial;

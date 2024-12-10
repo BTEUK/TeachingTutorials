@@ -61,11 +61,13 @@ public class User
 
     /**
      * Refreshes whether the user has incomplete lessons then returns this value
-     * @return
+     * @param dbConnection A database connection object for the tutorials database
+     * @param logger A plugin logger
+     * @return Whether the user has incomplete lessons
      */
-    public boolean hasIncompleteLessons()
+    public boolean hasIncompleteLessons(DBConnection dbConnection, Logger logger)
     {
-        reassessHasIncompleteLesson(TeachingTutorials.getInstance().getDBConnection());
+        reassessHasIncompleteLesson(dbConnection, logger);
         return bHasIncompleteLesson;
     }
 
@@ -396,15 +398,17 @@ public class User
             logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching user info by UUID", e);
         }
 
-        reassessHasIncompleteLesson(dbConnection);
+        reassessHasIncompleteLesson(dbConnection, logger);
     }
 
     /**
      * Goes through the list of Lessons and works out whether a user has a lesson to complete
+     * @param dbConnection A database connection object for the tutorials database
+     * @param logger A plugin logger
      */
-    public void reassessHasIncompleteLesson(DBConnection dbConnection)
+    public void reassessHasIncompleteLesson(DBConnection dbConnection, Logger logger)
     {
-        int iTutorialIDOfCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(player.getUniqueId(), dbConnection, TeachingTutorials.getInstance());
+        int iTutorialIDOfCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(player.getUniqueId(), dbConnection, logger);
         this.bHasIncompleteLesson = (iTutorialIDOfCurrentLesson != -1);
     }
 

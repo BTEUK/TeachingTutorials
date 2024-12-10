@@ -297,15 +297,33 @@ public class TeachingTutorials extends JavaPlugin
                             case RESTART:
                             case CONTINUE:
                             case LIBRARY:
+                                Tutorial specifiedTutorial;
                                 //Extract the tutorial details
-                                Tutorial specifiedTutorial = Tutorial.fetchByTutorialID(event.getData(), dbConnection, getLogger());
+                                if (event.getData() == 0)
+                                {
+                                    if (user.hasIncompleteLessons(dbConnection, getLogger()))
+                                        specifiedTutorial = Tutorial.fetchByTutorialID(Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), dbConnection, getLogger()), dbConnection, getLogger());
+                                    else
+                                        specifiedTutorial = Lesson.decideTutorial(user, dbConnection, getLogger());
 
-                                //Creates a Lesson object
-                                Lesson newLesson = new Lesson(user, instance, specifiedTutorial);
+                                }
+                                else
+                                    specifiedTutorial = Tutorial.fetchByTutorialID(event.getData(), dbConnection, getLogger());
 
-                                //Starts the lesson, resetting the progress only if event is a restart event
-                                newLesson.startLesson(event.getEventType().equals(EventType.RESTART));
-                                break;
+                                //If it is still null then abort
+                                if (specifiedTutorial == null)
+                                {
+                                    user.player.sendMessage(Display.errorText("A tutorials error occurred, please report this to staff"));
+                                }
+                                else
+                                {
+                                    //Creates a Lesson object
+                                    Lesson newLesson = new Lesson(user, instance, specifiedTutorial);
+
+                                    //Starts the lesson, resetting the progress only if event is a restart event
+                                    newLesson.startLesson(event.getEventType().equals(EventType.RESTART));
+                                    break;
+                                }
                             case ADMIN_MENU:
                                 MainMenu.performEvent(EventType.ADMIN_MENU, user, TeachingTutorials.getInstance(), null);
                                 break;

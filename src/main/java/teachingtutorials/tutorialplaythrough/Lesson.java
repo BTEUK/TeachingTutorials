@@ -83,7 +83,7 @@ public class Lesson extends TutorialPlaythrough
             creatorOrStudent.disableSpying();
 
         //Checks to see whether a student has a lesson to finish - if so, will replace the tutorial with that one and resume it
-        if (creatorOrStudent.hasIncompleteLessons())
+        if (creatorOrStudent.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
         {
             //Attempts to resume the lesson if the student has a lesson that they need to complete
             //Mind: This will overwrite the Tutorial object parsed to the Lesson initially
@@ -475,7 +475,7 @@ public class Lesson extends TutorialPlaythrough
         }
 
         //Update player lesson status in the plugin
-        creatorOrStudent.reassessHasIncompleteLesson(plugin.getDBConnection());
+        creatorOrStudent.reassessHasIncompleteLesson(plugin.getDBConnection(), plugin.getLogger());
 
         //Performs common playthrough completion processes
         super.commonEndPlaythrough();
@@ -573,10 +573,10 @@ public class Lesson extends TutorialPlaythrough
      * Fetches the tutorial ID of the current in progress lesson for a player
      * @param playerUUID The UUID of the player to get the Tutorial of the current lesson for
      * @param dbConnection A connection to the database
-     * @param plugin An instance of a bukkit plugin through which errors will be logged
+     * @param logger A reference to a plugin logger
      * @return The id of the tutorial of the current lesson a player is in, or -1 if no lesson was found
      */
-    public static int getTutorialOfCurrentLessonOfPlayer(UUID playerUUID, DBConnection dbConnection, Plugin plugin)
+    public static int getTutorialOfCurrentLessonOfPlayer(UUID playerUUID, DBConnection dbConnection, Logger logger)
     {
         int iTutorialID;
 
@@ -601,7 +601,7 @@ public class Lesson extends TutorialPlaythrough
         }
         catch(SQLException se)
         {
-            plugin.getLogger().log(Level.SEVERE, "Tutorials - SQL Error fetching current lesson for " +playerUUID, se);
+            logger.log(Level.SEVERE, "Tutorials - SQL Error fetching current lesson for " +playerUUID, se);
             iTutorialID = -1;
         }
         return iTutorialID;

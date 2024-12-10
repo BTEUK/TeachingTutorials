@@ -158,10 +158,10 @@ public class LibraryMenu extends Gui
 
         int iTutorialIDCurrentLesson = -1;
 
-        if (user.hasIncompleteLessons())
+        if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
         {
             //Get current lesson's tutorial ID and sets up the tutorial object from this
-            iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), TeachingTutorials.getInstance().getDBConnection(), TeachingTutorials.getInstance());
+            iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
         }
 
         //Inv slot 0 = the first one
@@ -180,7 +180,7 @@ public class LibraryMenu extends Gui
                 public void leftClick(User user) {
                     boolean startTheLesson = false;
 
-                    if (user.hasIncompleteLessons())
+                    if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                     {
                         if (finalITutorialIDCurrentLesson != tutorials[iSlot].getTutorialID())
                             user.player.sendMessage(Display.errorText("You cannot start a new tutorial before you finish your current one"));
@@ -205,7 +205,7 @@ public class LibraryMenu extends Gui
                             user.mainGui = null;
                         }
                         //It might fail due to the user being in a lesson currently, in which case a message will already have been displayed
-                        else if (user.hasIncompleteLessons())
+                        else if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
                         {
                         }
                         else

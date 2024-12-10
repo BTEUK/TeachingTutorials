@@ -41,8 +41,8 @@ public class JoinLeaveEvent implements Listener
         //Creates a new user object
         User user = new User(event.getPlayer());
         user.fetchDetailsByUUID(plugin.getDBConnection(), plugin.getLogger());
-        user.reassessHasIncompleteLesson(TeachingTutorials.getInstance().getDBConnection());
-        user.calculateRatings(TeachingTutorials.getInstance().getDBConnection());
+        user.reassessHasIncompleteLesson(plugin.getDBConnection(), plugin.getLogger());
+        user.calculateRatings(plugin.getDBConnection());
 
         //Adds player to the main list of players
         plugin.players.add(user);

@@ -1,20 +1,24 @@
 package teachingtutorials.guis.locationcreatemenus;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.TextEditorBookListener;
+import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialplaythrough.StepPlaythrough;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
+
+import java.util.List;
 
 /**
  * A menu accessible to a creator when creating a new location, used to set the step instructions,
@@ -59,8 +63,13 @@ public class StepEditorMenu extends Gui
         this.locationStep = locationStep;
 
         //Sets up the books
-        this.videoLinkBookListener = new TextEditorBookListener(plugin, locationStep, this, user, false);
-        this.instructionsBookListener = new TextEditorBookListener(plugin, locationStep, this, user, true);
+        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, locationStep.getStep().getName(),
+                (oldBookMeta, newBookMeta, textEditorBookListener, szNewContent) ->
+                        bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, false));
+
+        this.instructionsBookListener = new TextEditorBookListener(plugin, user, locationStep.getStep().getName(),
+                (oldBookMeta, newBookMeta, textEditorBookListener, szNewContent) ->
+                        bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, true));
 
         //Adds the items to the gui
         addMenuOptions();
@@ -295,5 +304,37 @@ public class StepEditorMenu extends Gui
     public void instructionsEdited()
     {
         stepPlaythrough.tryNextStep();
+    }
+
+
+    /**
+     * The procedure upon closure of a video link editor book
+     * @param oldBookMeta The previous metadata of the book just closed.
+     * @param newBookMeta The new metadata of the book just closed.
+     * @param textEditorBookListener A reference to the book listener itself which calls this. Enables unregistering to be called.
+     * @param szNewContent The combined content of all pages in the new book.
+     * @param bWasInstructions Whether the book was created for editing instructions (true) or the video link (false)
+     */
+    private void bookClosed(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent, boolean bWasInstructions)
+    {
+        //Edits the step instructions or video link
+        if (bWasInstructions)
+            locationStep.setInstruction(this.getStepPlaythrough(), szNewContent, locationStep.getStep().getInstructionDisplayType(), user.player, locationStep.getStep().getName());
+        else
+            locationStep.setVideoLink(szNewContent);
+
+        //Reopen the feature menu
+        user.mainGui = this;
+        user.mainGui.refresh();
+
+        //Unregisters this listener
+        textEditorBookListener.unregister();
+
+        //Removes the book
+        user.player.getInventory().getItemInMainHand().setAmount(0);
+
+        //Informs the menu that some instructions were edited
+        if (bWasInstructions)
+            instructionsEdited();
     }
 }

@@ -32,15 +32,13 @@ public class LocationTask extends Task
      * @param group A reference to the parent group of the task
      * @param iLocationID A copy of the locationID for the location with which the Location Task is associated
      * @param szAnswers The answers
-     * @param fDifficulty The difficulty
      */
-    public LocationTask(FundamentalTaskType type, int iTaskID, int iOrder, String szDetails, Group group, int iLocationID, String szAnswers, float fDifficulty)
+    public LocationTask(FundamentalTaskType type, int iTaskID, int iOrder, String szDetails, Group group, int iLocationID, String szAnswers, float[] fDifficulties)
     {
         super(type, iTaskID, iOrder, szDetails, group);
         this.iLocationID = iLocationID;
         this.szAnswers = szAnswers;
-
-        this.fDifficulties = new float[]{0f, 0f, 0f, 0f, 0f};
+        this.fDifficulties = fDifficulties;
     }
 
     /**
@@ -52,6 +50,8 @@ public class LocationTask extends Task
     {
         super(task.type, task.iTaskID, task.iOrder, task.szDetails, task.getParentGroup());
         this.iLocationID = iLocationID;
+
+        this.fDifficulties = new float[]{0f, 0f, 0f, 0f, 0f};
     }
 
     /**

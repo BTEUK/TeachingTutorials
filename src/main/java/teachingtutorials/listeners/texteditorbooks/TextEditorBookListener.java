@@ -40,7 +40,7 @@ public class TextEditorBookListener implements Listener
      * @param bookCloseAction The action to perform on book close
      */
 
-    public TextEditorBookListener(TeachingTutorials plugin, User user, String szBookTitle, BookCloseAction bookCloseAction)
+    public TextEditorBookListener(TeachingTutorials plugin, User user, String szBookTitle, BookCloseAction bookCloseAction, String... initialValue)
     {
         this.plugin = plugin;
         this.bookCloseAction = bookCloseAction;
@@ -49,9 +49,13 @@ public class TextEditorBookListener implements Listener
         //Creates the book
         this.book = new ItemStack(Material.WRITABLE_BOOK, 1);
 
-        //Extracts a reference to the book meta, and sets the title
+        //Extracts a reference to the book meta, and sets the title and initial value
         BookMeta bookMeta = (BookMeta) this.book.getItemMeta();
         bookMeta.setTitle(szBookTitle);
+        if (initialValue.length > 0)
+        {
+            bookMeta.page(0, Component.text(initialValue[0]));
+        }
 
         //Adds the meta of the book back in
         this.book.setItemMeta(bookMeta);

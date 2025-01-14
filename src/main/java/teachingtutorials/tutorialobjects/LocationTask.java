@@ -3,6 +3,7 @@ package teachingtutorials.tutorialobjects;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.FundamentalTaskType;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
+import teachingtutorials.utils.Category;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,8 +14,7 @@ import java.util.logging.Level;
  */
 public class LocationTask extends Task
 {
-    /** The difficulty of the location task */
-    private float fDifficulty;
+    /** The difficulties of the location task, in the same order as the categories in the Category enum */
     private float[] fDifficulties;
 
     /** The answers of the location task */
@@ -39,7 +39,8 @@ public class LocationTask extends Task
         super(type, iTaskID, iOrder, szDetails, group);
         this.iLocationID = iLocationID;
         this.szAnswers = szAnswers;
-        this.fDifficulty = fDifficulty;
+
+        this.fDifficulties = new float[]{0f, 0f, 0f, 0f, 0f};
     }
 
     /**
@@ -54,7 +55,23 @@ public class LocationTask extends Task
     }
 
     /**
-     * Sets the difficulties
+     * Sets the difficulty in the category specified
+     * @param category The category to set the difficulty in
+     */
+    public void setDifficulty(Category category, float fDifficulty)
+    {
+        switch (category)
+        {
+            case tpll -> fDifficulties[0] = fDifficulty;
+            case worldedit -> fDifficulties[1] = fDifficulty;
+            case colouring -> fDifficulties[2] = fDifficulty;
+            case detail -> fDifficulties[3] = fDifficulty;
+            case terraforming -> fDifficulties[4] = fDifficulty;
+        }
+    }
+
+    /**
+     * Sets all of the difficulties together
      * @param fDifTpll
      * @param fDifWE
      * @param fDifColour
@@ -77,11 +94,34 @@ public class LocationTask extends Task
 
     /**
      *
-     * @return The difficulty of this location task
+     * @return Gets the difficulty of this location task in the category specified
      */
-    public float getDifficulty()
+    public float getDifficulty(Category category)
     {
-        return fDifficulty;
+        switch (category)
+        {
+            case tpll ->
+            {
+                return fDifficulties[0];
+            }
+            case worldedit ->
+            {
+                return fDifficulties[1];
+            }
+            case colouring ->
+            {
+                return fDifficulties[2];
+            }
+            case detail ->
+            {
+                return fDifficulties[3];
+            }
+            //Including terraforming:
+            default ->
+            {
+                return fDifficulties[4];
+            }
+        }
     }
 
     /**

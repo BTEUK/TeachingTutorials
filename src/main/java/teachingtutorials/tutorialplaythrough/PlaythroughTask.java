@@ -7,6 +7,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
 import teachingtutorials.newlocation.DifficultyListener;
+import teachingtutorials.utils.Category;
 import teachingtutorials.utils.VirtualBlockGroup;
 
 //Possible change: Make a separate NewLocation task and LessonTask.
@@ -57,7 +58,7 @@ public abstract class PlaythroughTask
 
     //Things in place for the full scoring update
     public float fPerformance;
-    public float fFinalScore;
+//    public float[] fFinalScores = new float[5];
 
     /** The difficulty listener, used for creating new locations. It is used for inputting the difficulty of the task when recording the answers */
     protected DifficultyListener difficultyListener;
@@ -132,11 +133,22 @@ public abstract class PlaythroughTask
 
         if (!parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.bLocationCreation)
         {
-            fFinalScore = locationTask.getDifficulty()*fPerformance;
+            //A reference to the parent lesson
+            Lesson lesson = (Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough;
+            //Temporary variable used to store the final score calculations in each category
+            float fFinalScore, fDifficulty;
+            for (int i = 0 ; i < 5 ; i++)
+            {
+                fDifficulty = locationTask.getDifficulty(Category.values()[i]);
+                fFinalScore = fDifficulty*fPerformance;
+
+                //Add scores to the totals
+                lesson.fTotalScores[i] = lesson.fTotalScores[i] +fFinalScore;
+                lesson.fDifficultyTotals[i] = lesson.fDifficultyTotals[i] + fDifficulty;
+
+            }
 
             //Add scores to the totals
-            ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllScoreTotal = ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllScoreTotal + fFinalScore;
-            ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllDifTotal = ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllDifTotal + getLocationTask().getDifficulty();
         }
         //Notifies the parent group that one of its tasks havs been complete
         parentGroupPlaythrough.taskFinished();

@@ -2,7 +2,6 @@ package teachingtutorials.tutorialplaythrough.fundamentalTasks;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,8 +22,17 @@ import java.util.logging.Level;
  */
 public class Chat extends PlaythroughTask implements Listener
 {
-    /** Stores the target answer */
-    private String szTargetAnswer;
+    /** Stores the target answer(s) or the numerical bounds. Always supports Regex forms when used in discrete mode */
+    private String[] szTargetAnswers;
+
+    /** Stores the score to be received upon completing the task using the corresponding indexed answer specified in szTargetAnswers.
+     * If using in discrete mode */
+    private float[] fScores;
+
+    /** Stores the type of chat that this is */
+    private ChatType chatType;
+
+//    Next task is to sort out the setting of answers, also checking thaat : does not appear in any of the asnwers, or come up with a way to solve this
 
     /**
      * Used when initialising a task for a lesson, i.e when the answers are already known
@@ -36,7 +44,56 @@ public class Chat extends PlaythroughTask implements Listener
     Chat(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, locationTask, groupPlaythrough);
-        this.szTargetAnswer = locationTask.getAnswer();
+
+        //Check which sort of answer(s) is (are) specified and perform the necessary information extraction
+        String szAnswerText = locationTask.getAnswer();
+        String[] szAnswerParts = szAnswerText.split(":");
+
+        //Handles original mechanics
+        if (szAnswerParts.length == 1)
+        {
+            szTargetAnswers = szAnswerParts;
+            fScores = new float[]{1};
+            chatType = ChatType.Discrete;
+        }
+        switch (szAnswerParts[0])
+        {
+            //Deals with discrete task types
+            case "Discrete":
+                //Set the chat type
+                chatType = ChatType.Discrete;
+
+                //Creates a list of all of the valid answers and their scores. Each entry in this string should have form: "Answer,score"
+                String[] szAnswers = szAnswerParts[1].split(";");
+
+                //Initialises the answer and score array to the required length
+                int iNumAnswers = szAnswers.length;
+                this.szTargetAnswers = new String[iNumAnswers];
+                this.fScores = new float[iNumAnswers];
+
+                for (int i = 0 ; i < iNumAnswers ; i++)
+                {
+                    //Extracts the ith answer and score
+                    String szAnswerAndScore = szAnswers[i];
+
+                    //Extracts the answer and the score into different variables, and adds them to the chat task list
+                    String szAnswer = szAnswerAndScore.substring(0, szAnswerAndScore.indexOf(','));
+                    float fScore = Float.parseFloat(szAnswerAndScore.substring(szAnswerAndScore.indexOf(',')+1));
+                    szTargetAnswers[i] = szAnswer;
+                    fScores[i] = fScore;
+                }
+                break;
+
+            //Deals with numerical task types
+            case "Numerical":
+                //Set the chat type
+                chatType = ChatType.Numerical;
+
+                //Extracts the min, ideal and max scores. This will produce a string array looking like: [min,ideal,max]
+                String[] szBounds = szAnswerParts[1].split(",");
+                szTargetAnswers = szBounds;
+                break;
+        }
     }
 
     /**
@@ -58,13 +115,31 @@ public class Chat extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required chat to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target chat = "+this.szTargetAnswer);
+        String szLogMessage = "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                +". Task: " +this.getLocationTask().iTaskID;
+
+        if (chatType.equals(ChatType.Numerical))
+        {
+            szLogMessage = szLogMessage+". Numerical Chat with max: "+szTargetAnswers[0] +", target: "+szTargetAnswers[1] +", and max: "+szTargetAnswers[2];
+        }
+        else
+        {
+            szLogMessage = szLogMessage+". Discrete Chat with answers: ";
+            int iNumAnswers = szTargetAnswers.length;
+            for (int i = 0 ; i < iNumAnswers - 1 ; i++)
+            {
+                szLogMessage = szLogMessage + szTargetAnswers[i] +", ";
+            }
+            szLogMessage = szLogMessage + szTargetAnswers[iNumAnswers-1] +".";
+        }
+        plugin.getLogger().log(Level.INFO, szLogMessage);
 
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+
+        //Create a menu and open it here
+
     }
 
     /**
@@ -104,23 +179,111 @@ public class Chat extends PlaythroughTask implements Listener
             event.setCancelled(true);
         }
 
-        //Performs steps for if it is a lesson
-        else if (szChat.equalsIgnoreCase(szTargetAnswer))
+        //Need a proper check at this point. Need menus to specify discrete etc. Need books potentially.
+
+        //Performs logic for if it is a lesson
+        if (!bCreatingNewLocation)
         {
-            //Answer correct
-            Display.ActionBar(player, Display.colouredText("Correct answer !", NamedTextColor.DARK_GREEN));
-            messageCorrect();
-            fPerformance = 1F;
+            //Hides answers
             event.setCancelled(true);
-        }
-        else
-        {
+
+            if (chatType.equals(ChatType.Numerical))
+            {
+                try
+                {
+                    float fPlayerAnswer = Float.parseFloat(szChat);
+                    float fMin = Float.parseFloat(szTargetAnswers[0]);
+                    float fIdeal = Float.parseFloat(szTargetAnswers[1]);
+                    float fMax = Float.parseFloat(szTargetAnswers[2]);
+
+                    if (fPlayerAnswer >= fMin && fPlayerAnswer <= fMax)
+                    {
+                        //Answer correct
+                        Display.ActionBar(player, Display.colouredText("Correct answer !", NamedTextColor.DARK_GREEN));
+                        messageCorrect();
+
+                        //Calculates the score
+                        if (fPlayerAnswer == fIdeal)
+                            fPerformance = 1F;
+                        else
+                        {
+                            float m, c;
+                            float fBound;
+//                            if (fPlayerAnswer < fIdeal)
+//                            {
+//                                m = 1.0f/(fIdeal-fMin);
+//                                c = -fMin*m;
+//                            }
+//                            else
+//                            {
+//                                m = -1.0f/(fMax-fIdeal);
+//                                c = -fMax*m;
+//                            }
+
+                            //Simplifies to:
+                            if (fPlayerAnswer < fIdeal)
+                                fBound = fMin;
+                            else
+                                fBound = fMax;
+
+//                          Non-zero fIdeal-fBound situation would never occur:
+                            //Answer is in the bounds by this point
+                            //But isn't equal to the ideal
+                            //If Min and Max were both the same as ideal then to be in the bounds it would have to be ideal so this isn't reached
+                            //If Min is the same as ideal then to be in the bounds it must be:
+                            // Less than the ideal: it can't be since that would be less than the min
+                            // Greater than the ideal, in which case upper bound would take over which isn't same as ideal
+                            //If Max is the same as ideal then to be in the bounds it must be:
+                            // Less than the ideal, in which case the lower bound would take over which isn't same as ideal
+                            // Greater than the ideal, it can't be since that would be greater than the max
+
+                            //For safety:
+
+                            //Handles non zero error. Note I can't see when this would ever happen but is here in case there is a way
+                            if (fIdeal-fBound == 0f)
+                                fPerformance = 1;
+                            else
+                            {
+                                m = 1.0f/(fIdeal-fBound);
+                                c = -fBound*m;
+                                fPerformance = m*fPlayerAnswer+c;
+                            }
+                        }
+                        return;
+                    }
+
+                }
+                catch (NumberFormatException e)
+                {
+                    //Prompt
+                    Display.ActionBar(player, Display.colouredText("The answer should be a number, try again", NamedTextColor.GOLD));
+                    return;
+                }
+            }
+
+            //Logic for discrete answers
+            else
+            {
+                int iNumAnswers = szTargetAnswers.length;
+                for (int i = 0 ; i < iNumAnswers ; i++)
+                {
+                    if (szChat.toLowerCase().matches(szTargetAnswers[i].toLowerCase()))
+                    {
+                        //Answer correct
+                        Display.ActionBar(player, Display.colouredText("Correct answer !", NamedTextColor.DARK_GREEN));
+                        messageCorrect();
+                        fPerformance = fScores[i];
+                        return;
+                    }
+                }
+            }
+
+            //If not found a correct answer:
+
             //Answer incorrect
             Display.ActionBar(player, Display.colouredText("Incorrect, try again", NamedTextColor.GOLD));
-
-            //Make wrong answers private. May be made configurable in a later update
-            event.setCancelled(true);
         }
+
     }
 
     /**
@@ -158,4 +321,9 @@ public class Chat extends PlaythroughTask implements Listener
     {
         messageCorrect();
     }
+}
+
+enum ChatType
+{
+    Numerical, Discrete
 }

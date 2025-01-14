@@ -11,8 +11,6 @@ import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
-import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.utils.User;
 
 import java.util.List;
@@ -86,7 +84,8 @@ public class TextEditorBookListener implements Listener
 
     /**
      * Detects when a player closes a book after editing it, checks whether it is the relevant player and relevant book,
-     * then detects the changes and stores the information in the correct place
+     * then detects the changes and stores the information in the book.
+     * <p>Will then run the custom book close logic inserted into this listener at construction</p>
      * @param event
      */
     @EventHandler
@@ -107,12 +106,12 @@ public class TextEditorBookListener implements Listener
         //Removes the end space, the space after the last page is added in the loop but then needs to be removed
         szNewContent = szNewContent.substring(0, szNewContent.length() - 1);
 
-        //Performs the predefined instructions upon book close
-        bookCloseAction.runBookClose(event.getPreviousBookMeta(), event.getNewBookMeta(), this, szNewContent);
-
         //Saves the instructions in the book
         BookMeta bookMeta = (BookMeta) getBook().getItemMeta();
         bookMeta.pages(event.getNewBookMeta().pages());
         getBook().setItemMeta(bookMeta);
+
+        //Performs the predefined instructions upon book close
+        bookCloseAction.runBookClose(event.getPreviousBookMeta(), event.getNewBookMeta(), this, szNewContent);
     }
 }

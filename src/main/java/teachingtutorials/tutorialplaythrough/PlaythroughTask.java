@@ -102,7 +102,6 @@ public abstract class PlaythroughTask
 
         //Listens out for difficulty - There will only be one difficulty listener per task to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this);
-        difficultyListener.register();
     }
 
     /**

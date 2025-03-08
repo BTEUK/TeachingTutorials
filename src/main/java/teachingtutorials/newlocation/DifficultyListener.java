@@ -49,6 +49,7 @@ public class DifficultyListener implements Listener
      */
     public void register()
     {
+        this.bReadyForDifficulty = true;
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 

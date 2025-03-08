@@ -201,6 +201,7 @@ public class Selection extends PlaythroughTask implements Listener
 
                 //Prompt difficulty
                 player.sendMessage(Display.aquaText("Enter the difficulty of that selection from 0 to 1 as a decimal. Use /tutorials [difficulty]"));
+                difficultyListener.register();
 
                 //SpotHit is then called from inside the difficulty listener once the difficulty has been established
                 //This is what moves it onto the next task

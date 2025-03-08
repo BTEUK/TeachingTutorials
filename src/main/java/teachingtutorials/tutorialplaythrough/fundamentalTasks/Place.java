@@ -151,6 +151,7 @@ public class Place extends PlaythroughTask implements Listener
 
             //Prompt difficulty
             player.sendMessage(Display.colouredText("Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]", NamedTextColor.AQUA));
+            difficultyListener.register();
 
             //SpotHit is then called from inside the difficulty listener once the difficulty has been established
             //This is what moves it onto the next task

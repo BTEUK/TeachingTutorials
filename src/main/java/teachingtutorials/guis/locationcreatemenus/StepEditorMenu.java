@@ -130,15 +130,11 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, instructionsBookListener.getBook(), "Instructions editor book");
-                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    instructionsBookListener.register();
+                    instructionsBookListener.startEdit("Instructions editor book");
+
+                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
+                    //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
                     //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
                 }
@@ -171,16 +167,10 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
-                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    videoLinkBookListener.register();
+                    videoLinkBookListener.startEdit("Video link editor book");
 
+                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
@@ -209,15 +199,11 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, instructionsBookListener.getBook(), "Instructions editor book");
-                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    instructionsBookListener.register();
+                    instructionsBookListener.startEdit("Instructions editor book");
+
+                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
+                    //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
                     //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
                 }
@@ -232,16 +218,10 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
-                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    videoLinkBookListener.register();
+                    videoLinkBookListener.startEdit("Video link editor book");
 
+                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
@@ -315,7 +295,7 @@ public class StepEditorMenu extends Gui
      * @param szNewContent The combined content of all pages in the new book.
      * @param bWasInstructions Whether the book was created for editing instructions (true) or the video link (false)
      */
-    private void bookClosed(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent, boolean bWasInstructions)
+    private boolean bookClosed(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent, boolean bWasInstructions)
     {
         //Edits the step instructions or video link
         if (bWasInstructions)
@@ -336,5 +316,7 @@ public class StepEditorMenu extends Gui
         //Informs the menu that some instructions were edited
         if (bWasInstructions)
             instructionsEdited();
+
+        return true;
     }
 }

@@ -7,11 +7,13 @@ import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.User;
+import teachingtutorials.utils.Utils;
 
 import java.util.List;
 
@@ -71,10 +73,17 @@ public class TextEditorBookListener implements Listener
     }
 
     /**
-     * Registers the listeners with the server's event listeners
+     * Gives the player the book, closes the current inventory and registers the listeners with the server's event listeners
      */
-    public void register()
+    public void startEdit(String szBookName)
     {
+        //Gives the player the book item
+        Utils.giveItem(user.player, this.book, szBookName);
+
+        //Closes the current inventory
+        user.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+
+        //Registers the book close listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -105,17 +114,19 @@ public class TextEditorBookListener implements Listener
         for (Component page: pages)
         {
             szNewContent = szNewContent + ((TextComponent) page).content() + " ";
-
         }
-        //Removes the end space, the space after the last page is added in the loop but then needs to be removed
+        // Removes the end space, the space after the last page is added in the loop but then needs to be removed
         szNewContent = szNewContent.substring(0, szNewContent.length() - 1);
 
-        //Saves the instructions in the book
-        BookMeta bookMeta = (BookMeta) getBook().getItemMeta();
-        bookMeta.pages(event.getNewBookMeta().pages());
-        getBook().setItemMeta(bookMeta);
-
         //Performs the predefined instructions upon book close
-        bookCloseAction.runBookClose(event.getPreviousBookMeta(), event.getNewBookMeta(), this, szNewContent);
+        boolean bSaveAnswers = bookCloseAction.runBookClose(event.getPreviousBookMeta(), event.getNewBookMeta(), this, szNewContent);
+
+        if (bSaveAnswers)
+        {
+            //Saves the instructions in the book
+            BookMeta bookMeta = (BookMeta) getBook().getItemMeta();
+            bookMeta.pages(event.getNewBookMeta().pages());
+            getBook().setItemMeta(bookMeta);
+        }
     }
 }

@@ -68,6 +68,7 @@ public abstract class PlaythroughTask
      * @param plugin A reference to the TeachingTutorials plugin instance
      * @param player A reference to the Bukkit player for whom the task is for
      * @param locationTask A reference to the Tutorials LocationTask which this task is a play-through of
+     * @param groupPlaythrough A reference to the GroupPlaythrough that this PlaythroughTask is a part of
      */
     public PlaythroughTask(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
@@ -87,6 +88,7 @@ public abstract class PlaythroughTask
      * @param plugin A reference to the TeachingTutorials plugin instance
      * @param player A reference to the Bukkit player for whom the task is for
      * @param task A reference to the Tutorials Task which this task is a play-through of
+     * @param groupPlaythrough A reference to the GroupPlaythrough that this PlaythroughTask is a part of
      */
     public PlaythroughTask(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {

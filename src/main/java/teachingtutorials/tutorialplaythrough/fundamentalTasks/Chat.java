@@ -115,23 +115,30 @@ public class Chat extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required chat to assist debugging
-        String szLogMessage = "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID;
-
-        if (chatType.equals(ChatType.Numerical))
+        String szLogMessage;
+        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
         {
-            szLogMessage = szLogMessage+". Numerical Chat with max: "+szTargetAnswers[0] +", target: "+szTargetAnswers[1] +", and max: "+szTargetAnswers[2];
+            szLogMessage = "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+                    +". Task: " +this.getLocationTask().iTaskID;
+
+            if (chatType.equals(ChatType.Numerical))
+            {
+                szLogMessage = szLogMessage+". Numerical Chat with max: "+szTargetAnswers[0] +", target: "+szTargetAnswers[1] +", and max: "+szTargetAnswers[2];
+            }
+            else
+            {
+                szLogMessage = szLogMessage+". Discrete Chat with answers: ";
+                int iNumAnswers = szTargetAnswers.length;
+                for (int i = 0 ; i < iNumAnswers - 1 ; i++)
+                {
+                    szLogMessage = szLogMessage + szTargetAnswers[i] +", ";
+                }
+                szLogMessage = szLogMessage + szTargetAnswers[iNumAnswers-1] +".";
+            }
         }
         else
-        {
-            szLogMessage = szLogMessage+". Discrete Chat with answers: ";
-            int iNumAnswers = szTargetAnswers.length;
-            for (int i = 0 ; i < iNumAnswers - 1 ; i++)
-            {
-                szLogMessage = szLogMessage + szTargetAnswers[i] +", ";
-            }
-            szLogMessage = szLogMessage + szTargetAnswers[iNumAnswers-1] +".";
-        }
+            szLogMessage = "New Location being made by :"+player.getName() +". Chat Task: " +this.getLocationTask().iTaskID;
+
         plugin.getLogger().log(Level.INFO, szLogMessage);
 
         super.register();

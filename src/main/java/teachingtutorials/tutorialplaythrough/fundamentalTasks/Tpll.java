@@ -88,10 +88,14 @@ public class Tpll extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required tpll coordinates to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
+            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
                 +". Task: " +this.getLocationTask().iTaskID
                 +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
-        );
+            );
+        else
+            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                    +". Tpll Task: " +this.getLocationTask().iTaskID);
 
         super.register();
 

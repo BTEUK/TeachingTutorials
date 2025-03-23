@@ -9,6 +9,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.locationcreatemenus.ChatLocationTaskEditorMenu;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
@@ -106,6 +107,12 @@ public class Chat extends PlaythroughTask implements Listener
     Chat(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
+
+        this.taskEditorMenu = new ChatLocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Chat Task Editor", NamedTextColor.AQUA),
+                this.getLocationTask(), this);
     }
 
     /**
@@ -135,18 +142,18 @@ public class Chat extends PlaythroughTask implements Listener
                 }
                 szLogMessage = szLogMessage + szTargetAnswers[iNumAnswers-1] +".";
             }
+
+            //Register it
+            Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
         }
         else
+        {
             szLogMessage = "New Location being made by :"+player.getName() +". Chat Task: " +this.getLocationTask().iTaskID;
+            Display.ActionBar(player, Display.colouredText("Use the menu to edit the answers", NamedTextColor.GREEN));
+        }
 
         plugin.getLogger().log(Level.INFO, szLogMessage);
-
         super.register();
-
-        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
-
-        //Create a menu and open it here
-
     }
 
     /**
@@ -166,27 +173,6 @@ public class Chat extends PlaythroughTask implements Listener
 
         //Extracts the message that the user has sent
         String szChat = event.getMessage();
-
-        //Checks whether it is a new location
-        if (bCreatingNewLocation) //Set the answers
-        {
-            //Gets a local reference to the locationTask object to hold the data that is to be stored in the LocationTasks table of the DB
-            LocationTask locationTask = getLocationTask();
-
-            //Sets the answers into the locationTask object
-            locationTask.setAnswers(szChat);
-
-            //Data is added to database once difficulty is provided
-            //Prompt difficulty
-            player.sendMessage(player, Display.aquaText("Enter the difficulty of that chat message from 0 to 1 as a decimal. Use /tutorials [difficulty]"));
-
-            //messageCorrect is then called from inside the difficulty listener once the difficulty has been established
-            //This is what moves it onto the next task
-
-            event.setCancelled(true);
-        }
-
-        //Need a proper check at this point. Need menus to specify discrete etc. Need books potentially.
 
         //Performs logic for if it is a lesson
         if (!bCreatingNewLocation)

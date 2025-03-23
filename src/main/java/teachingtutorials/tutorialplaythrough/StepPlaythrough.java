@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialobjects.Step;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.Tpll;
@@ -72,7 +73,7 @@ public class StepPlaythrough
     /** The current group - used when creating a new location - when groups are synchronous */
     private GroupPlaythrough currentGroupPlaythrough;
 
-    /** The step editor menu - used when creating new locations*/
+    /** The step editor menu - used when creating new locations */
     private StepEditorMenu menu;
 
     /**
@@ -128,6 +129,26 @@ public class StepPlaythrough
     public boolean getSelectionCompleteHold()
     {
         return selectionCompleteHold;
+    }
+
+    /** Returns a reference to the step editor menu */
+    public StepEditorMenu getEditorMenu()
+    {
+        return menu;
+    }
+
+    public LocationTaskEditorMenu getCurrentTaskEditorMenu ()
+    {
+        if (this.iGroupInStepLocationCreation < 1)
+            return null;
+        else
+        {
+            PlaythroughTask currentTask = this.groupPlaythroughs.get(this.iGroupInStepLocationCreation - 1).getCurrentTask();
+            if (currentTask == null)
+                return null;
+            else
+                return currentTask.taskEditorMenu;
+        }
     }
 
     /**
@@ -324,6 +345,14 @@ public class StepPlaythrough
             }, lWaitTime);
         }
 
+        //Creates the menu, assigns it to the user
+        User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
+        menu = new StepEditorMenu(plugin, user, this, this.locationStep);
+        if (user.mainGui != null)
+            user.mainGui.delete();
+        user.mainGui = menu;
+
+
         //Fetches the details of groups and stores them in memory
         fetchAndInitialiseGroups();
         plugin.getLogger().log(Level.INFO, groupPlaythroughs.size() +" groups fetched");
@@ -364,13 +393,6 @@ public class StepPlaythrough
             iGroupInStepLocationCreation = 1;
             currentGroupPlaythrough.startGroupPlaythrough();
             plugin.getLogger().log(Level.FINE, "Registered group "+iGroupInStepLocationCreation +" of step");
-
-            //Creates the menu, assigns it to the user
-            User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
-            menu = new StepEditorMenu(plugin, user, this, this.locationStep);
-            if (user.mainGui != null)
-                user.mainGui.delete();
-            user.mainGui = menu;
         }
     }
 
@@ -418,7 +440,7 @@ public class StepPlaythrough
             }
         }
 
-        if (bAllGroupsFinished == true)
+        if (bAllGroupsFinished)
         {
             //Marks the step's tasks as all finished
             this.bStepFinished = true;

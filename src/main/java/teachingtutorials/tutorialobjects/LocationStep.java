@@ -172,6 +172,10 @@ public class LocationStep
      */
     public boolean storeDetailsInDB(TeachingTutorials plugin)
     {
+        //Sanitise the instructions
+        String szNewInstructions = szInstructions.replace("\\'", "'");
+        szNewInstructions = szNewInstructions.replace("'", "\\'");
+
         String sql;
         Statement SQL = null;
         ResultSet resultSet = null;
@@ -188,7 +192,7 @@ public class LocationStep
                     + dStartLongitude +", "
                     + fStartYaw +", "
                     + fStartPitch +", '"
-                    + szInstructions +"', "
+                    + szNewInstructions +"', "
                     + dHologramLocationX +", "
                     + dHologramLocationY +", "
                     + dHologramLocationZ +", '"
@@ -196,11 +200,7 @@ public class LocationStep
                     +")";
             iCount = SQL.executeUpdate(sql);
 
-            if (iCount != 1)
-            {
-                return false;
-            }
-            return true;
+            return iCount == 1;
         }
         catch (SQLException se)
         {
@@ -342,6 +342,9 @@ public class LocationStep
      */
     public void setVideoLink(String szLink)
     {
+        //Sanitise the instructions
+        szLink = szLink.replace("'", "\\'");
+
         this.szVideoWalkthroughLink = szLink;
     }
 

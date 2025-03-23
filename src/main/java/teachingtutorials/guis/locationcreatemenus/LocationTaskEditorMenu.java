@@ -1,0 +1,311 @@
+package teachingtutorials.guis.locationcreatemenus;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Material;
+import org.bukkit.inventory.meta.BookMeta;
+import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.Gui;
+import teachingtutorials.guis.TutorialGUIUtils;
+import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
+import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import teachingtutorials.tutorialobjects.LocationTask;
+import teachingtutorials.tutorialplaythrough.PlaythroughTask;
+import teachingtutorials.utils.Category;
+import teachingtutorials.utils.Display;
+import teachingtutorials.utils.User;
+import teachingtutorials.utils.Utils;
+
+import java.util.logging.Level;
+
+
+/**
+ * A base class for LocationTask editor menus. Defines the standard features of LocationTaskEditor menus, including
+ * a link back to the Step Editor Menu, a place to define the difficulties of the task, and a confirm and continue
+ * button to move on to the next task.
+ */
+public abstract class LocationTaskEditorMenu extends Gui
+{
+    /**
+     * A reference to the parent menu / menu of the associated step of this location task
+     */
+    private final StepEditorMenu parentStepMenu;
+
+    /**
+     * A reference to the instance of the TeachingTutorials plugin
+     */
+    protected final TeachingTutorials plugin;
+
+    /**
+     * A reference to the user who owns this menu
+     */
+    protected final User user;
+
+    /**
+     * A reference to the location task that this menu is designed to edit the information of
+     */
+    protected final LocationTask locationTask;
+
+    /**
+     * A reference to the task playthrough object that this menu is associated with
+     */
+    private final PlaythroughTask playthroughTask;
+
+    /** A list of book editing listeners used for specifying the difficulties in each of the categories
+     * <p>Order is that in which the categories are specified in the Category Enum</p>*/
+    private final TextEditorBookListener[] difficultyListeners;
+
+    /**
+     * Defines whether the confirm and continue button should be enabled
+     */
+    private boolean bEnableConfirmAndContinueButton;
+
+    public LocationTaskEditorMenu(TeachingTutorials plugin, User user, StepEditorMenu parentStepMenu, Component inventoryTitle, LocationTask locationTask, PlaythroughTask playthroughTask)
+    {
+        //Creates an empty gui
+        super(5*9, inventoryTitle);
+        this.plugin = plugin;
+        this.user = user;
+        this.parentStepMenu = parentStepMenu;
+        this.locationTask = locationTask;
+        this.playthroughTask = playthroughTask;
+
+        //Sets up the difficulty listeners, loading each book with the current value of the difficulty
+        difficultyListeners = new TextEditorBookListener[5];
+        for (int i = 0 ; i < 5 ; i ++)
+        {
+            int finalI = i;
+            difficultyListeners[i] = new TextEditorBookListener(plugin, user, this, "Difficulty in " + Category.values()[i], new BookCloseAction()
+            {
+                /**
+                 * Performs the action on book close. You will likely want to unregister the book close listener within this.
+                 *
+                 * @param oldBookMeta            The previous metadata of the book just closed.
+                 * @param newBookMeta            The new metadata of the book just closed.
+                 * @param textEditorBookListener A reference to the book listener itself which calls this. Enables unregistering to be called
+                 * @param szNewContent           The combined content of all pages in the new book. This is always provided for convenience
+                 * @return Whether to accept the input and save the text
+                 */
+                @Override
+                public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
+                    boolean bVerificationPassed;
+
+                    try
+                    {
+                        float fDifficulty = Float.parseFloat(szNewContent);
+
+                        //Format will be of a float if it reaches this point
+
+                        //Checks whether it is out of range
+                        if (fDifficulty < 0 || fDifficulty > 1)
+                        {
+                            user.player.sendMessage(Display.errorText("You must enter something in the range 0-1"));
+                            bVerificationPassed = false;
+                        }
+                        else
+                        {
+                            //Sets the difficulty in the ith category
+                            locationTask.setDifficulty(Category.values()[finalI], fDifficulty);
+                            bVerificationPassed = true;
+                        }
+
+                        //Remove the book
+                        user.player.getInventory().getItemInMainHand().setAmount(0);
+                        textEditorBookListener.unregister();
+
+                        //Reopen the menu
+                        refresh();
+                        open(user);
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        user.player.sendMessage(Display.errorText("You must enter a floating point number in the range 0-1"));
+                        bVerificationPassed = false;
+                    }
+                    return bVerificationPassed;
+                }
+
+                /**
+                 * Performs the actions post saving and closing
+                 */
+                @Override
+                public void runPostClose()
+                {
+                    refresh();
+                    open(user);
+                }
+
+            }, locationTask.getDifficulty(Category.values()[i])+"");
+        }
+
+        //Adds the default options to the menu
+        addBaseOptions();
+    }
+
+    /**
+     * Adds the basic options to the inventory: The link back to the step editor menu and the difficulty editors
+     */
+    private void addBaseOptions()
+    {
+        //Adds the link back to the step editor menu
+        super.setItem((4 * 9) - 1 + 1,
+                Utils.createItem(Material.SPRUCE_DOOR, 1,
+                TutorialGUIUtils.optionTitle("To step editor menu")),
+                new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                u.mainGui = parentStepMenu;
+                u.mainGui.open(u);
+            }
+        });
+
+        //Stores which difficulty categories are open for setting
+        boolean[] bEnabledDifficulties = new boolean[5];
+        for (int i = 0 ; i < 5 ; i++)
+        {
+            bEnabledDifficulties[i] = false;
+        }
+
+        //Decides which categories to open up
+        switch (locationTask.type)
+        {
+            case tpll:
+                //Tpll, nothing else
+                bEnabledDifficulties[0] = true;
+                break;
+            case chat:
+            case place:
+            case command:
+                //All enabled
+                bEnabledDifficulties[0] = true;
+                bEnabledDifficulties[1] = true;
+                bEnabledDifficulties[2] = true;
+                bEnabledDifficulties[3] = true;
+                bEnabledDifficulties[4] = true;
+                break;
+            case selection:
+                //Tpll, WorldEdit, terraforming
+                bEnabledDifficulties[0] = true;
+                bEnabledDifficulties[1] = true;
+                bEnabledDifficulties[4] = true;
+                break;
+        }
+
+        //Add in the difficulty options in a row.
+        for (int i = 0 ; i < 5 ; i++)
+        {
+            int finalI = i;
+            if (bEnabledDifficulties[i])
+            {
+                super.setItem((4 * 9) - 1 + 3 + i,
+                        Utils.createItem(Material.WRITABLE_BOOK, 1,
+                                TutorialGUIUtils.optionTitle("Define "+Category.values()[i] +" difficulty"), TutorialGUIUtils.optionLore(locationTask.getDifficulty(Category.values()[finalI]) +"")),
+                        new guiAction() {
+                            @Override
+                            public void rightClick(User u) {
+                                leftClick(u);
+                            }
+                            @Override
+                            public void leftClick(User u) {
+                                //Gives the player the book item and registers the book close listener
+                                difficultyListeners[finalI].startEdit("Define "+Category.values()[finalI] +" difficulty");
+                            }
+                        });
+            }
+            else
+            {
+                super.setItem((4 * 9) - 1 + 3 + i,
+                        Utils.createItem(Material.BARRIER, 1,
+                                Display.colouredText("Define "+Category.values()[i] +" difficulty", NamedTextColor.GRAY)),
+                        new guiAction() {
+                            @Override
+                            public void rightClick(User u) {
+                            }
+                            @Override
+                            public void leftClick(User u) {
+                            }
+                        });
+            }
+        }
+
+        //Adds the confirm and continue button if applicable - clicking on this will save the answers and move on to the next task
+        if (bEnableConfirmAndContinueButton)
+        {
+            super.setItem((4 * 9) - 1 + 9,
+                    Utils.createItem(Material.LIME_STAINED_GLASS_PANE, 1,
+                            TutorialGUIUtils.optionTitle("Confirm Details"), TutorialGUIUtils.optionLore("Continue to next task")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u) {
+                            //Action on confirm
+
+                            //Deletes this menu
+                            delete();
+
+                            //Attempt to store the new data into the DB
+                            if (locationTask.storeNewData(plugin))
+                            {
+                                plugin.getLogger().log(Level.INFO, "LocationTask stored in database");
+                                user.player.sendMessage(Display.aquaText("Task answer successfully stored in DB"));
+                            }
+                            else
+                            {
+                                plugin.getLogger().log(Level.SEVERE, "LocationTask not stored in database");
+                                user.player.sendMessage(Display.errorText("Task could not be stored in DB. Please report this to a server admin"));
+                            }
+
+                            delete();
+                            //Calls for the play-through to move on to the next task
+                            playthroughTask.newLocationSpotHit();
+
+                            //Refresh will block the task editing if all tasks are already added
+                            LocationTaskEditorMenu.this.parentStepMenu.refresh();
+                            //Will open up the step menu if the step is not yet finished
+                            if (!LocationTaskEditorMenu.this.parentStepMenu.getAllInformationSet())
+                                LocationTaskEditorMenu.this.parentStepMenu.open(user);
+                        }
+                    });
+        }
+    }
+
+    /**
+     * Clears items from the GUI, recreates the items. If you call this you will need to open the menu yourself
+     * with this.open(User) after calling this and adding any additional items.
+     */
+    @Override
+    public void refresh()
+    {
+        this.clearGui();
+        this.addBaseOptions();
+    }
+
+    /**
+     * Notifies the menu that all of the necessary information in the task is fully set and we are ready to move on to the next task
+     */
+    public void taskFullySet()
+    {
+        bEnableConfirmAndContinueButton = true;
+
+        refresh();
+    }
+
+    /**
+     * Notifies the menu that all of the necessary information in the task is no longer set and we are not ready to move on to the next task.
+     * Will then call for a full refresh of the menu
+     */
+    public void taskNoLongerReadyToMoveOn()
+    {
+        bEnableConfirmAndContinueButton = false;
+
+        //Refreshes the menu
+        refresh();
+    }
+}

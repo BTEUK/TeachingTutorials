@@ -75,9 +75,13 @@ public class Place extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required block and location to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: "+((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
+            plugin.getLogger().log(Level.INFO, "Lesson: "+((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
                 +". Task: " +this.getLocationTask().iTaskID
                 +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+        else
+            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                    +". Place Task: " +this.getLocationTask().iTaskID);
 
         super.register();
 
@@ -147,6 +151,7 @@ public class Place extends PlaythroughTask implements Listener
 
             //Prompt difficulty
             player.sendMessage(Display.colouredText("Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]", NamedTextColor.AQUA));
+            difficultyListener.register();
 
             //SpotHit is then called from inside the difficulty listener once the difficulty has been established
             //This is what moves it onto the next task

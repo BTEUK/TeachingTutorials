@@ -128,6 +128,8 @@ public class Task
                 float fDetailingDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.DetailingDifficulty"));
                 float fTerraDifficulty = Float.parseFloat(resultSet.getString("LocationTasks.TerraDifficulty"));
 
+                float[] fDifficulties = new float[]{fTpllDifficulty, fWEDifficulty, fColouringDifficulty, fDetailingDifficulty, fTerraDifficulty};
+
                 //Extract the task type
                 FundamentalTaskType taskType = null;
                 try
@@ -145,27 +147,27 @@ public class Task
                 switch (taskType)
                 {
                     case tpll:
-                        locationTask = new LocationTask(FundamentalTaskType.selection, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fTpllDifficulty);
+                        locationTask = new LocationTask(FundamentalTaskType.selection, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fDifficulties);
                         Tpll tpll = new Tpll(plugin, player, locationTask, parentGroupPlaythrough);
                         tasks.add(tpll);
                         break;
                     case selection:
-                        locationTask = new LocationTask(FundamentalTaskType.selection, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fWEDifficulty);
+                        locationTask = new LocationTask(FundamentalTaskType.selection, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fDifficulties);
                         Selection selection = new Selection(plugin, player, locationTask, parentGroupPlaythrough);
                         tasks.add(selection);
                         break;
                     case command:
-                        locationTask = new LocationTask(FundamentalTaskType.command, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fWEDifficulty);
+                        locationTask = new LocationTask(FundamentalTaskType.command, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fDifficulties);
                         Command command = new Command(plugin, player, locationTask, parentGroupPlaythrough, tasks);
                         tasks.add(command);
                         break;
                     case chat:
-                        locationTask = new LocationTask(FundamentalTaskType.chat, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fWEDifficulty);
+                        locationTask = new LocationTask(FundamentalTaskType.chat, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fDifficulties);
                         Chat chat = new Chat(plugin, player, locationTask, parentGroupPlaythrough);
                         tasks.add(chat);
                         break;
                     case place:
-                        locationTask = new LocationTask(FundamentalTaskType.place, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fWEDifficulty);
+                        locationTask = new LocationTask(FundamentalTaskType.place, iTaskID, iOrder, szDetails, parentGroupPlaythrough.getGroup(), iLocationID, szAnswers, fDifficulties);
                         Place place = new Place(plugin, player, locationTask, parentGroupPlaythrough);
                         tasks.add(place);
                         break;

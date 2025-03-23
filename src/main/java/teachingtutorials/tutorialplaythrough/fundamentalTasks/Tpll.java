@@ -88,10 +88,14 @@ public class Tpll extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required tpll coordinates to assist debugging
-        plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
+            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
                 +". Task: " +this.getLocationTask().iTaskID
                 +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
-        );
+            );
+        else
+            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                    +". Tpll Task: " +this.getLocationTask().iTaskID);
 
         super.register();
 
@@ -166,6 +170,7 @@ public class Tpll extends PlaythroughTask implements Listener
 
                     //Prompt difficulty
                     player.sendMessage(Display.aquaText("Enter the difficulty of that tpll from 0 to 1 as a decimal. Use /tutorials [difficulty]"));
+                    difficultyListener.register();
 
                     //SpotHit is then called from inside the difficulty listener once the difficulty has been established
                     //This is what moves it onto the next task

@@ -4,9 +4,11 @@ import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
 import teachingtutorials.newlocation.DifficultyListener;
+import teachingtutorials.utils.Category;
 import teachingtutorials.utils.VirtualBlockGroup;
 
 //Possible change: Make a separate NewLocation task and LessonTask.
@@ -57,16 +59,20 @@ public abstract class PlaythroughTask
 
     //Things in place for the full scoring update
     public float fPerformance;
-    public float fFinalScore;
+//    public float[] fFinalScores = new float[5];
 
     /** The difficulty listener, used for creating new locations. It is used for inputting the difficulty of the task when recording the answers */
     protected DifficultyListener difficultyListener;
+
+    /** The menu used to edit the information and properties of this location task */
+    protected LocationTaskEditorMenu taskEditorMenu;
 
     /**
      * Used when initialising a task for a tutorial play-through for an existing location.
      * @param plugin A reference to the TeachingTutorials plugin instance
      * @param player A reference to the Bukkit player for whom the task is for
      * @param locationTask A reference to the Tutorials LocationTask which this task is a play-through of
+     * @param groupPlaythrough A reference to the GroupPlaythrough that this PlaythroughTask is a part of
      */
     public PlaythroughTask(TeachingTutorials plugin, Player player, LocationTask locationTask, GroupPlaythrough groupPlaythrough)
     {
@@ -86,6 +92,7 @@ public abstract class PlaythroughTask
      * @param plugin A reference to the TeachingTutorials plugin instance
      * @param player A reference to the Bukkit player for whom the task is for
      * @param task A reference to the Tutorials Task which this task is a play-through of
+     * @param groupPlaythrough A reference to the GroupPlaythrough that this PlaythroughTask is a part of
      */
     public PlaythroughTask(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
@@ -101,7 +108,6 @@ public abstract class PlaythroughTask
 
         //Listens out for difficulty - There will only be one difficulty listener per task to avoid bugs
         difficultyListener = new DifficultyListener(this.plugin, this.player, this);
-        difficultyListener.register();
     }
 
     /**
@@ -132,13 +138,24 @@ public abstract class PlaythroughTask
 
         if (!parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.bLocationCreation)
         {
-            fFinalScore = locationTask.getDifficulty()*fPerformance;
+            //A reference to the parent lesson
+            Lesson lesson = (Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough;
+            //Temporary variable used to store the final score calculations in each category
+            float fFinalScore, fDifficulty;
+            for (int i = 0 ; i < 5 ; i++)
+            {
+                fDifficulty = locationTask.getDifficulty(Category.values()[i]);
+                fFinalScore = fDifficulty*fPerformance;
+
+                //Add scores to the totals
+                lesson.fTotalScores[i] = lesson.fTotalScores[i] +fFinalScore;
+                lesson.fDifficultyTotals[i] = lesson.fDifficultyTotals[i] + fDifficulty;
+
+            }
 
             //Add scores to the totals
-            ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllScoreTotal = ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllScoreTotal + fFinalScore;
-            ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllDifTotal = ((Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough).fTpllDifTotal + getLocationTask().getDifficulty();
         }
-        //Notifies the parent group that one of its tasks havs been complete
+        //Notifies the parent group that one of its tasks has been complete
         parentGroupPlaythrough.taskFinished();
     }
 

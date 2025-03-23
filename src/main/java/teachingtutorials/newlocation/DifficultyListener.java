@@ -45,11 +45,16 @@ public class DifficultyListener implements Listener
     }
 
     /**
-     * Registers the event listeners with the server's listener system
+     * Registers the event listeners with the server's listener system, if not already registered
      */
     public void register()
     {
-        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+        //Ensures it is only registered once
+        if (!this.bReadyForDifficulty)
+        {
+            this.bReadyForDifficulty = true;
+            Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+        }
     }
 
     /** Returns whether this listener is ready to take the difficulty */

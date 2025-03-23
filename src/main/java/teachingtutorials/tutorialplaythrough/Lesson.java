@@ -41,11 +41,15 @@ public class Lesson extends TutorialPlaythrough
     /** The step that a user is currently at (1 indexed), used for "resuming" tutorials */
     private int iStepToStart;
 
-    /** Stores the total scores for each of the categories - Ready for when scoring is added properly */
-    public float fTpllScoreTotal, fWEScoreTotal, fColourScoreTotal, fDetailingScoreTotal, fTerraScoreTotal;
+    /** Stores the total scores for each of the categories - Ready for when scoring is added properly.
+     * <p>Order follows that of the order of categories in the Category enum</p>
+     */
+    public float[] fTotalScores = new float[5];
 
-    /** Store the sum of the difficulties that could've been achieved so far for each of the categories - Ready for when scoring is added properly */
-    public float fTpllDifTotal, fWEDifTotal, fColourDifTotal, fDetailDifTotal, fTerraDifTotal;
+    /** Store the sum of the difficulties that could've been achieved so far for each of the categories - Ready for when scoring is added properly
+     * <p>Order follows that of the order of categories in the Category enum</p>
+     */
+    public float[] fDifficultyTotals = new float[5];
 
     /**
      * The only constructor available to initiate a lesson object
@@ -411,20 +415,6 @@ public class Lesson extends TutorialPlaythrough
         //Initialise arrays - used for the for loop
         float[] fFinalScores = new float[5];
 
-        float[] fScoreTotals = new float[5];
-        fScoreTotals[0] = fTpllScoreTotal;
-        fScoreTotals[1] = fWEScoreTotal;
-        fScoreTotals[2] = fColourScoreTotal;
-        fScoreTotals[3] = fDetailingScoreTotal;
-        fScoreTotals[4] = fTerraScoreTotal;
-
-        float[] fDifficultyTotals = new float[5];
-        fDifficultyTotals[0] = fTpllDifTotal;
-        fDifficultyTotals[1] = fWEDifTotal;
-        fDifficultyTotals[2] = fColourDifTotal;
-        fDifficultyTotals[3] = fDetailDifTotal;
-        fDifficultyTotals[4] = fTerraDifTotal;
-
         for (i = 0 ; i < 5 ; i++)
         {
             if (fDifficultyTotals[i] == 0)
@@ -432,7 +422,7 @@ public class Lesson extends TutorialPlaythrough
                 fFinalScores[i] = -1;
             }
             else
-                fFinalScores[i] = fScoreTotals[i]/fDifficultyTotals[i];
+                fFinalScores[i] = fTotalScores[i]/fDifficultyTotals[i];
         }
 
         /* Todo: Then store in DB

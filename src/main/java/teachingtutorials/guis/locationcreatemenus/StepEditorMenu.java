@@ -4,12 +4,13 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.TextEditorBookListener;
+import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
+import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialplaythrough.StepPlaythrough;
 import teachingtutorials.utils.Display;
@@ -59,8 +60,33 @@ public class StepEditorMenu extends Gui
         this.locationStep = locationStep;
 
         //Sets up the books
-        this.videoLinkBookListener = new TextEditorBookListener(plugin, locationStep, this, user, false);
-        this.instructionsBookListener = new TextEditorBookListener(plugin, locationStep, this, user, true);
+        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
+        {
+            @Override
+            public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
+            {
+                return bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, false);
+            }
+
+            @Override
+            public void runPostClose()
+            {
+            }
+        });
+
+        this.instructionsBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
+        {
+            @Override
+            public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
+            {
+                return bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, true);
+            }
+
+            @Override
+            public void runPostClose()
+            {
+            }
+        });
 
         //Adds the items to the gui
         addMenuOptions();
@@ -73,6 +99,14 @@ public class StepEditorMenu extends Gui
     public StepPlaythrough getStepPlaythrough()
     {
         return stepPlaythrough;
+    }
+
+    /**
+     * @return Whether all of the extra information is set
+     */
+    public boolean getAllInformationSet()
+    {
+        return locationStep.isOtherInformationSet(plugin.getLogger());
     }
 
     /**
@@ -121,15 +155,11 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, instructionsBookListener.getBook(), "Instructions editor book");
-                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    instructionsBookListener.register();
+                    instructionsBookListener.startEdit("Instructions editor book");
+
+                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
+                    //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
                     //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
                 }
@@ -162,16 +192,10 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
-                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    videoLinkBookListener.register();
+                    videoLinkBookListener.startEdit("Video link editor book");
 
+                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
@@ -200,15 +224,11 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, instructionsBookListener.getBook(), "Instructions editor book");
-                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    instructionsBookListener.register();
+                    instructionsBookListener.startEdit("Instructions editor book");
+
+                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
+                    //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
                     //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
                 }
@@ -223,16 +243,10 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    //The book must have the step name as the title
-                    Utils.giveItem(u.player, videoLinkBookListener.getBook(), "Video link editor book");
-                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
-
-                    //Closes the current inventory
-                    u.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
                     //Sets up the book listener and registers it
-                    videoLinkBookListener.register();
+                    videoLinkBookListener.startEdit("Video link editor book");
 
+                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
@@ -250,6 +264,31 @@ public class StepEditorMenu extends Gui
                 locationStep.teleportPlayerToStartOfStep(u.player, stepPlaythrough.getParentStage().getTutorialPlaythrough().getLocation().getWorld(), plugin);
             }
         });
+
+        //Go to task editor menu
+
+        //When this gets initialised the step has not yet started.
+
+        //This is passed as a reference sort of thing, so the value will change
+        //When this is first called on initialisation it will break because the current group/task are still at -1 so it won't be able to get the current one
+        //We could just return null if it has not started yet
+
+        LocationTaskEditorMenu editorMenu = stepPlaythrough.getCurrentTaskEditorMenu();
+        if (editorMenu != null && !stepPlaythrough.bStepFinished)
+        {
+            setItem(22, Utils.createItem(Material.IRON_DOOR, 1, TutorialGUIUtils.optionTitle("Task Editor Menu"), TutorialGUIUtils.optionLore("Click to edit the current task")), new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+
+                @Override
+                public void leftClick(User u) {
+                    u.mainGui = editorMenu;
+                    u.mainGui.open(u);
+                }
+            });
+        }
     }
 
     /**
@@ -295,5 +334,40 @@ public class StepEditorMenu extends Gui
     public void instructionsEdited()
     {
         stepPlaythrough.tryNextStep();
+    }
+
+
+    /**
+     * The procedure upon closure of a video link editor book
+     * @param oldBookMeta The previous metadata of the book just closed.
+     * @param newBookMeta The new metadata of the book just closed.
+     * @param textEditorBookListener A reference to the book listener itself which calls this. Enables unregistering to be called.
+     * @param szNewContent The combined content of all pages in the new book.
+     * @param bWasInstructions Whether the book was created for editing instructions (true) or the video link (false)
+     * @return Whether to save the text (always true)
+     */
+    private boolean bookClosed(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent, boolean bWasInstructions)
+    {
+        //Edits the step instructions or video link
+        if (bWasInstructions)
+            locationStep.setInstruction(this.getStepPlaythrough(), szNewContent, locationStep.getStep().getInstructionDisplayType(), user.player, locationStep.getStep().getName());
+        else
+            locationStep.setVideoLink(szNewContent);
+
+        //Reopen the feature menu
+        user.mainGui = this;
+        user.mainGui.refresh();
+
+        //Unregisters this listener
+        textEditorBookListener.unregister();
+
+        //Removes the book
+        user.player.getInventory().getItemInMainHand().setAmount(0);
+
+        //Informs the menu that some instructions were edited
+        if (bWasInstructions)
+            instructionsEdited();
+
+        return true;
     }
 }

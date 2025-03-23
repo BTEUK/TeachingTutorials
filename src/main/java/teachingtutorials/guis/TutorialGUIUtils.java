@@ -9,7 +9,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 /**
  * Utils for Tutorial Menus
  */
-public class TutorialGUIUtils
+public abstract class TutorialGUIUtils
 {
     public static TextComponent backButton(String szText)
     {

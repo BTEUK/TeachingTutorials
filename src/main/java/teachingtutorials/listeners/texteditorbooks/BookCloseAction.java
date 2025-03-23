@@ -13,4 +13,11 @@ public interface BookCloseAction
      * @return Whether to accept the input and save the text
      */
     boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent);
+
+
+    /**
+     * Performs the actions post saving and closing
+     * @return
+     */
+    void runPostClose();
 }

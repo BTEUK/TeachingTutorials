@@ -4,6 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
 import teachingtutorials.newlocation.DifficultyListener;
@@ -62,6 +63,9 @@ public abstract class PlaythroughTask
 
     /** The difficulty listener, used for creating new locations. It is used for inputting the difficulty of the task when recording the answers */
     protected DifficultyListener difficultyListener;
+
+    /** The menu used to edit the information and properties of this location task */
+    protected LocationTaskEditorMenu taskEditorMenu;
 
     /**
      * Used when initialising a task for a tutorial play-through for an existing location.
@@ -151,7 +155,7 @@ public abstract class PlaythroughTask
 
             //Add scores to the totals
         }
-        //Notifies the parent group that one of its tasks havs been complete
+        //Notifies the parent group that one of its tasks has been complete
         parentGroupPlaythrough.taskFinished();
     }
 

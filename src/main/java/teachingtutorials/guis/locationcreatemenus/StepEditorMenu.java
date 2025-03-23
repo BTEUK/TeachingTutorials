@@ -1,24 +1,21 @@
 package teachingtutorials.guis.locationcreatemenus;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.guis.TutorialGUIUtils;
+import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
 import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialplaythrough.StepPlaythrough;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
-
-import java.util.List;
 
 /**
  * A menu accessible to a creator when creating a new location, used to set the step instructions,
@@ -63,13 +60,33 @@ public class StepEditorMenu extends Gui
         this.locationStep = locationStep;
 
         //Sets up the books
-        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, locationStep.getStep().getName(),
-                (oldBookMeta, newBookMeta, textEditorBookListener, szNewContent) ->
-                        bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, false));
+        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
+        {
+            @Override
+            public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
+            {
+                return bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, false);
+            }
 
-        this.instructionsBookListener = new TextEditorBookListener(plugin, user, locationStep.getStep().getName(),
-                (oldBookMeta, newBookMeta, textEditorBookListener, szNewContent) ->
-                        bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, true));
+            @Override
+            public void runPostClose()
+            {
+            }
+        });
+
+        this.instructionsBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
+        {
+            @Override
+            public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
+            {
+                return bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, true);
+            }
+
+            @Override
+            public void runPostClose()
+            {
+            }
+        });
 
         //Adds the items to the gui
         addMenuOptions();
@@ -82,6 +99,14 @@ public class StepEditorMenu extends Gui
     public StepPlaythrough getStepPlaythrough()
     {
         return stepPlaythrough;
+    }
+
+    /**
+     * @return Whether all of the extra information is set
+     */
+    public boolean getAllInformationSet()
+    {
+        return locationStep.isOtherInformationSet(plugin.getLogger());
     }
 
     /**
@@ -239,6 +264,31 @@ public class StepEditorMenu extends Gui
                 locationStep.teleportPlayerToStartOfStep(u.player, stepPlaythrough.getParentStage().getTutorialPlaythrough().getLocation().getWorld(), plugin);
             }
         });
+
+        //Go to task editor menu
+
+        //When this gets initialised the step has not yet started.
+
+        //This is passed as a reference sort of thing, so the value will change
+        //When this is first called on initialisation it will break because the current group/task are still at -1 so it won't be able to get the current one
+        //We could just return null if it has not started yet
+
+        LocationTaskEditorMenu editorMenu = stepPlaythrough.getCurrentTaskEditorMenu();
+        if (editorMenu != null && !stepPlaythrough.bStepFinished)
+        {
+            setItem(22, Utils.createItem(Material.IRON_DOOR, 1, TutorialGUIUtils.optionTitle("Task Editor Menu"), TutorialGUIUtils.optionLore("Click to edit the current task")), new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
+                }
+
+                @Override
+                public void leftClick(User u) {
+                    u.mainGui = editorMenu;
+                    u.mainGui.open(u);
+                }
+            });
+        }
     }
 
     /**
@@ -294,6 +344,7 @@ public class StepEditorMenu extends Gui
      * @param textEditorBookListener A reference to the book listener itself which calls this. Enables unregistering to be called.
      * @param szNewContent The combined content of all pages in the new book.
      * @param bWasInstructions Whether the book was created for editing instructions (true) or the video link (false)
+     * @return Whether to save the text (always true)
      */
     private boolean bookClosed(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent, boolean bWasInstructions)
     {

@@ -462,11 +462,15 @@ public class TeachingTutorials extends JavaPlugin
     }
 
     /**
-     * Removes a group of virtual blocks from the active list
+     * Removes a group of virtual blocks from the active list and resets the view of the player and spies for this group
      * @param virtualBlocks A reference to the list you want to remove
      */
     public void removeVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
     {
+        //Resets the views
+        virtualBlocks.removeBlocks();
+
+        //Removes from the list of groups to send updates for
         virtualBlockGroups.remove(virtualBlocks);
     }
 

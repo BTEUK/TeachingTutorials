@@ -310,10 +310,8 @@ public abstract class TutorialPlaythrough
             if (virtualBlockGroup.isOfPlaythrough(this))
             {
                 //Removes the list from the plugin's list of lists
+                // and resets the blocks back to the original state for the player and spies
                 this.plugin.removeVirtualBlocks(virtualBlockGroup);
-
-                //Resets the blocks back to the original state for the players
-                virtualBlockGroup.removeBlocks();
 
                 i--;
             }

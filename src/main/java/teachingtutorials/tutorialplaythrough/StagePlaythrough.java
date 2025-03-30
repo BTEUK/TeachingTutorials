@@ -230,11 +230,14 @@ public class StagePlaythrough
     }
 
     /**
-     * Safely terminates the current step
+     * Safely terminates all of the steps in this stage. This deregisters and removes virtual blocks for all steps.
      */
     public void terminateEarly()
     {
-        currentStepPlaythrough.terminateEarly();
+        for (StepPlaythrough stepPlaythrough : stepPlaythroughs)
+        {
+            stepPlaythrough.terminateEarly();
+        }
     }
 
     /**

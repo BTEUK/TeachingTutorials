@@ -81,11 +81,7 @@ public class Lesson extends TutorialPlaythrough
             creatorOrStudent.player.sendMessage(Display.colouredText("Complete your current tutorial first", NamedTextColor.DARK_AQUA));
             return false;
         }
-
-        //Disables spying if they are currently spying
-        if (creatorOrStudent.isSpying())
-            creatorOrStudent.disableSpying();
-
+        
         //Checks to see whether a student has a lesson to finish - if so, will replace the tutorial with that one and resume it
         if (creatorOrStudent.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
         {

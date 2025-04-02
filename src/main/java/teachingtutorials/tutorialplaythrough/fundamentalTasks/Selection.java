@@ -56,16 +56,6 @@ public class Selection extends PlaythroughTask implements Listener
 
     //NOTE: Height is height of the block (i.e the block's Y coordinate)
 
-    /**
-     * Stores the minecraft coordinates of the left click point which the player has selected in x, y, z format
-     */
-    public int[] iSelectedBlockCoordinates1 = new int[]{0, 0, 0};
-
-    /**
-     * Stores the minecraft coordinates of the right click point which the player has selected in x, y, z format
-     */
-    public int[] iSelectedBlockCoordinates2 = new int[]{0, 0, 0};
-
     /** Variables used by new location procedures */
     boolean bSelection1Made, bSelection2Made;
 
@@ -88,9 +78,6 @@ public class Selection extends PlaythroughTask implements Listener
         this.dTargetCoords2[0] = Double.parseDouble(cords[3]);
         this.dTargetCoords2[1] = Double.parseDouble(cords[4]);
         this.dTargetCoords2[2] = Double.parseDouble(cords[5]);
-
-        this.bSelection1Made = false;
-        this.bSelection2Made = false;
     }
 
     /**
@@ -103,13 +90,10 @@ public class Selection extends PlaythroughTask implements Listener
     Selection(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
-
-        this.bSelection1Made = false;
-        this.bSelection2Made = false;
     }
 
     /**
-     * Registers the task listener, activating the task
+     * Registers the task listener, activating the task. Sets up the starting state of the selections.
      */
     @Override
     public void register()
@@ -124,6 +108,9 @@ public class Selection extends PlaythroughTask implements Listener
         else
             plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
                     +". Selection Task: " +this.getLocationTask().iTaskID);
+
+        //Prepares the selection task - sets the starting state
+        bSelection1Made = bSelection2Made = false;
 
         super.register();
 
@@ -155,12 +142,6 @@ public class Selection extends PlaythroughTask implements Listener
             //Player has selected an area outside of the projection
             return;
         }
-
-        //Stores the Minecraft coordinates of the selections
-        if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))
-            iSelectedBlockCoordinates1 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
-        else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
-            iSelectedBlockCoordinates2 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
 
         //Checks whether it is a new location
         if (bCreatingNewLocation)

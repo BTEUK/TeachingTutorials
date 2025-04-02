@@ -427,6 +427,5 @@ public class MainMenu extends Gui
     public void delete()
     {
         super.delete();
-        user.mainGui = null;
     }
 }

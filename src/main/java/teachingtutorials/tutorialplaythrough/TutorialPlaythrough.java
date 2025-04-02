@@ -5,6 +5,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.TutorialNavigationMenu;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.listeners.PlaythroughCommandListeners;
 import teachingtutorials.tutorialobjects.Location;
@@ -48,6 +49,9 @@ public abstract class TutorialPlaythrough
     /** Enables tpll, ll and controls gmask */
     protected PlaythroughCommandListeners playthroughCommandListeners;
 
+    /** The Tutorial Navigation Menu for this playthrough */
+    protected final TutorialNavigationMenu navigationMenu;
+
     /** A list of spies also viewing the virtual blocks for this playthrough */
     private ArrayList<Player> spies = new ArrayList<>();
 
@@ -67,6 +71,8 @@ public abstract class TutorialPlaythrough
         //Fetches a list of stage playthroughs for this lesson and puts that list into the main list
         this.stagePlaythroughs = StagePlaythrough.fetchStagesByTutorialIDForPlaythrough(this.getCreatorOrStudent().player, plugin, this);
 
+        //Sets up the nav menu
+        navigationMenu = new TutorialNavigationMenu(this);
     }
 
     /**
@@ -261,14 +267,210 @@ public abstract class TutorialPlaythrough
         {
             currentStagePlaythrough = stagePlaythroughs.get(iStageIndex-1);
             currentStagePlaythrough.startStage(iStepToStartStageOn, bDelayTitle);
-
-            //Save the positions of stage and step after each stage is started
-            // savePositions(); - Optional. Not needed since there is a save after each step
         }
         else
         {
             endPlaythrough();
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------
+    // ------------------------------------- Tutorial Navigation -------------------------------------
+    // -----------------------------------------------------------------------------------------------
+
+    /**
+     * If parts of the current stage have been completed, will reset the player back to the start of the current stage.
+     * <p></p>
+     * If no progress has been made on the current stage, will take the player back to the start of the previous stage, provided that a previous stage exists.
+     * <p></p>
+     */
+    public void previousStage()
+    {
+        if (this instanceof Lesson lesson)
+        {
+            //Checks if the stage has progress
+            if (currentStagePlaythrough.inProgress()) //Has progress
+            {
+                //If in progress, attempt to reset to the start of the stage
+                currentStagePlaythrough.terminateEarly();
+                currentStagePlaythrough.startStage(1, false);
+
+                //Save the positions if moved
+                lesson.savePositions();
+            }
+
+            else //Has no progress - attempt move to previous stage
+            {
+                //Only move to start of previous stage if there is one
+                if (iStageIndex > 1)
+                {
+                    //Terminate and start previous stage from start
+                    currentStagePlaythrough.terminateEarly();
+                    iStageIndex--;
+                    currentStagePlaythrough = stagePlaythroughs.get(iStageIndex - 1);
+                    //Reset the stage
+                    currentStagePlaythrough.terminateEarly();
+                    currentStagePlaythrough.startStage(1, false);
+
+                    //Save the positions if moved
+                    lesson.savePositions();
+                }
+            }
+        }
+    }
+
+    /**
+     * Moves the player to the final step of the previous stage. Saves the positions if moved.
+     */
+    public void previousStageStepBack()
+    {
+        if (this instanceof Lesson lesson)
+        {
+            //Checks that there is a previous stage
+            if (iStageIndex > 1)
+            {
+                //Close the current stage
+                currentStagePlaythrough.terminateEarly(); //This should already be called but we call again
+
+                //Move to the previous stage
+                iStageIndex--;
+                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex-1);
+
+                //Reset the new stage
+                currentStagePlaythrough.terminateEarly();
+
+                //Displays all virtual blocks but the last step
+                currentStagePlaythrough.displayAllVirtualBlocks(currentStagePlaythrough.getStage().steps.size() - 1);
+
+                //Starts the stage on the largest step
+                currentStagePlaythrough.startStage(Integer.MAX_VALUE, false);
+
+                //Save the positions if moved
+                lesson.savePositions();
+            }
+        }
+    }
+
+    /**
+     * Moves a player to the start of the next step, if they have already completed the current stage.
+     */
+    public void skipStage()
+    {
+        if (this instanceof Lesson lesson)
+        {
+            //If they have already completed this stage or one above it, attempt to move them on
+            if (iStageIndex <= lesson.iHighestStageCompleted)
+            {
+                //Only move them on if there is a higher stage
+                if (iStageIndex < stagePlaythroughs.size())
+                {
+                    //Terminate and start next stage from start
+                    currentStagePlaythrough.terminateEarly();
+                    currentStagePlaythrough.displayAllVirtualBlocks(-1);
+                    currentStagePlaythrough = stagePlaythroughs.get(iStageIndex);
+                    iStageIndex++;
+                    currentStagePlaythrough.startStage(1, false);
+
+                    //Save the positions if moved
+                    lesson.savePositions();
+                }
+            }
+        }
+    }
+
+    /**
+     * If parts of the current step have been completed, will reset the player back to the start of the current step.
+     * <p></p>
+     * If no progress has been made on the current step, will take the player back to the start of the previous step, provided that a previous step exists.
+     * <p></p>
+     */
+    public void previousStep()
+    {
+        if (currentStagePlaythrough != null)
+            currentStagePlaythrough.previousStep();
+    }
+
+    /**
+     * Moves a player to the start of the next step, if they have already completed the current step.
+     */
+    public void skipStep()
+    {
+        if (currentStagePlaythrough != null)
+            currentStagePlaythrough.skipStep();
+    }
+
+    /**
+     *
+     * @return Whether the player can navigate to the previous stage
+     */
+    public boolean canMoveBackStage()
+    {
+        if (this instanceof Lesson lesson && currentStagePlaythrough != null)
+            return currentStagePlaythrough.inProgress() || iStageIndex > 1;
+        return false;
+    }
+
+    /**
+     *
+     * @return Whether the player can navigate to the next stage
+     */
+    public boolean canMoveForwardsStage()
+    {
+        if (this instanceof Lesson lesson)
+            return (iStageIndex <= lesson.iHighestStageCompleted && iStageIndex < stagePlaythroughs.size());
+        return false;
+    }
+
+    /**
+     *
+     * @return Whether the player can navigate to the previous step
+     */
+    public boolean canMoveBackStep()
+    {
+        if (currentStagePlaythrough != null)
+            return currentStagePlaythrough.canMoveBackStep();
+        return false;
+    }
+
+    /**
+     *
+     * @return Whether the player can navigate to the next step
+     */
+    public boolean canMoveForwardsStep()
+    {
+        if (currentStagePlaythrough != null)
+            return currentStagePlaythrough.canMoveForwardsStep();
+        return false;
+    }
+
+    /**
+     * Teleports the player to the start of the current step
+     */
+    public void tpToStepStart()
+    {
+        if (fallListener != null)
+            this.fallListener.teleportToSafeLocation();
+    }
+
+    /**
+     * Sends a link to the video walkthrough in chat
+     */
+    public void callVideoLink()
+    {
+        if (currentStagePlaythrough != null)
+            if (currentStagePlaythrough.currentStepPlaythrough != null)
+                this.currentStagePlaythrough.currentStepPlaythrough.locationStep.displayVideoLink(this.creatorOrStudent.player);
+    }
+
+    /**
+     * @return Whether the current step has a video link
+     */
+    public boolean currentStepHasVideoLink()
+    {
+        if (currentStagePlaythrough != null)
+            if (currentStagePlaythrough.currentStepPlaythrough != null)
+                return this.currentStagePlaythrough.currentStepPlaythrough.locationStep.isLinkAvailable();
+        return false;
     }
 
     /**
@@ -319,6 +521,10 @@ public abstract class TutorialPlaythrough
 
         //Removes all spies
         removeAllSpies();
+
+        //Remove the gui
+        this.navigationMenu.delete();
+        this.creatorOrStudent.mainGui = null;
 
         //Teleport the player back to the lobby area
         teleportToLobby();

@@ -10,6 +10,8 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 
+import java.util.logging.Level;
+
 /**
  * An interaction listener used to detect clicks of the menu item in the hot-bar
  */
@@ -58,10 +60,15 @@ public class PlayerInteract implements Listener
                 //Cancel the event
                 event.setCancelled(true);
 
+                plugin.getLogger().log(Level.INFO, "The main menu is null? "+(user.mainGui==null));
+
                 //Check if the mainGui is not null.
                 if (user.mainGui != null)
+                {
                     //If not then open it after refreshing its contents.
                     user.mainGui.refresh();
+                    user.mainGui.open(user);
+                }
 
                 //If no gui exists open the learning menu
                 else

@@ -1,16 +1,14 @@
 package teachingtutorials.utils;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.ChatColor;
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
@@ -19,6 +17,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerTextures;
+import com.destroystokyo.paper.profile.PlayerProfile;
 
 /**
  * A set of Minecraft utils
@@ -90,6 +90,50 @@ public class Utils {
         return item;
 
     }
+
+    public static ItemStack createCustomSkullWithFallback(String texture, Material fallback, int amount, Component displayName, Component... loreString) {
+
+        ItemStack item;
+
+        try {
+
+            if (texture == null) {
+                throw new NullPointerException();
+            }
+
+            URL url = new URL("http://textures.minecraft.net/texture/" + texture);
+            item = new ItemStack(Material.PLAYER_HEAD);
+
+            SkullMeta meta = (SkullMeta) item.getItemMeta();
+
+            //Create playerprofile.
+            PlayerProfile profile = Bukkit.getServer().createProfile(UUID.randomUUID());
+
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(url);
+
+            profile.setTextures(textures);
+
+            meta.setPlayerProfile(profile);
+
+            item.setItemMeta(meta);
+
+        } catch (Exception e) {
+            item = new ItemStack(fallback);
+        }
+
+        item.setAmount(amount);
+
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(displayName);
+        List<Component> lore = new ArrayList<>(Arrays.asList(loreString));
+        meta.lore(lore);
+        item.setItemMeta(meta);
+
+        return item;
+
+    }
+
 
     /**
      * Returns whether a given player is in a specific group

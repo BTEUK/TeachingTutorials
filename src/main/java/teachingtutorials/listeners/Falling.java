@@ -74,8 +74,16 @@ public class Falling implements Listener
         }
         else if (event.getTo().getY() < plugin.getConfig().getInt("Min_Y"))
         {
-            player.teleport(safeLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            teleportToSafeLocation();
         }
+    }
+
+    /**
+     * Teleports the player to the safe location
+     */
+    public void teleportToSafeLocation()
+    {
+        player.teleport(safeLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
 
     /**

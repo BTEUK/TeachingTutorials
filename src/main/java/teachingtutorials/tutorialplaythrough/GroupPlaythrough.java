@@ -24,8 +24,8 @@ public class GroupPlaythrough
     /** A reference to the task that the player is current playing through */
     private PlaythroughTask currentTask;
 
-    /** Stores whether the all tasks in the group have been completed */
-    private boolean groupFinished;
+    /** Tracks the current status of the group playthrough*/
+    private StepPlaythroughStatus status;
 
     /** A reference to the instance of the TeachingTutorials plugin */
     private final TeachingTutorials plugin;
@@ -47,7 +47,7 @@ public class GroupPlaythrough
         this.plugin = plugin;
         this.parentStepPlaythrough = parentStepPlaythrough;
         this.group = group;
-        this.groupFinished = false;
+        this.status = StepPlaythroughStatus.SubsNotFetched;
     }
 
     /**
@@ -100,7 +100,7 @@ public class GroupPlaythrough
      */
     public boolean getFinished()
     {
-        return this.groupFinished;
+        return this.status.equals(StepPlaythroughStatus.Finished);
     }
 
     /**
@@ -108,6 +108,8 @@ public class GroupPlaythrough
      */
     public void fetchAndInitialiseTasks()
     {
+        plugin.getLogger().log(Level.FINE, "Fetching and initialising tasks");
+
         if (this.parentStepPlaythrough.getParentStage().bLocationCreation)
         {
             plugin.getLogger().log(Level.FINE,"GroupPlaythrough.fetchAndInitialiseTasks(): Fetching tasks without answers");
@@ -118,6 +120,8 @@ public class GroupPlaythrough
         {
             tasks = Task.fetchTasksForLocation(plugin, plugin.getDBConnection(), parentStepPlaythrough.parentStagePlaythrough.getLocationID(), this, parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent().player);
         }
+
+        this.status = StepPlaythroughStatus.SubsFetched;
     }
 
     /**
@@ -126,7 +130,10 @@ public class GroupPlaythrough
     public void displayAllVirtualBlocks()
     {
         //Gets the tasks from the DB
-        fetchAndInitialiseTasks();
+        if (this.status.equals(StepPlaythroughStatus.SubsNotFetched))
+        {
+            fetchAndInitialiseTasks();
+        }
 
         //Goes through each task and calls it to display its virtual blocks
         int iNumTasks = tasks.size();
@@ -145,13 +152,12 @@ public class GroupPlaythrough
         plugin.getLogger().log(Level.INFO, "Setting up group playthrough of group with Group ID "+this.group.getGroupID());
 
         //Ensures that the tasks are fetched and initialised
-        if (tasks.size() == 0)
+        if (this.status.equals(StepPlaythroughStatus.SubsNotFetched))
         {
-            plugin.getLogger().log(Level.FINE, "Fetching and initialising tasks");
             fetchAndInitialiseTasks();
         }
         else
-            plugin.getLogger().log(Level.FINE, "Tasks already fetched and initialised for this grouo");
+            plugin.getLogger().log(Level.FINE, "Tasks already fetched and initialised for this group");
 
         //Checks whether there are actually any tasks in the group
         if (tasks.size() > 0)
@@ -166,7 +172,7 @@ public class GroupPlaythrough
         else //If there are no tasks in the group, move on
         {
             //Signal that group is complete before it even started
-            groupFinished = true;
+            status = StepPlaythroughStatus.Finished;
 
             //Log to console
             if (this.getParentStep().parentStagePlaythrough.getTutorialPlaythrough() instanceof Lesson lesson)
@@ -190,16 +196,18 @@ public class GroupPlaythrough
 
     /**
      * Acknowledges completion of a task. If group is now complete, informs the parent step, else, registers the next
-     * task of the group.
+     * task of the group. Informs the parent step that the step now has progress.
      */
     public void taskFinished()
     {
+        parentStepPlaythrough.notifyStepInProgress();
+
         //taskNo is that of the previous, so it is the correct index of the next
         //taskNo is 1 indexed
         if (taskNo >= tasks.size()) //If the task was the last one in the group
         {
             //Signal that group is complete
-            groupFinished = true;
+            status = StepPlaythroughStatus.Finished;
 
             //Log to console
             if (this.getParentStep().parentStagePlaythrough.getTutorialPlaythrough() instanceof Lesson lesson)
@@ -235,7 +243,11 @@ public class GroupPlaythrough
      */
     public void terminateEarly()
     {
-        currentTask.unregister();
+        int iNumTask = tasks.size();
+        for (int i = iNumTask - 1 ; i >= 0 ; i--)
+        {
+            tasks.get(i).unregister();
+        }
     }
 
     /**

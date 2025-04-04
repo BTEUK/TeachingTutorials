@@ -56,16 +56,6 @@ public class Selection extends PlaythroughTask implements Listener
 
     //NOTE: Height is height of the block (i.e the block's Y coordinate)
 
-    /**
-     * Stores the minecraft coordinates of the left click point which the player has selected in x, y, z format
-     */
-    public int[] iSelectedBlockCoordinates1 = new int[]{0, 0, 0};
-
-    /**
-     * Stores the minecraft coordinates of the right click point which the player has selected in x, y, z format
-     */
-    public int[] iSelectedBlockCoordinates2 = new int[]{0, 0, 0};
-
     /** Variables used by new location procedures */
     boolean bSelection1Made, bSelection2Made;
 
@@ -88,9 +78,6 @@ public class Selection extends PlaythroughTask implements Listener
         this.dTargetCoords2[0] = Double.parseDouble(cords[3]);
         this.dTargetCoords2[1] = Double.parseDouble(cords[4]);
         this.dTargetCoords2[2] = Double.parseDouble(cords[5]);
-
-        this.bSelection1Made = false;
-        this.bSelection2Made = false;
     }
 
     /**
@@ -103,13 +90,10 @@ public class Selection extends PlaythroughTask implements Listener
     Selection(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
-
-        this.bSelection1Made = false;
-        this.bSelection2Made = false;
     }
 
     /**
-     * Registers the task listener, activating the task
+     * Registers the task listener, activating the task. Sets up the starting state of the selections.
      */
     @Override
     public void register()
@@ -124,6 +108,9 @@ public class Selection extends PlaythroughTask implements Listener
         else
             plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
                     +". Selection Task: " +this.getLocationTask().iTaskID);
+
+        //Prepares the selection task - sets the starting state
+        bSelection1Made = bSelection2Made = false;
 
         super.register();
 
@@ -155,12 +142,6 @@ public class Selection extends PlaythroughTask implements Listener
             //Player has selected an area outside of the projection
             return;
         }
-
-        //Stores the Minecraft coordinates of the selections
-        if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))
-            iSelectedBlockCoordinates1 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
-        else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
-            iSelectedBlockCoordinates2 = new int[]{event.getClickedBlock().getX(), event.getClickedBlock().getY(), event.getClickedBlock().getZ()};
 
         //Checks whether it is a new location
         if (bCreatingNewLocation)
@@ -212,14 +193,14 @@ public class Selection extends PlaythroughTask implements Listener
         else
         {
             //Checks whether it is a left click or right click and stores the coordinates,
-            // then checks whether it was a correct point and whether both selection points have been made
-            boolean[] bCorrectPointSelectedAndBothSelectionsMade = wasCorrectPointAndBothSelectionsMade(event, longLatOfSelectedBlock);
+            // then checks whether it was a correct point and whether both selection points have been hit
+            boolean[] bCorrectPointSelectedAndBothSelectionsHit = wasCorrectPointAndBothSelectionsHit(event, longLatOfSelectedBlock);
 
             //Checks whether it was a correct point
-            if (bCorrectPointSelectedAndBothSelectionsMade[0])
+            if (bCorrectPointSelectedAndBothSelectionsHit[0])
             {
                 //Checks whether both points have been made
-                if (bCorrectPointSelectedAndBothSelectionsMade[1])
+                if (bCorrectPointSelectedAndBothSelectionsHit[1])
                 {
                     plugin.getLogger().log(Level.FINE, ChatColor.AQUA +"Player has now made both points of the selection");
                     Display.ActionBar(player, Display.colouredText("Selection complete", NamedTextColor.DARK_GREEN));
@@ -259,7 +240,7 @@ public class Selection extends PlaythroughTask implements Listener
      * @param longLatOfSelectedBlock The longitude and latitude of the point selected
      * @return A 2 value boolean array containing the required answers, in the form of {correct point selected?, both points now selected?}
      */
-    public boolean[] wasCorrectPointAndBothSelectionsMade(PlayerInteractEvent event, double[] longLatOfSelectedBlock)
+    public boolean[] wasCorrectPointAndBothSelectionsHit(PlayerInteractEvent event, double[] longLatOfSelectedBlock)
     {
         //Stores whether it was a left or right click. True if left, false if right.
         boolean bIsLeft = false;
@@ -272,6 +253,7 @@ public class Selection extends PlaythroughTask implements Listener
             dSelectionPoint1[0] = longLatOfSelectedBlock[1];
             dSelectionPoint1[1] = longLatOfSelectedBlock[0];
             dSelectionPoint1[2] = event.getClickedBlock().getY();
+            bSelection1Made = true;
         }
         else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
         {
@@ -280,11 +262,12 @@ public class Selection extends PlaythroughTask implements Listener
             dSelectionPoint2[0] = longLatOfSelectedBlock[1];
             dSelectionPoint2[1] = longLatOfSelectedBlock[0];
             dSelectionPoint2[2] = event.getClickedBlock().getY();
+            bSelection2Made = true;
         }
 
         boolean bPointFound;
         boolean bWasTarget1;
-        boolean bBothSelectionsMade = false;
+        boolean bBothSelectionsHit = false;
 
         //Returns whether a target point was found, and which one
         boolean[] bPointFoundWhichTarget = isCorrectPointWhichTarget(longLatOfSelectedBlock, event.getClickedBlock().getY());
@@ -303,20 +286,24 @@ public class Selection extends PlaythroughTask implements Listener
             else
                 selectionGeoCoords = new LatLng(dSelectionPoint1[0], dSelectionPoint1[1]);
 
-            //If the point the user just found was target 1 then we want to check target 2
-            if (bWasTarget1)
-                fOtherDistance = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords2);
-            else
-                fOtherDistance = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords1);
-
-            //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
-            if (fOtherDistance <= 1.5)
+            //If both selections have now been made, proceed with checking whether both are on point
+            if (bSelection1Made && bSelection2Made)
             {
-                bBothSelectionsMade = true;
+                //If the point the user just found was target 1 then we want to check target 2
+                if (bWasTarget1)
+                    fOtherDistance = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords2);
+                else
+                    fOtherDistance = GeometricUtils.geometricDistance(selectionGeoCoords, dTargetCoords1);
+
+                //Generally, tutorials should have a player tpll to the position first, so any reasonable value here is performance of 1
+                if (fOtherDistance <= 1.5)
+                {
+                    bBothSelectionsHit = true;
+                }
             }
         }
-        boolean[] bCorrectPointSelectedAndBothSelectionsMade = {bPointFound, bBothSelectionsMade};
-        return bCorrectPointSelectedAndBothSelectionsMade;
+        boolean[] bCorrectPointSelectedAndBothSelectionsHit = {bPointFound, bBothSelectionsHit};
+        return bCorrectPointSelectedAndBothSelectionsHit;
     }
 
     /**

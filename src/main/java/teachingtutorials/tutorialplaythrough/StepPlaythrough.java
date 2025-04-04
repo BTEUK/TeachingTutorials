@@ -36,11 +36,11 @@ public class StepPlaythrough
     /** A reference to the instance of the player who is doing this step play-through */
     private final Player player;
 
-    /** Notes whether all tasks have been completed/set or not */
-    public boolean bStepFinished;
+    /** Tracks the current status of the step playthrough*/
+    private StepPlaythroughStatus status;
 
     /** Stores the location specific step data */
-    private LocationStep locationStep;
+    LocationStep locationStep;
 
     /** The list of group playthroughs which must be completed as part of this step */
     public ArrayList<GroupPlaythrough> groupPlaythroughs = new ArrayList<>();
@@ -100,9 +100,7 @@ public class StepPlaythrough
         //Initialises the video link listener
         videoLinkListener = new VideoLinkCommandListener(this.plugin, this.player, this.locationStep);
 
-        this.bStepFinished = false;
-        this.selectionCompleteHold = false;
-        this.bPointWasHit = false;
+        this.status = StepPlaythroughStatus.SubsNotFetched;
     }
 
     //Getters
@@ -152,12 +150,34 @@ public class StepPlaythrough
     }
 
     /**
+     * Checks the current status for equivalence to StepPlaythroughStatus.ActiveStarted
+     * @return Whether any tasks of this step have been completed
+     */
+    public boolean inProgress()
+    {
+        return status.equals(StepPlaythroughStatus.ActiveStarted);
+    }
+
+    /**
+     * Checks the current status for equivalence to StepPlaythroughStatus.Finished
+     * @return Whether all tasks of this step have been completed
+     */
+    public boolean isFinished()
+    {
+        return status.equals(StepPlaythroughStatus.Finished);
+    }
+
+    /**
      * Displays the virtual blocks of all tasks is this step
      */
     public void displayAllVirtualBlocks()
     {
-        //Gets the groups from the DB
-        fetchAndInitialiseGroups();
+        //Fetches the details of groups and stores them in memory
+        if (status.equals(StepPlaythroughStatus.SubsNotFetched))
+        {
+            fetchAndInitialiseGroups();
+            plugin.getLogger().log(Level.INFO, groupPlaythroughs.size() +" groups fetched");
+        }
 
         int iNumGroups = groupPlaythroughs.size();
         for (int i = 0 ; i < iNumGroups ; i++)
@@ -218,6 +238,7 @@ public class StepPlaythrough
     private void fetchAndInitialiseGroups()
     {
         groupPlaythroughs = GroupPlaythrough.fetchGroupsByStepID(plugin, this);
+        this.status = StepPlaythroughStatus.SubsRegistered;
     }
 
     /**
@@ -345,17 +366,14 @@ public class StepPlaythrough
             }, lWaitTime);
         }
 
-        //Creates the menu, assigns it to the user
-        User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
-        menu = new StepEditorMenu(plugin, user, this, this.locationStep);
-        if (user.mainGui != null)
-            user.mainGui.delete();
-        user.mainGui = menu;
-
-
         //Fetches the details of groups and stores them in memory
-        fetchAndInitialiseGroups();
-        plugin.getLogger().log(Level.INFO, groupPlaythroughs.size() +" groups fetched");
+        if (status.equals(StepPlaythroughStatus.SubsNotFetched))
+        {
+            fetchAndInitialiseGroups();
+            plugin.getLogger().log(Level.INFO, groupPlaythroughs.size() +" groups fetched");
+        }
+
+        status = StepPlaythroughStatus.SubsFetched;
 
         //Player is a student doing a tutorial
         if (!parentStagePlaythrough.bLocationCreation)
@@ -387,6 +405,13 @@ public class StepPlaythrough
         //Player is a creator creating a new location for a tutorial
         else
         {
+            //Creates the menu, assigns it to the user
+            User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
+            menu = new StepEditorMenu(plugin, user, this, this.locationStep);
+            if (user.mainGui != null)
+                user.mainGui.delete();
+            user.mainGui = menu;
+
             //Register the start of the first group
             //If a location is being created, groups are made synchronous rather than asynchronous
             currentGroupPlaythrough = groupPlaythroughs.get(0);
@@ -394,6 +419,15 @@ public class StepPlaythrough
             currentGroupPlaythrough.startGroupPlaythrough();
             plugin.getLogger().log(Level.FINE, "Registered group "+iGroupInStepLocationCreation +" of step");
         }
+
+        //Reset the tpll list
+        this.handledTpllListeners = new ArrayList<>();
+        this.selectionCompleteHold = false;
+        this.bPointWasHit = false;
+        this.bTpllDistanceMessageQueued = false;
+
+        //Update the status
+        status = StepPlaythroughStatus.SubsRegistered;
     }
 
     /**
@@ -402,7 +436,7 @@ public class StepPlaythrough
      * <p> </p>
      * If in a Location creation, moves the step onto the next group
      */
-    protected void groupFinished()
+    void groupFinished()
     {
         int i;
         int iGroups = groupPlaythroughs.size();
@@ -443,7 +477,7 @@ public class StepPlaythrough
         if (bAllGroupsFinished)
         {
             //Marks the step's tasks as all finished
-            this.bStepFinished = true;
+            this.status = StepPlaythroughStatus.Finished;
 
             //Player has just finished setting the answers for this step
             if (parentStagePlaythrough.bLocationCreation)
@@ -480,6 +514,22 @@ public class StepPlaythrough
     }
 
     /**
+     * Notifies the step playthrough that one of its tasks has been finished.
+     * <p></p>
+     * <b>Do not make the mistake of calling this immediately after calling that a group is finished</b>. If you do
+     * you may inadvertently remark the step as still active even if all groups have finished.
+     */
+    void notifyStepInProgress()
+    {
+        //Blocks the issue a group calling that a task was complete after the step was marked as finished
+        if (!this.status.equals(StepPlaythroughStatus.Finished))
+            this.status = StepPlaythroughStatus.ActiveStarted;
+
+        //Notifies that the stage is in progress
+        parentStagePlaythrough.notifyStageInProgress();
+    }
+
+    /**
      * Will move the player on to the next step if the current step is finished - answers AND additional information set
      * <p> </p>
      * <p> This method has two uses: it is called directly after any additional step information is set.
@@ -492,7 +542,7 @@ public class StepPlaythrough
         if (!parentStagePlaythrough.bLocationCreation)
             return;
 
-        if (bStepFinished)
+        if (status.equals(StepPlaythroughStatus.Finished))
         {
             if (locationStep.isOtherInformationSet(plugin.getLogger()))
             {
@@ -594,4 +644,9 @@ public class StepPlaythrough
         }
         return stepPlaythroughs;
     }
+}
+
+enum StepPlaythroughStatus
+{
+    SubsNotFetched, SubsFetched, SubsRegistered, ActiveStarted, Finished
 }

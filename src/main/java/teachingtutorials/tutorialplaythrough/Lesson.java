@@ -52,6 +52,22 @@ public class Lesson extends TutorialPlaythrough
     public float[] fDifficultyTotals = new float[5];
 
     /**
+     * The highest step that has been fully completed as part of this lesson. (1 index).
+     * <p> </p>
+     * In combination with the highest stage completed variable, this is used to determine the step which
+     * a player can wind forwards to.
+     */
+    int iHighestStepCompleted;
+
+    /**
+     * The highest stage that has been fully completed as part of this lesson. (1 index).
+     * <p> </p>
+     * In combination with the highest step completed variable, this is used to determine the stage which
+     * a player can wind forwards to.
+     */
+    int iHighestStageCompleted;
+
+    /**
      * The only constructor available to initiate a lesson object
      * @param player The User for which this Lesson is being initiated
      * @param plugin A reference to the instance of the TeachingTutorials plugin
@@ -81,10 +97,6 @@ public class Lesson extends TutorialPlaythrough
             creatorOrStudent.player.sendMessage(Display.colouredText("Complete your current tutorial first", NamedTextColor.DARK_AQUA));
             return false;
         }
-
-        //Disables spying if they are currently spying
-        if (creatorOrStudent.isSpying())
-            creatorOrStudent.disableSpying();
 
         //Checks to see whether a student has a lesson to finish - if so, will replace the tutorial with that one and resume it
         if (creatorOrStudent.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
@@ -137,6 +149,9 @@ public class Lesson extends TutorialPlaythrough
         //Adds this lesson to the list of tutorial playthroughs ongoing on the server
         this.plugin.activePlaythroughs.add(this);
 
+        //Gives the player the navigation menu
+        this.navigationMenu.refresh();
+        this.creatorOrStudent.mainGui = this.navigationMenu;
         return true;
     }
 
@@ -214,6 +229,8 @@ public class Lesson extends TutorialPlaythrough
             //Return false - lesson could not be created properly
             return false;
         }
+        iHighestStageCompleted = 0;
+        iHighestStepCompleted = 0;
         return true;
     }
 
@@ -536,6 +553,8 @@ public class Lesson extends TutorialPlaythrough
                 {
                     this.iStageIndex = resultSet.getInt("StageAt");
                     this.iStepToStart = resultSet.getInt("StepAt");
+                    this.iHighestStepCompleted = resultSet.getInt("HighestStepCompleted");
+                    this.iHighestStageCompleted = resultSet.getInt("HighestStageCompleted");
                 }
 
                 creatorOrStudent.player.sendMessage(Display.aquaText("Loading the world for you"));
@@ -677,6 +696,13 @@ public class Lesson extends TutorialPlaythrough
 
             szSql = "UPDATE `Lessons` SET `StepAt` = " + currentStagePlaythrough.getCurrentStep() +" WHERE `LessonID` = "+ this.iLessonID;
             SQL.executeUpdate(szSql);
+
+            szSql = "UPDATE `Lessons` SET `HighestStepCompleted` = " +iHighestStepCompleted +" WHERE `LessonID` = "+ this.iLessonID;
+            SQL.executeUpdate(szSql);
+
+            szSql = "UPDATE `Lessons` SET `HighestStageCompleted` = " +iHighestStageCompleted +" WHERE `LessonID` = "+ this.iLessonID;
+            SQL.executeUpdate(szSql);
+
         }
         catch (SQLException se)
         {

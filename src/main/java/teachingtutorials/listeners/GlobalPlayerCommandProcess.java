@@ -58,10 +58,13 @@ public class GlobalPlayerCommandProcess implements Listener
             {
                 //Check if the mainGui is not null.
                 if (user.mainGui != null)
+                {
                     //If not then open it after refreshing its contents.
                     user.mainGui.refresh();
+                    user.mainGui.open(user);
+                }
 
-                    //If no gui exists open the learning menu
+                //If no gui exists open the learning menu
                 else
                 {
                     //Creates a new main menu

@@ -372,4 +372,13 @@ public class LocationStep
         //Sends the message
         player.sendMessage(linkMessage);
     }
+
+    /**
+     *
+     * @return Whether a link is available for this stepxw
+     */
+    public boolean isLinkAvailable()
+    {
+        return !szVideoWalkthroughLink.isEmpty();
+    }
 }

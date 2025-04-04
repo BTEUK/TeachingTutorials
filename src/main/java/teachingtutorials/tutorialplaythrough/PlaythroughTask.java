@@ -182,7 +182,8 @@ public abstract class PlaythroughTask
     }
 
     /**
-     * Removes the list of virtual blocks of this task from the plugin's list of virtual block groups
+     * Removes the list of virtual blocks of this task from the plugin's list of virtual block groups and
+     * resets the view of the players and spies.
      */
     protected void removeVirtualBlocks()
     {

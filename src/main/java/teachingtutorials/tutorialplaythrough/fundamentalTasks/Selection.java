@@ -99,8 +99,8 @@ public class Selection extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required selection point coordinates to assist debugging
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+        if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+            plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
                 +". Task: " +this.getLocationTask().iTaskID
                 +". Target point 1 (lat, long, height) = ("+dTargetCoords1[0]+","+dTargetCoords1[1]+","+dTargetCoords1[2]+")"
                 +". Target point 2 (lat, long, height) = ("+dTargetCoords2[0]+","+dTargetCoords2[1]+","+dTargetCoords2[2]+")"

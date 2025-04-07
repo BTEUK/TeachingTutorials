@@ -121,8 +121,8 @@ public class Command extends PlaythroughTask implements Listener
     public void register()
     {
         //Output the required command to assist debugging
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+        if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+            plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
                     +". Task: " +this.getLocationTask().iTaskID);
         else
             plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()

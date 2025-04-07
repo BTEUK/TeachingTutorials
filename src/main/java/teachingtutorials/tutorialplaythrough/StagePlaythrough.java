@@ -4,7 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialobjects.Stage;
 import teachingtutorials.utils.Display;
@@ -41,10 +40,6 @@ public class StagePlaythrough
     /** A reference to the current step playthrough which the player is on */
     StepPlaythrough currentStepPlaythrough;
 
-    /** Records whether this stage playthrough is part of a location creation */
-    public final boolean bLocationCreation;
-
-
 
     //--------------------------------------------------
     //-------------------Constructors-------------------
@@ -67,7 +62,6 @@ public class StagePlaythrough
         this.stage = stage;
 
         //Other
-        this.bLocationCreation = (tutorialPlaythrough instanceof NewLocation);
         this.status = StepPlaythroughStatus.SubsNotFetched;
     }
 

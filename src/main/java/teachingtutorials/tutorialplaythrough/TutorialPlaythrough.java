@@ -43,6 +43,9 @@ public abstract class TutorialPlaythrough
     /** The index (0 indexed) of the stage to start next. Therefore also equals the stage currently on if 1 indexed */
     protected int iStageIndex;
 
+    /** The current mode which the playthrough is in */
+    private PlaythroughMode currentPlaythroughMode;
+
     /** The listener listening out for if a player falls into the void */
     protected Falling fallListener;
 
@@ -100,6 +103,51 @@ public abstract class TutorialPlaythrough
     public User getCreatorOrStudent()
     {
         return creatorOrStudent;
+    }
+
+    public PlaythroughMode getCurrentPlaythroughMode()
+    {
+        return currentPlaythroughMode;
+    }
+
+    public boolean setCurrentPlaythroughMode(PlaythroughMode playthroughMode)
+    {
+        //Block changes during location creation
+        if (currentPlaythroughMode.equals(PlaythroughMode.CreatingLocation))
+            return false;
+
+        //Check to see if the mode is actually to be changed
+        boolean bModeChanged = !currentPlaythroughMode.equals(playthroughMode);
+        if (bModeChanged)
+        {
+            //Update the mode
+            this.currentPlaythroughMode = playthroughMode;
+
+            //Perform any necessary actions to adjust gameplay
+            try
+            {
+                currentStagePlaythrough.currentStepPlaythrough.switchPlaythroughMode();
+
+                //Take the location edit menu away from the user and refresh the navigation menu
+                if (playthroughMode.equals(PlaythroughMode.PlayingLesson))
+                {
+                    this.navigationMenu.refresh();
+                    this.creatorOrStudent.mainGui = this.navigationMenu;
+                }
+
+                //That's all kinda global stuff though. No actual step editor menu changes
+
+                return true;
+            }
+            catch (NullPointerException e)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return true;
+        }
     }
 
     /**

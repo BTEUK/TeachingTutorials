@@ -90,9 +90,9 @@ public class StepPlaythrough
         this.step = step;
         this.parentStagePlaythrough = parentStagePlaythrough;
 
-        if (parentStagePlaythrough.bLocationCreation)
+        if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             //Initialises location step
-            this.locationStep = new LocationStep(parentStagePlaythrough.tutorialPlaythrough.location, step);
+            this.locationStep = new LocationStep(parentStagePlaythrough.tutorialPlaythrough.location, step, false );
         else
             //Gets the location specific data
             this.locationStep = LocationStep.getFromStepAndLocation(parentStagePlaythrough.tutorialPlaythrough.location, step);
@@ -165,6 +165,17 @@ public class StepPlaythrough
     public boolean isFinished()
     {
         return status.equals(StepPlaythroughStatus.Finished);
+    }
+
+    /**
+     * Performs actions when playthrough mode is switched.
+     * Restarts the step.
+     */
+    void switchPlaythroughMode()
+    {
+        //Reset the step
+        terminateEarly();
+        startStep(false);
     }
 
     /**
@@ -375,8 +386,13 @@ public class StepPlaythrough
 
         status = StepPlaythroughStatus.SubsFetched;
 
+        //Creates the menu
+        User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
+        menu = new StepEditorMenu(plugin, user, this, this.locationStep);
+
         //Player is a student doing a tutorial
-        if (!parentStagePlaythrough.bLocationCreation)
+
+        if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
         {
             //Registers the video link listener
             videoLinkListener.register();
@@ -401,19 +417,20 @@ public class StepPlaythrough
             //Displays the step instructions
             displayInstructions(step.getInstructionDisplayType(), player, step.getName(), parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld());
         }
-
-        //Player is a creator creating a new location for a tutorial
+        //Player is a creator creating a new location for a tutorial or editing the location
         else
         {
-            //Creates the menu, assigns it to the user
-            User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
-            menu = new StepEditorMenu(plugin, user, this, this.locationStep);
-            if (user.mainGui != null)
-                user.mainGui.delete();
-            user.mainGui = menu;
+            //If location creation then default the menu to the step editor menu
+            if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
+            {
+                //Assign the menu to the user's main gui
+                if (user.mainGui != null)
+                    user.mainGui.delete();
+                user.mainGui = menu;
+            }
 
             //Register the start of the first group
-            //If a location is being created, groups are made synchronous rather than asynchronous
+            //If a location is being created or edited, groups are made synchronous rather than asynchronous
             currentGroupPlaythrough = groupPlaythroughs.get(0);
             iGroupInStepLocationCreation = 1;
             currentGroupPlaythrough.startGroupPlaythrough();
@@ -443,8 +460,8 @@ public class StepPlaythrough
 
         boolean bAllGroupsFinished = true;
 
-        //Different logic needed as location creation groups are performed in sync
-        if (parentStagePlaythrough.bLocationCreation)
+        //Different logic needed as location creation and editing groups are performed in sync
+        if (!parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
         {
             //iGroupInStepLocationCreation is 1 indexed
             if (iGroupInStepLocationCreation == groupPlaythroughs.size()) //If the current group is the last group
@@ -480,7 +497,7 @@ public class StepPlaythrough
             this.status = StepPlaythroughStatus.Finished;
 
             //Player has just finished setting the answers for this step
-            if (parentStagePlaythrough.bLocationCreation)
+            if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             {
                 //Checks whether the additional information is set - start location and instructions etc
                 if (locationStep.isOtherInformationSet(plugin.getLogger()))
@@ -539,7 +556,7 @@ public class StepPlaythrough
     public void tryNextStep()
     {
         //Blocks any processes occurring if the method has wrongly been called from outside of location creation
-        if (!parentStagePlaythrough.bLocationCreation)
+        if (!parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             return;
 
         if (status.equals(StepPlaythroughStatus.Finished))
@@ -577,7 +594,7 @@ public class StepPlaythrough
         videoLinkListener.unregister();
 
         //Unregisters the current task listener
-        if (parentStagePlaythrough.bLocationCreation)
+        if (!parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
         {
             currentGroupPlaythrough.terminateEarly();
             menu.delete();

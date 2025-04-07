@@ -123,9 +123,9 @@ public class Chat extends PlaythroughTask implements Listener
     {
         //Output the required chat to assist debugging
         String szLogMessage;
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
+        if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
         {
-            szLogMessage = "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
+            szLogMessage = "Lesson: " +lesson.getLessonID()
                     +". Task: " +this.getLocationTask().iTaskID;
 
             if (chatType.equals(ChatType.Numerical))

@@ -179,6 +179,10 @@ public class LocationStep
      */
     public boolean storeDetailsInDB(TeachingTutorials plugin)
     {
+        //Diverts to the update
+        if (bIsSaved)
+            updateDetailsInDB(plugin);
+
         //Sanitise the instructions
         String szNewInstructions = szInstructions.replace("\\'", "'");
         szNewInstructions = szNewInstructions.replace("'", "\\'");
@@ -206,6 +210,7 @@ public class LocationStep
                     +")";
             iCount = SQL.executeUpdate(sql);
 
+            this.bIsSaved = true;
             return iCount == 1;
         }
         catch (SQLException se)
@@ -228,6 +233,10 @@ public class LocationStep
      */
     private boolean updateDetailsInDB(TeachingTutorials plugin)
     {
+        //Diverts to the add
+        if (!bIsSaved)
+            storeDetailsInDB(plugin);
+
         //Sanitise the instructions
         String szNewInstructions = szInstructions.replace("\\'", "'");
         szNewInstructions = szNewInstructions.replace("'", "\\'");

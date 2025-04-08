@@ -112,6 +112,12 @@ public abstract class TutorialPlaythrough
 
     public boolean setCurrentPlaythroughMode(PlaythroughMode playthroughMode)
     {
+        //Checks to see if current player is the creator of the tutorial they are playing
+        if (!creatorOrStudent.player.getUniqueId().equals(tutorial.getUUIDOfAuthor()))
+        {
+            return false;
+        }
+
         //Block changes during location creation
         if (currentPlaythroughMode.equals(PlaythroughMode.CreatingLocation))
             return false;

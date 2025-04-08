@@ -46,6 +46,12 @@ public class Chat extends PlaythroughTask implements Listener
     {
         super(plugin, player, locationTask, groupPlaythrough);
 
+        this.taskEditorMenu = new ChatLocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Chat Task Editor", NamedTextColor.AQUA),
+                this.getLocationTask(), this);
+
         //Check which sort of answer(s) is (are) specified and perform the necessary information extraction
         String szAnswerText = locationTask.getAnswer();
         String[] szAnswerParts = szAnswerText.split(":");

@@ -13,6 +13,7 @@ import teachingtutorials.guis.locationcreatemenus.ChatLocationTaskEditorMenu;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
@@ -181,7 +182,7 @@ public class Chat extends PlaythroughTask implements Listener
         String szChat = event.getMessage();
 
         //Performs logic for if it is a lesson
-        if (!bCreatingNewLocation)
+        if (parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
         {
             //Hides answers
             event.setCancelled(true);

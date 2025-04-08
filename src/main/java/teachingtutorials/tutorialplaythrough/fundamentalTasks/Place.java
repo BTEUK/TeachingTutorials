@@ -10,12 +10,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
@@ -132,9 +132,9 @@ public class Place extends PlaythroughTask implements Listener
         int iBlockY = newBlockLocation.getBlockY();
         int iBlockZ = newBlockLocation.getBlockZ();
 
-        //Checks whether it is a new location
-        if (bCreatingNewLocation)
-        {
+        //Checks whether it is a new location or editing
+        if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        { //Edits or sets the answers
             //Store the material
             mTargetMaterial = newBlockMaterial;
 

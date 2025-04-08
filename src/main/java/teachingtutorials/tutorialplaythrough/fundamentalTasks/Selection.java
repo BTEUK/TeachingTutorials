@@ -19,6 +19,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -143,9 +144,9 @@ public class Selection extends PlaythroughTask implements Listener
             return;
         }
 
-        //Checks whether it is a new location
-        if (bCreatingNewLocation)
-        {
+        //Checks whether it is a new location or editing
+        if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        { // Edits or sets answers
             //Checks whether it is a left click or right click and stores the coordinates
             if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))
             {

@@ -19,6 +19,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -151,9 +152,9 @@ public class Command extends PlaythroughTask implements Listener
         //Extracts the command
         String command = event.getMessage();
 
-        //Checks whether we are creating a new location
-        if (bCreatingNewLocation) //Set the answers
-        {
+        //Checks whether we are creating a new location or editing
+        if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        { // Sets the answers/edits the answers
             LocationTask locationTask = getLocationTask();
 
             //Catches the /tutorials command
@@ -214,7 +215,7 @@ public class Command extends PlaythroughTask implements Listener
             }
         }
 
-        //Not a new location - a lesson playthrough
+        //Not a new location or editing - a lesson playthrough
         else if (command.startsWith("/"+szTargetCommand))
         {
             command = command.replace(("/"+szTargetCommand), "");

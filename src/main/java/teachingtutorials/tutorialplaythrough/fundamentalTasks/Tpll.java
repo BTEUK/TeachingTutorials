@@ -14,6 +14,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -159,10 +160,10 @@ public class Tpll extends PlaythroughTask implements Listener
                 if (!GeometricUtils.tpllPlayer(world, latLong.getLat(), latLong.getLng(), player))
                     return; //Returns if the tpll was not in the bounds of the earth
 
-                //Checks whether it is a new location
-                if (bCreatingNewLocation)
+                //Checks whether it is a new location or editing
+                if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
                 {
-                    //Set the answers
+                    //Set or edits the answers
                     LocationTask locationTask = this.getLocationTask();
                     locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
 

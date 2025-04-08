@@ -139,7 +139,8 @@ public abstract class PlaythroughTask
         //Marks the task as not being completable anymore, since it has been completed
         bActive = false;
 
-        if (!parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.bLocationCreation)
+        //Calculates the score
+        if (parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
         {
             //A reference to the parent lesson
             Lesson lesson = (Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough;

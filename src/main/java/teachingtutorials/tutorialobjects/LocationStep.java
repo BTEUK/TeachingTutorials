@@ -57,7 +57,7 @@ public class LocationStep
     /** Whether or not the hologram location has been set yet - when creating a new location */
     private boolean bHologramLocationSet;
 
-    /** Whether or not the Location task is already saved
+    /** Whether or not the Location step is already saved
      * <p></p>
      * This is used to determine whether to edit or update the location step
      */
@@ -267,12 +267,12 @@ public class LocationStep
         }
         catch (SQLException se)
         {
-            plugin.getLogger().log(Level.SEVERE, "SQL - SQL Error adding new location step", se);
+            plugin.getLogger().log(Level.SEVERE, "SQL - SQL Error updating new location step", se);
             return false;
         }
         catch (Exception e)
         {
-            plugin.getLogger().log(Level.SEVERE, "SQL - Non-Sql error adding new location step", e);
+            plugin.getLogger().log(Level.SEVERE, "SQL - Non-Sql error updating new location step", e);
             return false;
         }
     }

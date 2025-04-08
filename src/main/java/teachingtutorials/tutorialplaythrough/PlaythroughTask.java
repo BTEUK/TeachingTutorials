@@ -85,6 +85,9 @@ public abstract class PlaythroughTask
 
         //Initiates a new virtual blocks group list
         this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough);
+
+        //Listens out for difficulty when editing a task answer - There will only be one difficulty listener per task to avoid bugs
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this);
     }
 
     /**

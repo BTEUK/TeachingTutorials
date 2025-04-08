@@ -23,6 +23,12 @@ public class LocationTask extends Task
     /** The locationID of the location task */
     private final int iLocationID;
 
+    /** Whether or not the Location task is already saved
+     * <p></p>
+     * This is used to determine whether to edit or update the location task
+     */
+    private boolean bIsSaved;
+
     /**
      * Constructs a location task during a lesson playthrough
      * @param type The type of the task
@@ -39,6 +45,7 @@ public class LocationTask extends Task
         this.iLocationID = iLocationID;
         this.szAnswers = szAnswers;
         this.fDifficulties = fDifficulties;
+        this.bIsSaved = true;
     }
 
     /**
@@ -52,6 +59,7 @@ public class LocationTask extends Task
         this.iLocationID = iLocationID;
 
         this.fDifficulties = new float[]{0f, 0f, 0f, 0f, 0f};
+        this.bIsSaved = false;
     }
 
     /**
@@ -140,6 +148,10 @@ public class LocationTask extends Task
      */
     public boolean storeNewData(TeachingTutorials plugin)
     {
+        //Diverts to the update
+        if (bIsSaved)
+            updateData(plugin);
+
         boolean bSuccess = false;
 
         String sql;
@@ -169,6 +181,54 @@ public class LocationTask extends Task
         catch (Exception e)
         {
             plugin.getLogger().log(Level.SEVERE, "Non SQL Error adding LocationTask", e);
+            bSuccess = false;
+        }
+        if (bSuccess)
+            bIsSaved = true;
+        return bSuccess;
+    }
+
+    /**
+     * Updates the location task in the DB with the data within this object DB
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
+     * @return Whether the LocationTask was updated successfully
+     */
+    public boolean updateData(TeachingTutorials plugin)
+    {
+        //Diverts to the add
+        if (!bIsSaved)
+            storeNewData(plugin);
+
+        boolean bSuccess = false;
+
+        String sql;
+        Statement SQL = null;
+
+        try
+        {
+            sql = "UPDATE `LocationTasks` SET (`LocationID`, `TaskID`, `Answers`, `TpllDifficulty`, `WEDifficulty`, `ColouringDifficulty`, `DetailingDifficulty`, `TerraDifficulty`) " +
+                    "VALUES (" +iLocationID+", " +iTaskID+", '" +szAnswers+"'"
+                    +" WHERE LocationID = "+this.iLocationID +" AND TaskID = "+this.iTaskID +";";
+
+            SQL = plugin.getConnection().createStatement();
+
+            for (int i = 0 ; i <=4 ; i++)
+            {
+                sql = sql +", "+fDifficulties[i];
+            }
+
+            sql = sql +")";
+            SQL.executeUpdate(sql);
+            bSuccess = true;
+        }
+        catch (SQLException se)
+        {
+            plugin.getLogger().log(Level.SEVERE, "SQL - SQL Error updating LocationTask", se);
+            bSuccess = false;
+        }
+        catch (Exception e)
+        {
+            plugin.getLogger().log(Level.SEVERE, "Non SQL Error updating LocationTask", e);
             bSuccess = false;
         }
         return bSuccess;

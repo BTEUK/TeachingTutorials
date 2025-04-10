@@ -110,7 +110,7 @@ public class GroupPlaythrough
     {
         plugin.getLogger().log(Level.FINE, "Fetching and initialising tasks");
 
-        if (this.parentStepPlaythrough.getParentStage().bLocationCreation)
+        if (this.parentStepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
         {
             plugin.getLogger().log(Level.FINE,"GroupPlaythrough.fetchAndInitialiseTasks(): Fetching tasks without answers");
             tasks = Task.fetchTasksWithoutAnswers(plugin, plugin.getDBConnection(), this, parentStepPlaythrough.parentStagePlaythrough.getPlayer());

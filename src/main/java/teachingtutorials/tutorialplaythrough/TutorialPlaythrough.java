@@ -65,11 +65,12 @@ public abstract class TutorialPlaythrough
      * @param creatorOrStudent A reference to the user who is to do this playthrough
      * @param tutorial A reference to the tutorial of which this is a playthrough
      */
-    public TutorialPlaythrough(TeachingTutorials plugin, User creatorOrStudent, Tutorial tutorial)
+    public TutorialPlaythrough(TeachingTutorials plugin, User creatorOrStudent, Tutorial tutorial, PlaythroughMode playthroughMode)
     {
         this.plugin = plugin;
         this.creatorOrStudent = creatorOrStudent;
         this.tutorial = tutorial;
+        this.currentPlaythroughMode = playthroughMode;
 
         //Fetches a list of stage playthroughs for this lesson and puts that list into the main list
         this.stagePlaythroughs = StagePlaythrough.fetchStagesByTutorialIDForPlaythrough(this.getCreatorOrStudent().player, plugin, this);

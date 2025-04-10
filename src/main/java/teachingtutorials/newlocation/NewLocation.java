@@ -19,6 +19,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
 import teachingtutorials.utils.GeometricUtils;
 import teachingtutorials.guis.MainMenu;
@@ -28,7 +29,6 @@ import teachingtutorials.newlocation.elevation.ElevationManager;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.Display;
-import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.plugins.Multiverse;
 import teachingtutorials.utils.plugins.WorldGuard;
@@ -75,7 +75,7 @@ public class NewLocation extends TutorialPlaythrough
 
     public NewLocation(User creator, Tutorial tutorial, TeachingTutorials plugin)
     {
-        super(plugin, creator, tutorial);
+        super(plugin, creator, tutorial, PlaythroughMode.CreatingLocation);
 
         //Stage set first since the projection creation can take a while, hence the startUp phase
         this.stage = NewLocationProcess.startUp;

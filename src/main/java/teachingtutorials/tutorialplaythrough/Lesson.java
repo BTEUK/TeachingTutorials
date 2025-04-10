@@ -75,7 +75,7 @@ public class Lesson extends TutorialPlaythrough
      */
     public Lesson(User player, TeachingTutorials plugin, Tutorial tutorial)
     {
-        super(plugin, player, tutorial);
+        super(plugin, player, tutorial, PlaythroughMode.PlayingLesson);
     }
 
     public int getLessonID()

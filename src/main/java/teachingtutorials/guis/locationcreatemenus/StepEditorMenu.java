@@ -274,7 +274,7 @@ public class StepEditorMenu extends Gui
         //We could just return null if it has not started yet
 
         LocationTaskEditorMenu editorMenu = stepPlaythrough.getCurrentTaskEditorMenu();
-        if (editorMenu != null && !stepPlaythrough.isFinished())
+        if (editorMenu != null)
         {
             setItem(22, Utils.createItem(Material.IRON_DOOR, 1, TutorialGUIUtils.optionTitle("Task Editor Menu"), TutorialGUIUtils.optionLore("Click to edit the current task")), new guiAction() {
                 @Override

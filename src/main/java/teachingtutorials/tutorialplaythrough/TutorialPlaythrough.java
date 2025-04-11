@@ -157,6 +157,13 @@ public abstract class TutorialPlaythrough
         }
     }
 
+    public void OpenNavigationMenu()
+    {
+        this.navigationMenu.refresh();
+        this.creatorOrStudent.mainGui = this.navigationMenu;
+        this.creatorOrStudent.mainGui.open(creatorOrStudent);
+    }
+
     /**
      * Returns the list of spies on this playthrough
      */

@@ -423,9 +423,6 @@ public class StepPlaythrough
             //If location creation then default the menu to the step editor menu
             if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             {
-                //Assign the menu to the user's main gui
-                if (user.mainGui != null)
-                    user.mainGui.delete();
                 user.mainGui = menu;
             }
 
@@ -524,6 +521,10 @@ public class StepPlaythrough
                 if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
                     removeInstructionsHologram();
 
+                //Deletes the menu
+                menu.delete();
+                menu = null;
+
                 //Calls stage to start the next step
                 parentStagePlaythrough.nextStep(false);
             }
@@ -570,6 +571,9 @@ public class StepPlaythrough
                 //Deletes menu
                 menu.delete();
                 menu = null;
+
+                //Closes the inventory
+                player.closeInventory();
 
                 locationStep.storeDetailsInDB(plugin);
                 parentStagePlaythrough.nextStep(false);

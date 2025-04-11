@@ -150,7 +150,7 @@ public class LocationTask extends Task
     {
         //Diverts to the update
         if (bIsSaved)
-            updateData(plugin);
+            return updateData(plugin);
 
         boolean bSuccess = false;
 
@@ -197,7 +197,7 @@ public class LocationTask extends Task
     {
         //Diverts to the add
         if (!bIsSaved)
-            storeNewData(plugin);
+            return storeNewData(plugin);
 
         boolean bSuccess = false;
 
@@ -206,18 +206,17 @@ public class LocationTask extends Task
 
         try
         {
-            sql = "UPDATE `LocationTasks` SET (`LocationID`, `TaskID`, `Answers`, `TpllDifficulty`, `WEDifficulty`, `ColouringDifficulty`, `DetailingDifficulty`, `TerraDifficulty`) " +
-                    "VALUES (" +iLocationID+", " +iTaskID+", '" +szAnswers+"'"
-                    +" WHERE LocationID = "+this.iLocationID +" AND TaskID = "+this.iTaskID +";";
-
             SQL = plugin.getConnection().createStatement();
 
-            for (int i = 0 ; i <=4 ; i++)
-            {
-                sql = sql +", "+fDifficulties[i];
-            }
+            sql = "UPDATE `LocationTasks` SET `Answers` = '"+szAnswers+"'"
+                    + ", `TpllDifficulty` = " +fDifficulties[0]
+                    + ", `WEDifficulty` = " +fDifficulties[1]
+                    + ", `ColouringDifficulty` = " +fDifficulties[2]
+                    + ", `DetailingDifficulty` = " +fDifficulties[3]
+                    + ", `TerraDifficulty` = " +fDifficulties[4];
 
-            sql = sql +")";
+            sql = sql +" WHERE LocationID = "+this.iLocationID +" AND TaskID = "+this.iTaskID +";";
+
             SQL.executeUpdate(sql);
             bSuccess = true;
         }

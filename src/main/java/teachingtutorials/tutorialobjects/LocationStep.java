@@ -181,7 +181,7 @@ public class LocationStep
     {
         //Diverts to the update
         if (bIsSaved)
-            updateDetailsInDB(plugin);
+            return updateDetailsInDB(plugin);
 
         //Sanitise the instructions
         String szNewInstructions = szInstructions.replace("\\'", "'");
@@ -235,7 +235,7 @@ public class LocationStep
     {
         //Diverts to the add
         if (!bIsSaved)
-            storeDetailsInDB(plugin);
+            return storeDetailsInDB(plugin);
 
         //Sanitise the instructions
         String szNewInstructions = szInstructions.replace("\\'", "'");
@@ -249,18 +249,18 @@ public class LocationStep
         try
         {
             SQL = plugin.getConnection().createStatement();
-            sql = "UPDATE `LocationSteps` SET (Latitude`, `Longitude`, `StartYaw`, `StartPitch`, `Instructions`, `InstructionsX`, `InstructionsY`, `InstructionsZ`, `VideoWalkthroughLink`) VALUES ("
-                    + dStartLatitude +", "
-                    + dStartLongitude +", "
-                    + fStartYaw +", "
-                    + fStartPitch +", '"
-                    + szNewInstructions +"', "
-                    + dHologramLocationX +", "
-                    + dHologramLocationY +", "
-                    + dHologramLocationZ +", '"
-                    + szVideoWalkthroughLink +"'"
-                    +")"
-                    +" WHERE Location = "+this.location.getLocationID() +" AND Step = "+this.step.getStepID()+";";
+
+            sql = "UPDATE `LocationSteps` SET `Latitude` = "+dStartLatitude
+                    + ", `Longitude` = " +dStartLongitude
+                    + ", `StartYaw` = " +dStartLongitude
+                    + ", `StartPitch` = " +dStartLongitude
+                    + ", `Instructions` = '" +dStartLongitude+"'"
+                    + ", `InstructionsX` = " +dStartLongitude
+                    + ", `InstructionsY` = " +dStartLongitude
+                    + ", `InstructionsZ` = " +dStartLongitude
+                    + ", `VideoWalkthroughLink` = '" +dStartLongitude+"'"
+            +" WHERE Location = "+this.location.getLocationID() +" AND Step = "+this.step.getStepID()+";";
+
             iCount = SQL.executeUpdate(sql);
 
             return iCount == 1;

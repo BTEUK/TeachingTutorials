@@ -109,6 +109,7 @@ public class TutorialNavigationMenu extends Gui
                     @Override
                     public void leftClick(User u) {
                         tutorialPlaythrough.terminateEarly();
+                        u.player.closeInventory();
                     }
                 });
 

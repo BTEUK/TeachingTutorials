@@ -247,9 +247,6 @@ public abstract class LocationTaskEditorMenu extends Gui
                         public void leftClick(User u) {
                             //Action on confirm
 
-                            //Deletes this menu
-                            delete();
-
                             //Attempt to store the new data into the DB
                             if (locationTask.storeNewData(plugin))
                             {
@@ -262,7 +259,6 @@ public abstract class LocationTaskEditorMenu extends Gui
                                 user.player.sendMessage(Display.errorText("Task could not be stored in DB. Please report this to a server admin"));
                             }
 
-                            delete();
                             //Calls for the play-through to move on to the next task
                             playthroughTask.newLocationSpotHit();
 

@@ -252,13 +252,13 @@ public class LocationStep
 
             sql = "UPDATE `LocationSteps` SET `Latitude` = "+dStartLatitude
                     + ", `Longitude` = " +dStartLongitude
-                    + ", `StartYaw` = " +dStartLongitude
-                    + ", `StartPitch` = " +dStartLongitude
-                    + ", `Instructions` = '" +dStartLongitude+"'"
-                    + ", `InstructionsX` = " +dStartLongitude
-                    + ", `InstructionsY` = " +dStartLongitude
-                    + ", `InstructionsZ` = " +dStartLongitude
-                    + ", `VideoWalkthroughLink` = '" +dStartLongitude+"'"
+                    + ", `StartYaw` = " +fStartYaw
+                    + ", `StartPitch` = " +fStartPitch
+                    + ", `Instructions` = '" +szNewInstructions+"'"
+                    + ", `InstructionsX` = " +dHologramLocationX
+                    + ", `InstructionsY` = " +dHologramLocationY
+                    + ", `InstructionsZ` = " +dHologramLocationZ
+                    + ", `VideoWalkthroughLink` = '" +szVideoWalkthroughLink+"'"
             +" WHERE Location = "+this.location.getLocationID() +" AND Step = "+this.step.getStepID()+";";
 
             iCount = SQL.executeUpdate(sql);

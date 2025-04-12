@@ -92,7 +92,7 @@ public class StepPlaythrough
 
         if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             //Initialises location step
-            this.locationStep = new LocationStep(parentStagePlaythrough.tutorialPlaythrough.location, step, false );
+            this.locationStep = new LocationStep(parentStagePlaythrough.tutorialPlaythrough.location, step, false);
         else
             //Gets the location specific data
             this.locationStep = LocationStep.getFromStepAndLocation(parentStagePlaythrough.tutorialPlaythrough.location, step);
@@ -186,7 +186,7 @@ public class StepPlaythrough
         //Fetches the details of groups and stores them in memory
         if (status.equals(StepPlaythroughStatus.SubsNotFetched))
         {
-            fetchAndInitialiseGroups();
+            fetchAndInitialiseGroupsAndMenu();
             plugin.getLogger().log(Level.INFO, groupPlaythroughs.size() +" groups fetched");
         }
 
@@ -243,13 +243,18 @@ public class StepPlaythrough
 
     /**
      * Fetches the list of groups of this step from the database and stores this in {@link #groupPlaythroughs}.
+     * <p>Also initialises the menu</p>
      * <p> </p>
      * The order of groups does not matter and as such the order that they are fetched and stored in doesn't matter.
      */
-    private void fetchAndInitialiseGroups()
+    private void fetchAndInitialiseGroupsAndMenu()
     {
         groupPlaythroughs = GroupPlaythrough.fetchGroupsByStepID(plugin, this);
         this.status = StepPlaythroughStatus.SubsRegistered;
+
+        //Initialises the menu
+        User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
+        menu = new StepEditorMenu(plugin, user, this, this.locationStep);
     }
 
     /**
@@ -338,7 +343,8 @@ public class StepPlaythrough
 
     /**
      * Starts the player on this step. Sends them the title of the step, registers the fall listener,
-     * teleports them to the start, displays the instructions and initialises the groups of tasks
+     * teleports them to the start, displays the instructions and initialises the groups of tasks.
+     * <p>If creating new location or editing will set the step editor menu as the main menu</p>
      */
     public void startStep(boolean bDelayTitle)
     {
@@ -347,6 +353,8 @@ public class StepPlaythrough
         {
             plugin.getLogger().log(Level.INFO, "Lesson: "+lesson.getLessonID() +". Player: "+this.player.getName() +". Step " +this.step.getStepInStage()
                     +" (" +this.step.getName() +") of stage "+this.parentStagePlaythrough.getStage().getOrder() +" starting.");
+            if (parentStagePlaythrough.getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
+                plugin.getLogger().log(Level.INFO, "In edit mode");
         }
         else
         {
@@ -380,59 +388,66 @@ public class StepPlaythrough
         //Fetches the details of groups and stores them in memory
         if (status.equals(StepPlaythroughStatus.SubsNotFetched))
         {
-            fetchAndInitialiseGroups();
+            fetchAndInitialiseGroupsAndMenu();
             plugin.getLogger().log(Level.INFO, groupPlaythroughs.size() +" groups fetched");
         }
 
         status = StepPlaythroughStatus.SubsFetched;
 
-        //Creates the menu
-        User user = parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent();
-        menu = new StepEditorMenu(plugin, user, this, this.locationStep);
-
         //Player is a student doing a tutorial
 
-        if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        //Video link and hologram
+        switch (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode())
         {
-            //Registers the video link listener
-            videoLinkListener.register();
+            case CreatingLocation:
+                if (!locationStep.isOtherInformationSet(plugin.getLogger()))
+                    break;
+                //If information is set, we can fallthrough
+            case PlayingLesson:
+            case EditingLocation:
+                //Registers the video link listener
+                videoLinkListener.register();
 
-            //Register the start of all groups
-            int i;
-            int iGroups = groupPlaythroughs.size();
+                //TP to start location, and store this location for later use
+                Location startLocation = locationStep.teleportPlayerToStartOfStep(player, parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld(), plugin);
 
-            for (i = 0; i < iGroups; i++)
-            {
-                final int I = i;
-                groupPlaythroughs.get(I).startGroupPlaythrough();
-                plugin.getLogger().log(Level.FINE, "Registered group "+(I+1));
-            }
+                //Updates the fall listener
+                parentStagePlaythrough.tutorialPlaythrough.setFallListenerSafeLocation(startLocation);
 
-            //TP to start location, and store this location for later use
-            Location startLocation = locationStep.teleportPlayerToStartOfStep(player, parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld(), plugin);
-
-            //Updates the fall listener
-            parentStagePlaythrough.tutorialPlaythrough.setFallListenerSafeLocation(startLocation);
-
-            //Displays the step instructions
-            displayInstructions(step.getInstructionDisplayType(), player, step.getName(), parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld());
+                //Displays the step instructions
+                displayInstructions(step.getInstructionDisplayType(), player, step.getName(), parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld());
+                break;
         }
-        //Player is a creator creating a new location for a tutorial or editing the location
-        else
+
+        //Group registration and main menu switching
+        switch (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode())
         {
-            //If location creation then default the menu to the step editor menu
-            if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
-            {
-                user.mainGui = menu;
-            }
+            case PlayingLesson:
+                //Register the start of all groups
+                int i;
+                int iGroups = groupPlaythroughs.size();
 
-            //Register the start of the first group
-            //If a location is being created or edited, groups are made synchronous rather than asynchronous
-            currentGroupPlaythrough = groupPlaythroughs.get(0);
-            iGroupInStepLocationCreation = 1;
-            currentGroupPlaythrough.startGroupPlaythrough();
-            plugin.getLogger().log(Level.FINE, "Registered group "+iGroupInStepLocationCreation +" of step");
+                for (i = 0; i < iGroups; i++)
+                {
+                    final int I = i;
+                    groupPlaythroughs.get(I).startGroupPlaythrough();
+                    plugin.getLogger().log(Level.FINE, "Registered group "+(I+1));
+                }
+                break;
+            case EditingLocation:
+            case CreatingLocation:
+                //Register the start of the first group
+                //If a location is being created or edited, groups are made synchronous rather than asynchronous
+                currentGroupPlaythrough = groupPlaythroughs.get(0);
+                iGroupInStepLocationCreation = 1;
+                currentGroupPlaythrough.startGroupPlaythrough();
+                plugin.getLogger().log(Level.FINE, "Registered group "+iGroupInStepLocationCreation +" of step");
+
+                //Set the main menu to be the step playthrough
+                getParentStage().getTutorialPlaythrough().creatorOrStudent.mainGui = menu;
+                break;
         }
+
 
         //Reset the tpll list
         this.handledTpllListeners = new ArrayList<>();
@@ -493,6 +508,8 @@ public class StepPlaythrough
             //Marks the step's tasks as all finished
             this.status = StepPlaythroughStatus.Finished;
 
+            //Check for if any step info needs to be set up still
+
             //Player has just finished setting the answers for this step
             if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             {
@@ -512,6 +529,8 @@ public class StepPlaythrough
                     //We wait and then perform the code in the if statement above once the location has been set, via tryNextStep()
                 }
             }
+
+            //Lesson or editing
             else
             {
                 //Unregisters the video link listener
@@ -521,9 +540,8 @@ public class StepPlaythrough
                 if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
                     removeInstructionsHologram();
 
-                //Deletes the menu
-                menu.delete();
-                menu = null;
+                //Closes the menu
+                Bukkit.getScheduler().runTask(plugin, () -> player.closeInventory());
 
                 //Calls stage to start the next step
                 parentStagePlaythrough.nextStep(false);
@@ -568,12 +586,8 @@ public class StepPlaythrough
                 if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
                     removeInstructionsHologram();
 
-                //Deletes menu
-                menu.delete();
-                menu = null;
-
                 //Closes the inventory
-                player.closeInventory();
+                Bukkit.getScheduler().runTask(plugin, () -> player.closeInventory());
 
                 locationStep.storeDetailsInDB(plugin);
                 parentStagePlaythrough.nextStep(false);
@@ -597,27 +611,17 @@ public class StepPlaythrough
         //Unregisters the video link listener
         videoLinkListener.unregister();
 
-        //Unregisters the current task listener
-        if (!parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
-        {
-            currentGroupPlaythrough.terminateEarly();
-            menu.delete();
-            menu = null;
-
-            plugin.getLogger().log(Level.FINE, "Unregistered group "+iGroupInStepLocationCreation);
-        }
+        //Closes the menu
+        player.closeInventory();
 
         //Unregisters the task listeners
-        else
+        int i;
+        int iGroups = groupPlaythroughs.size();
+        for (i = 0; i < iGroups; i++)
         {
-            int i;
-            int iGroups = groupPlaythroughs.size();
-            for (i = 0; i < iGroups; i++)
-            {
-                GroupPlaythrough groupPlaythrough = groupPlaythroughs.get(i);
-                groupPlaythrough.terminateEarly();
-                plugin.getLogger().log(Level.FINE, "Unregistered group "+(i+1));
-            }
+            GroupPlaythrough groupPlaythrough = groupPlaythroughs.get(i);
+            groupPlaythrough.terminateEarly();
+            plugin.getLogger().log(Level.FINE, "Unregistered group "+(i+1));
         }
 
         //Remove holograms

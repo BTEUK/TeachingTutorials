@@ -89,11 +89,7 @@ public class Command extends PlaythroughTask implements Listener
         //Uses the details of the command from the DB and determines what action should be taken after completion
         this.actionType = CommandActionType.valueOf(locationTask.szDetails);
 
-        //Makes the calculation of virtual blocks if it is a virtual blocks action command
-        if (actionType.equals(CommandActionType.virtualBlocks))
-        {
-            calculateVirtualBlocks(previousTasks);
-        }
+        this.tasksInGroup = previousTasks;
     }
 
     /**
@@ -112,7 +108,7 @@ public class Command extends PlaythroughTask implements Listener
         this.actionType = CommandActionType.valueOf(task.szDetails);
 
         //Loads the tasks into a global list for use later
-        tasksInGroup = tasks;
+        this.tasksInGroup = tasks;
     }
 
     /**
@@ -121,13 +117,36 @@ public class Command extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
-        //Output the required command to assist debugging
-        if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
-                    +". Task: " +this.getLocationTask().iTaskID);
-        else
-            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
-                    +". Command Task: " +this.getLocationTask().iTaskID);
+        //Reset the virtual blocks list
+        virtualBlocks.clear();
+
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
+
+        //Log registration and output the required command to assist debugging
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Command Task: " +this.getLocationTask().iTaskID
+                            +". Target command = "+this.szTargetCommand +this.szTargetCommandArgs);
+
+                //Makes the calculation of virtual blocks if it is a virtual blocks action command
+                if (actionType.equals(CommandActionType.virtualBlocks))
+                    calculateVirtualBlocks(tasksInGroup);
+
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Editing Command Task: " +this.getLocationTask().iTaskID
+                            +". Original Target command = "+this.szTargetCommand +this.szTargetCommandArgs);
+                break;
+            case CreatingLocation:
+                plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                        +". Command Task: " +this.getLocationTask().iTaskID);
+                break;
+        }
 
         super.register();
 

@@ -51,9 +51,6 @@ public class Place extends PlaythroughTask implements Listener
 
         //Extracts the material
         mTargetMaterial = Material.getMaterial(szCoordinates3AndMaterial[3]);
-
-        //Adds the virtual block
-        addVirtualBlock();
     }
 
     /**
@@ -74,14 +71,36 @@ public class Place extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        //Reset the virtual blocks list
+        virtualBlocks.clear();
+
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
+
         //Output the required block and location to assist debugging
-        if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
-        else
-            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
-                    +". Place Task: " +this.getLocationTask().iTaskID);
+        //Calculate virtual blocks for Lesson mode
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Place Task: " +this.getLocationTask().iTaskID
+                            +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+
+                //Adds the virtual block
+                addVirtualBlock();
+
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Editing Place Task: " +this.getLocationTask().iTaskID
+                            +". Original Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+                break;
+            case CreatingLocation:
+                plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                        +". Place Task: " +this.getLocationTask().iTaskID);
+                break;
+        }
 
         super.register();
 

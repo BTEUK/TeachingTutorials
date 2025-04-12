@@ -124,8 +124,7 @@ public abstract class TutorialPlaythrough
             return false;
 
         //Check to see if the mode is actually to be changed
-        boolean bModeChanged = !currentPlaythroughMode.equals(playthroughMode);
-        if (bModeChanged)
+        if (!currentPlaythroughMode.equals(playthroughMode))
         {
             //Update the mode
             this.currentPlaythroughMode = playthroughMode;

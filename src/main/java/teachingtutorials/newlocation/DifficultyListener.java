@@ -27,8 +27,8 @@ public class DifficultyListener implements Listener
     /** A reference to the playthrough task which is managing this DifficultyListener */
     private final PlaythroughTask task;
 
-    /** Whether or not the task is ready for the difficulty to be inputted */
-    private boolean bReadyForDifficulty;
+    /** Whether or not the listener is registered */
+    private boolean bRegistered;
 
     /**
      * Constructs the difficulty listener
@@ -41,7 +41,7 @@ public class DifficultyListener implements Listener
         this.plugin = plugin;
         this.player = player;
         this.task = playthroughTask;
-        bReadyForDifficulty = false;
+        bRegistered = false;
     }
 
     /**
@@ -50,9 +50,9 @@ public class DifficultyListener implements Listener
     public void register()
     {
         //Ensures it is only registered once
-        if (!this.bReadyForDifficulty)
+        if (!this.bRegistered)
         {
-            this.bReadyForDifficulty = true;
+            this.bRegistered = true;
             Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
         }
     }
@@ -60,7 +60,7 @@ public class DifficultyListener implements Listener
     /** Returns whether this listener is ready to take the difficulty */
     public boolean getIsReady()
     {
-        return bReadyForDifficulty;
+        return bRegistered;
     }
 
     //Want this /tutorials event to be handled first, so we set it to lowest priority so it can be cancelled straight away
@@ -84,7 +84,7 @@ public class DifficultyListener implements Listener
                 //Cancels the event
                 event.setCancelled(true);
 
-                if (!bReadyForDifficulty)
+                if (!bRegistered)
                 {
                     event.getPlayer().sendMessage(Display.errorText("Complete the " +task.getLocationTask().type.toString() +" task first"));
                     return;
@@ -126,6 +126,8 @@ public class DifficultyListener implements Listener
 
                 //Unregisters this listener
                 HandlerList.unregisterAll(this);
+
+                bRegistered = false;
 
                 //Calls for the play-through to move on to the next task
                 task.newLocationSpotHit();

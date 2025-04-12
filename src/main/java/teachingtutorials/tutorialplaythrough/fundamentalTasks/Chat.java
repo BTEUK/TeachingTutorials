@@ -1,5 +1,7 @@
 package teachingtutorials.tutorialplaythrough.fundamentalTasks;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -7,7 +9,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.ChatLocationTaskEditorMenu;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
@@ -47,12 +48,6 @@ public class Chat extends PlaythroughTask implements Listener
     {
         super(plugin, player, locationTask, groupPlaythrough);
 
-        this.taskEditorMenu = new ChatLocationTaskEditorMenu(plugin,
-                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
-                groupPlaythrough.getParentStep().getEditorMenu(),
-                Display.colouredText("Chat Task Editor", NamedTextColor.AQUA),
-                this.getLocationTask(), this);
-
         //Check which sort of answer(s) is (are) specified and perform the necessary information extraction
         String szAnswerText = locationTask.getAnswer();
         String[] szAnswerParts = szAnswerText.split(":");
@@ -90,6 +85,13 @@ public class Chat extends PlaythroughTask implements Listener
                     szTargetAnswers[i] = szAnswer;
                     fScores[i] = fScore;
                 }
+
+                this.taskEditorMenu = new ChatLocationTaskEditorMenu(plugin,
+                        groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                        groupPlaythrough.getParentStep().getEditorMenu(),
+                        Display.colouredText("Chat Task Editor", NamedTextColor.AQUA),
+                        this.getLocationTask(), this, szTargetAnswers, fScores);
+
                 break;
 
             //Deals with numerical task types
@@ -100,6 +102,12 @@ public class Chat extends PlaythroughTask implements Listener
                 //Extracts the min, ideal and max scores. This will produce a string array looking like: [min,ideal,max]
                 String[] szBounds = szAnswerParts[1].split(",");
                 szTargetAnswers = szBounds;
+
+                this.taskEditorMenu = new ChatLocationTaskEditorMenu(plugin,
+                        groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                        groupPlaythrough.getParentStep().getEditorMenu(),
+                        Display.colouredText("Chat Task Editor", NamedTextColor.AQUA),
+                        this.getLocationTask(), this, szBounds);
                 break;
         }
     }
@@ -168,7 +176,7 @@ public class Chat extends PlaythroughTask implements Listener
      * @param event A reference to a player chat event
      */
     @EventHandler(priority = EventPriority.LOWEST)
-    public void chatEvent(AsyncPlayerChatEvent event)
+    public void chatEvent(AsyncChatEvent event)
     {
         fPerformance = 0F;
 
@@ -179,7 +187,7 @@ public class Chat extends PlaythroughTask implements Listener
         }
 
         //Extracts the message that the user has sent
-        String szChat = event.getMessage();
+        String szChat = ((TextComponent) event.message()).content();
 
         //Performs logic for if it is a lesson
         if (parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))

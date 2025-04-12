@@ -40,6 +40,107 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
     /** The current page a player is looking at. Indexed from 1 */
     private int iCurrentPage;
 
+    /**
+     * Used when initialising a ChatLocationTaskEditorMenu when the location task in edit mode for a discrete task
+     * <p>Will prefill the discrete options with the answers for the task and the numerical options with the defaults</p>
+     * @param plugin
+     * @param user
+     * @param parentStepMenu
+     * @param inventoryTitle
+     * @param locationTask
+     * @param playthroughTask
+     * @param answers
+     * @param fScores
+     */
+    public ChatLocationTaskEditorMenu(TeachingTutorials plugin, User user, StepEditorMenu parentStepMenu, Component inventoryTitle, LocationTask locationTask, PlaythroughTask playthroughTask, String[] answers, float[] fScores)
+    {
+        //Creates the base menu
+        super(plugin, user, parentStepMenu, inventoryTitle, locationTask, playthroughTask);
+
+        mode = Mode.Discrete;
+
+        //Numerical setup
+        defaultTheNumericalBooks();
+
+        //Add the discrete items
+        for (int i = 0 ; i < answers.length ; i++)
+        {
+            // Create the answer book
+            TextEditorBookListener answerBook = new TextEditorBookListener(plugin, user, this, ("Answer "+(i+1)),
+                    new AnswerBookClose(user, this, false, false),
+                    answers[i]);
+            answerBooks.add(answerBook);
+
+            // Create the score book
+            TextEditorBookListener scoreBook = new TextEditorBookListener(plugin, user, this, ("Score "+(i+1)), new BookCloseAction()
+            {
+                @Override
+                public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
+                {
+                    //The false here basically just ensures that even if somehow this listener was used to edit the book despite not being registered, it will never save
+                    return false;
+                }
+
+                @Override
+                public void runPostClose()
+                {
+                    ChatLocationTaskEditorMenu.this.saveAndCheck();
+                    ChatLocationTaskEditorMenu.this.refresh();
+                }
+            }, ""+fScores[i]);
+            scoreBooks.add(scoreBook);
+        }
+
+        // Set the current page to 1
+        iCurrentPage = 1;
+
+        //Add chat specific items
+        addChatItems();
+    }
+
+    /**
+     * Used when initialising a ChatLocationTaskEditorMenu when the location task in edit mode for a numerical task
+     * <p>Will prefill the numerical options with the answers for the task and the discrete options with the defaults</p>
+     * @param plugin
+     * @param user
+     * @param parentStepMenu
+     * @param inventoryTitle
+     * @param locationTask
+     * @param playthroughTask
+     * @param bounds
+     */
+    public ChatLocationTaskEditorMenu(TeachingTutorials plugin, User user, StepEditorMenu parentStepMenu, Component inventoryTitle, LocationTask locationTask, PlaythroughTask playthroughTask, String[] bounds)
+    {
+        //Creates the base menu
+        super(plugin, user, parentStepMenu, inventoryTitle, locationTask, playthroughTask);
+
+        mode = Mode.Numerical;
+
+        //Discrete setup
+        defaultTheDiscreteBooks();
+
+        //Numerical setup
+        numericalMin = new TextEditorBookListener(plugin, user, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), bounds[0]);
+        numericalPerfect = new TextEditorBookListener(plugin, user, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), bounds[1]);
+        numericalMax = new TextEditorBookListener(plugin, user, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), bounds[2]);
+
+        // Set the current page to 1
+        iCurrentPage = 1;
+
+        //Add chat specific items
+        addChatItems();
+    }
+
+    /**
+     * Used when initialising a ChatLocationTaskEditorMenu when the location task in location creation mode
+     * <p>Will prefill the information with the defaults</p>
+     * @param plugin
+     * @param user
+     * @param parentStepMenu
+     * @param inventoryTitle
+     * @param locationTask
+     * @param playthroughTask
+     */
     public ChatLocationTaskEditorMenu(TeachingTutorials plugin, User user, StepEditorMenu parentStepMenu, Component inventoryTitle, LocationTask locationTask, PlaythroughTask playthroughTask)
     {
         //Creates the base menu
@@ -48,10 +149,28 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         //Default to discrete mode
         mode = Mode.Discrete;
 
-        //Set up the default/starting place
-
         //Discrete setup
+        defaultTheDiscreteBooks();
 
+        //Numerical setup
+        defaultTheNumericalBooks();
+
+        // Set the current page to 1
+        iCurrentPage = 1;
+
+        //Add chat specific items
+        addChatItems();
+    }
+
+    private void defaultTheNumericalBooks()
+    {
+        numericalMin = new TextEditorBookListener(plugin, user, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), "5");
+        numericalPerfect = new TextEditorBookListener(plugin, user, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), "10");
+        numericalMax = new TextEditorBookListener(plugin, user, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), "15");
+    }
+
+    private void defaultTheDiscreteBooks()
+    {
         // Create the first discrete item
         TextEditorBookListener firstItem = new TextEditorBookListener(plugin, user, this, "Answer 1",
                 new AnswerBookClose(user, this, false, false),
@@ -76,17 +195,6 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
             }
         }, "1.0");
         scoreBooks.add(firstItemScore);
-
-        // Set the current page to 1
-        iCurrentPage = 1;
-
-        //Numerical setup
-        numericalMin = new TextEditorBookListener(plugin, user, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), "5");
-        numericalPerfect = new TextEditorBookListener(plugin, user, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), "10");
-        numericalMax = new TextEditorBookListener(plugin, user, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), "15");
-
-        //Add chat specific items
-        addChatItems();
     }
 
     float getNumericalMin()

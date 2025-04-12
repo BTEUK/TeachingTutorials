@@ -107,9 +107,19 @@ public class LocationStep
     }
 
     /**
+     *
+     * @return A copy of the video link
+     */
+    public String getVideoWalkthroughLink()
+    {
+        return this.szVideoWalkthroughLink;
+    }
+
+
+    /**
      * Checks whether all of the extra information is set - the start location, the instructions and the
      * hologram instructions
-     * @return Whether all of the extra information is set
+     * @return Whether all of the extra information is set for a LocationStep in a NewLocation context
      */
     public boolean isOtherInformationSet(Logger logger)
     {

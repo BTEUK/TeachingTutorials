@@ -136,17 +136,35 @@ public class Chat extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
-        //Output the required chat to assist debugging
-        String szLogMessage;
-        if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
-        {
-            szLogMessage = "Lesson: " +lesson.getLessonID()
-                    +". Task: " +this.getLocationTask().iTaskID;
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
 
+        //Log registration and notify player that they need to use the gui if editing answers
+        String szLogMessage = "";
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    szLogMessage = "Lesson: " +lesson.getLessonID()
+                            +". Chat Task: " +this.getLocationTask().iTaskID;
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    szLogMessage = "Lesson: " +lesson.getLessonID()
+                            +". Editing Chat Task: " +this.getLocationTask().iTaskID;
+
+                Display.ActionBar(player, Display.colouredText("Use the menu to edit the answers", NamedTextColor.GREEN));
+                break;
+            case CreatingLocation:
+                szLogMessage = "New Location being made by :"+player.getName() +". Chat Task: " +this.getLocationTask().iTaskID;
+                Display.ActionBar(player, Display.colouredText("Use the menu to edit the answers", NamedTextColor.GREEN));
+                break;
+        }
+
+        //Output the answers to console
+        if (!currentMode.equals(PlaythroughMode.CreatingLocation))
+        {
             if (chatType.equals(ChatType.Numerical))
-            {
                 szLogMessage = szLogMessage+". Numerical Chat with max: "+szTargetAnswers[0] +", target: "+szTargetAnswers[1] +", and max: "+szTargetAnswers[2];
-            }
             else
             {
                 szLogMessage = szLogMessage+". Discrete Chat with answers: ";
@@ -157,15 +175,10 @@ public class Chat extends PlaythroughTask implements Listener
                 }
                 szLogMessage = szLogMessage + szTargetAnswers[iNumAnswers-1] +".";
             }
+        }
 
-            //Register it
-            Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
-        }
-        else
-        {
-            szLogMessage = "New Location being made by :"+player.getName() +". Chat Task: " +this.getLocationTask().iTaskID;
-            Display.ActionBar(player, Display.colouredText("Use the menu to edit the answers", NamedTextColor.GREEN));
-        }
+        //Register it
+        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 
         plugin.getLogger().log(Level.INFO, szLogMessage);
         super.register();

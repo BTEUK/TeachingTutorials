@@ -51,6 +51,9 @@ public class Place extends PlaythroughTask implements Listener
 
         //Extracts the material
         mTargetMaterial = Material.getMaterial(szCoordinates3AndMaterial[3]);
+
+        //Adds the virtual block to the list
+        calculateVirtualBlocks();
     }
 
     /**
@@ -71,9 +74,6 @@ public class Place extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
-        //Reset the virtual blocks list
-        virtualBlocks.clear();
-
         PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
 
         //Output the required block and location to assist debugging
@@ -85,10 +85,6 @@ public class Place extends PlaythroughTask implements Listener
                     plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
                             +". Place Task: " +this.getLocationTask().iTaskID
                             +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
-
-                //Adds the virtual block
-                addVirtualBlock();
-
                 break;
             case EditingLocation:
                 if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
@@ -176,7 +172,7 @@ public class Place extends PlaythroughTask implements Listener
             //This is what moves it onto the next task
 
             //Adds the virtual block to the list
-            addVirtualBlock();
+            calculateVirtualBlocks();
 
             //Displays the virtual blocks
             displayVirtualBlocks();
@@ -267,8 +263,9 @@ public class Place extends PlaythroughTask implements Listener
     /**
      * Uses the target coordinates and target material to calculate the virtual block, and adds this to the list
      */
-    public void addVirtualBlock()
+    public void calculateVirtualBlocks()
     {
+        this.virtualBlocks.clear();
         Location location = new Location(this.parentGroupPlaythrough.getParentStep().getParentStage().getLocation().getWorld(), iTargetCoords[0], iTargetCoords[1], iTargetCoords[2]);
         this.virtualBlocks.put(location, mTargetMaterial.createBlockData());
     }

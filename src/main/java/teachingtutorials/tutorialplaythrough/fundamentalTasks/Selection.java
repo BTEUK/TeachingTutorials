@@ -170,6 +170,8 @@ public class Selection extends PlaythroughTask implements Listener
                 dTargetCoords1[0] = longLatOfSelectedBlock[1];
                 dTargetCoords1[1] = longLatOfSelectedBlock[0];
                 dTargetCoords1[2] = event.getClickedBlock().getY();
+
+                Display.ActionBar(player, Display.colouredText("Position 1 selected", NamedTextColor.GREEN));
             }
             else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
             {
@@ -177,6 +179,8 @@ public class Selection extends PlaythroughTask implements Listener
                 dTargetCoords2[0] = longLatOfSelectedBlock[1];
                 dTargetCoords2[1] = longLatOfSelectedBlock[0];
                 dTargetCoords2[2] = event.getClickedBlock().getY();
+
+                Display.ActionBar(player, Display.colouredText("Position 2 selected", NamedTextColor.GREEN));
             }
             else
             {

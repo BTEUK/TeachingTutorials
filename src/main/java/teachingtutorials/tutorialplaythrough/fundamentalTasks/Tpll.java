@@ -244,8 +244,7 @@ public class Tpll extends PlaythroughTask implements Listener
         HandlerList.unregisterAll(this);
 
         //Cancels the marker schedule
-        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
-        if (currentMode.equals(PlaythroughMode.PlayingLesson))
+        if (iMarkerTaskID != 0)
             Bukkit.getScheduler().cancelTask(iMarkerTaskID);
 
         //Marks the task as complete
@@ -261,8 +260,7 @@ public class Tpll extends PlaythroughTask implements Listener
         super.deactivate();
 
         //Cancels the marker schedule
-        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
-        if (currentMode.equals(PlaythroughMode.PlayingLesson))
+        if (iMarkerTaskID != 0)
             Bukkit.getScheduler().cancelTask(iMarkerTaskID);
 
         //Unregisters this task

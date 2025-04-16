@@ -52,22 +52,6 @@ public class Lesson extends TutorialPlaythrough
     public float[] fDifficultyTotals = new float[5];
 
     /**
-     * The highest step that has been fully completed as part of this lesson. (1 index).
-     * <p> </p>
-     * In combination with the highest stage completed variable, this is used to determine the step which
-     * a player can wind forwards to.
-     */
-    int iHighestStepCompleted;
-
-    /**
-     * The highest stage that has been fully completed as part of this lesson. (1 index).
-     * <p> </p>
-     * In combination with the highest step completed variable, this is used to determine the stage which
-     * a player can wind forwards to.
-     */
-    int iHighestStageCompleted;
-
-    /**
      * The only constructor available to initiate a lesson object
      * @param player The User for which this Lesson is being initiated
      * @param plugin A reference to the instance of the TeachingTutorials plugin

@@ -126,9 +126,19 @@ public class LocationStep
         boolean bAllExtraInformationIsSet = (bLocationSet && bInstructionsSet) && bHologramLocationSet;
         if (bAllExtraInformationIsSet)
             logger.log(Level.INFO, "All extra information is set");
-
         return bAllExtraInformationIsSet;
     }
+
+    public boolean isLocationSet()
+    {
+        return bLocationSet;
+    }
+
+    public boolean isHologramLocationSet()
+    {
+        return bHologramLocationSet;
+    }
+
 
     //------------------------------------------------
     //--------------------Database--------------------

@@ -229,44 +229,42 @@ public class StagePlaythrough
 
         if (iCurrentStep <= stepPlaythroughs.size())
         {
-            if (tutorialPlaythrough instanceof Lesson lesson)
+            //It's the pair that we need to check, they work together.
+
+            //If the current stage is higher than the one they have fully completed (they are doing a stage they have never completed)
+            if (tutorialPlaythrough.iStageIndex > tutorialPlaythrough.iHighestStageCompleted)
             {
-                //It's the pair that we need to check, they work together.
-
-                //If the current stage is higher than the one they have fully completed (they are doing a stage they have never completed)
-                if (lesson.iStageIndex > lesson.iHighestStageCompleted)
+                plugin.getLogger().log(Level.INFO, "You are further on than the highest stage completed. Checking step update.");
+                //iCurrentStep - 1 is the step just completed.
+                if (iCurrentStep - 1 > tutorialPlaythrough.iHighestStepCompleted)
                 {
-                    plugin.getLogger().log(Level.INFO, "You are further on than the highest stage completed. Checking step update.");
-                    //iCurrentStep - 1 is the step just completed.
-                    if (iCurrentStep - 1 > lesson.iHighestStepCompleted)
-                    {
-                        plugin.getLogger().log(Level.INFO, "That step is higher than the highest completed step so far, updating");
-                        lesson.iHighestStepCompleted = iCurrentStep - 1;
-                    }
+                    plugin.getLogger().log(Level.INFO, "That step is higher than the highest completed step so far, updating");
+                    tutorialPlaythrough.iHighestStepCompleted = iCurrentStep - 1;
                 }
-
-                //Save the positions of stage and step
-                lesson.savePositions();
             }
+
+            //Save the positions of stage and step
+            if (tutorialPlaythrough instanceof Lesson lesson)
+                lesson.savePositions();
+
             //Uses -1 because iCurrentStep is 1 indexed, so need it in computer terms
             currentStepPlaythrough = stepPlaythroughs.get(iCurrentStep-1);
             currentStepPlaythrough.startStep(bDelayTitle);
         }
         else //Stage finished
         {
-            if (tutorialPlaythrough instanceof Lesson lesson)
+            //At this point we put the highest step completed to 0 as we are updating the stage
+            //It's the pair that we need to check, they work together.
+            if (tutorialPlaythrough.iStageIndex > tutorialPlaythrough.iHighestStageCompleted)
             {
-                //At this point we put the highest step completed to 0 as we are updating the stage
-                //It's the pair that we need to check, they work together.
-                if (lesson.iStageIndex > lesson.iHighestStageCompleted)
-                {
-                    lesson.iHighestStepCompleted = 0;
-                    lesson.iHighestStageCompleted = lesson.iStageIndex;
-                }
-
-                //Save the positions of stage and step
-                lesson.savePositions();
+                tutorialPlaythrough.iHighestStepCompleted = 0;
+                tutorialPlaythrough.iHighestStageCompleted = tutorialPlaythrough.iStageIndex;
             }
+
+            //Save the positions of stage and step
+            if (tutorialPlaythrough instanceof Lesson lesson)
+                lesson.savePositions();
+
             status = StepPlaythroughStatus.Finished;
             tutorialPlaythrough.nextStage(1, false);
         }
@@ -293,54 +291,53 @@ public class StagePlaythrough
      */
     void previousStep()
     {
-        if (tutorialPlaythrough instanceof Lesson lesson)
+        //If the current step has progress, reset to the start
+        if (currentStepPlaythrough.inProgress())
         {
-            //If the current step has progress, reset to the start
-            if (currentStepPlaythrough.inProgress())
-            {
-                //Reset progress
-                currentStepPlaythrough.terminateEarly();
-                currentStepPlaythrough.startStep(false);
+            //Reset progress
+            currentStepPlaythrough.terminateEarly();
+            currentStepPlaythrough.startStep(false);
 
-                //Update the stage status if we've reset to the first step of a stage
-                if (iCurrentStep == 1)
-                    status = StepPlaythroughStatus.SubsRegistered;
+            //Update the stage status if we've reset to the first step of a stage
+            if (iCurrentStep == 1)
+                status = StepPlaythroughStatus.SubsRegistered;
 
-                //Save the positions if moved
+            //Save the positions if moved
+            if (tutorialPlaythrough instanceof Lesson lesson)
                 lesson.savePositions();
-            }
+        }
 
-            //If the step has no progress and there is a previous step, reset to the start of the previous step
-            else if (iCurrentStep > 1)
-            {
-                //Terminate and start previous step
-                currentStepPlaythrough.terminateEarly();
-                iCurrentStep--;
-                currentStepPlaythrough = stepPlaythroughs.get(iCurrentStep-1);
-                //Reset the new step
-                currentStepPlaythrough.terminateEarly();
-                currentStepPlaythrough.startStep(false);
+        //If the step has no progress and there is a previous step, reset to the start of the previous step
+        else if (iCurrentStep > 1)
+        {
+            //Terminate and start previous step
+            currentStepPlaythrough.terminateEarly();
+            iCurrentStep--;
+            currentStepPlaythrough = stepPlaythroughs.get(iCurrentStep-1);
+            //Reset the new step
+            currentStepPlaythrough.terminateEarly();
+            currentStepPlaythrough.startStep(false);
 
-                //Update the stage status if we've reset to the first step of a stage
-                if (iCurrentStep == 1)
-                    status = StepPlaythroughStatus.SubsRegistered;
+            //Update the stage status if we've reset to the first step of a stage
+            if (iCurrentStep == 1)
+                status = StepPlaythroughStatus.SubsRegistered;
 
-                //Save the positions if moved
+            //Save the positions if moved
+            if (tutorialPlaythrough instanceof Lesson lesson)
                 lesson.savePositions();
-            }
+        }
 
-            //If the start of the stage see if there is a previous stage to move to the end of
-            //Attempt to move to the previous stage
-            else if (tutorialPlaythrough.iStageIndex > 1)
-            {
-                //Move to previous stage
-                currentStepPlaythrough.terminateEarly();
+        //If the start of the stage see if there is a previous stage to move to the end of
+        //Attempt to move to the previous stage
+        else if (tutorialPlaythrough.iStageIndex > 1)
+        {
+            //Move to previous stage
+            currentStepPlaythrough.terminateEarly();
 
-                iCurrentStep = 1;
+            iCurrentStep = 1;
 
-                //Will call for the previous step to start. Starts the previous stage at the final step.
-                tutorialPlaythrough.previousStageStepBack();
-            }
+            //Will call for the previous step to start. Starts the previous stage at the final step.
+            tutorialPlaythrough.previousStageStepBack();
         }
     }
 
@@ -349,38 +346,37 @@ public class StagePlaythrough
      */
     void skipStep()
     {
-        //Check for whether the step is available
-        if (tutorialPlaythrough instanceof Lesson lesson)
+        //If the current stage is lower than or equal to the highest stage they have completed then we know they can automatically be moved on
+        //If they are on the stage after the highest stage they have completed, check that they are on a step
+        // lower than or equal to one they have already completed
+        if (tutorialPlaythrough.iStageIndex <= tutorialPlaythrough.iHighestStageCompleted || (tutorialPlaythrough.iStageIndex == tutorialPlaythrough.iHighestStageCompleted + 1 && iCurrentStep <= tutorialPlaythrough.iHighestStepCompleted))
         {
-            //If the current stage is lower than or equal to the highest stage they have completed then we know they can automatically be moved on
-            //If they are on the stage after the highest stage they have completed, check that they are on a step
-            // lower than or equal to one they have already completed
-            if (lesson.iStageIndex <= lesson.iHighestStageCompleted || (lesson.iStageIndex == lesson.iHighestStageCompleted + 1 && iCurrentStep <= lesson.iHighestStepCompleted))
+            //Check that there are any steps left in this stage
+            if (iCurrentStep == stepPlaythroughs.size())
+                //If not, just call a move to the next stage
+                tutorialPlaythrough.skipStage();
+            else
             {
-                //Check that there are any steps left in this stage
-                if (iCurrentStep == stepPlaythroughs.size())
-                    //If not, just call a move to the next stage
-                    tutorialPlaythrough.skipStage();
-                else
-                {
-                    //Terminate current step
-                    currentStepPlaythrough.terminateEarly();
-                    currentStepPlaythrough.displayAllVirtualBlocks();
+                //Terminate current step
+                currentStepPlaythrough.terminateEarly();
+                currentStepPlaythrough.displayAllVirtualBlocks();
 
-                    //Really we need a way to display all the blocks without terminating in the first place
-                    //Boolean on the terminate thing?
+                //Really we need a way to display all the blocks without terminating in the first place
+                //Boolean on the terminate thing?
 
-                    //Update the stage status
-                    status = StepPlaythroughStatus.ActiveStarted;
+                //Update the stage status
+                status = StepPlaythroughStatus.ActiveStarted;
 
-                    currentStepPlaythrough = stepPlaythroughs.get(iCurrentStep);
-                    iCurrentStep++;
-                    currentStepPlaythrough.startStep(false);
-                }
-
-                lesson.savePositions();
+                currentStepPlaythrough = stepPlaythroughs.get(iCurrentStep);
+                iCurrentStep++;
+                currentStepPlaythrough.startStep(false);
             }
+
+            //Save the positions if moved
+            if (tutorialPlaythrough instanceof Lesson lesson)
+                lesson.savePositions();
         }
+
     }
 
     /**
@@ -389,9 +385,7 @@ public class StagePlaythrough
      */
     public boolean canMoveBackStep()
     {
-        if (tutorialPlaythrough instanceof Lesson lesson)
-            return currentStepPlaythrough.inProgress() || iCurrentStep > 1 || tutorialPlaythrough.iStageIndex > 1;
-        return false;
+        return currentStepPlaythrough.inProgress() || iCurrentStep > 1 || tutorialPlaythrough.iStageIndex > 1;
     }
 
     /**
@@ -400,9 +394,7 @@ public class StagePlaythrough
      */
     public boolean canMoveForwardsStep()
     {
-        if (tutorialPlaythrough instanceof Lesson lesson)
-            return lesson.iStageIndex <= lesson.iHighestStageCompleted || (lesson.iStageIndex == lesson.iHighestStageCompleted + 1 && iCurrentStep <= lesson.iHighestStepCompleted);
-        return false;
+        return tutorialPlaythrough.iStageIndex <= tutorialPlaythrough.iHighestStageCompleted || (tutorialPlaythrough.iStageIndex == tutorialPlaythrough.iHighestStageCompleted + 1 && iCurrentStep <= tutorialPlaythrough.iHighestStepCompleted);
     }
 
     /**

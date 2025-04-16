@@ -400,8 +400,22 @@ public class StepPlaythrough
         switch (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode())
         {
             case CreatingLocation:
-                if (!locationStep.isOtherInformationSet(plugin.getLogger()))
-                    break;
+                //Registers the video link listener
+                videoLinkListener.register();
+
+                if (locationStep.isLocationSet())
+                {
+                    //TP to start location, and store this location for later use
+                    Location startLocation = locationStep.teleportPlayerToStartOfStep(player, parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld(), plugin);
+                    //Updates the fall listener
+                    parentStagePlaythrough.tutorialPlaythrough.setFallListenerSafeLocation(startLocation);
+                }
+
+                if (locationStep.isHologramLocationSet())
+                    //Displays the step instructions
+                    displayInstructions(step.getInstructionDisplayType(), player, step.getName(), parentStagePlaythrough.tutorialPlaythrough.getLocation().getWorld());
+
+                break;
                 //If information is set, we can fallthrough
             case PlayingLesson:
             case EditingLocation:
@@ -419,7 +433,7 @@ public class StepPlaythrough
                 break;
         }
 
-        //Group registration and main menu switching
+        //Group registration, index resetting and main menu switching
         switch (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode())
         {
             case PlayingLesson:
@@ -444,6 +458,7 @@ public class StepPlaythrough
                 plugin.getLogger().log(Level.FINE, "Registered group "+iGroupInStepLocationCreation +" of step");
 
                 //Set the main menu to be the step playthrough
+                menu.refresh();
                 getParentStage().getTutorialPlaythrough().creatorOrStudent.mainGui = menu;
                 break;
         }

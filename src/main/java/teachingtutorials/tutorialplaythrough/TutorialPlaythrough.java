@@ -43,6 +43,22 @@ public abstract class TutorialPlaythrough
     /** The index (0 indexed) of the stage to start next. Therefore also equals the stage currently on if 1 indexed */
     protected int iStageIndex;
 
+    /**
+     * The highest step that has been fully completed as part of this lesson. (1 index).
+     * <p> </p>
+     * In combination with the highest stage completed variable, this is used to determine the step which
+     * a player can wind forwards to.
+     */
+    protected int iHighestStepCompleted;
+
+    /**
+     * The highest stage that has been fully completed as part of this lesson. (1 index).
+     * <p> </p>
+     * In combination with the highest step completed variable, this is used to determine the stage which
+     * a player can wind forwards to.
+     */
+    protected int iHighestStageCompleted;
+
     /** The current mode which the playthrough is in */
     private PlaythroughMode currentPlaythroughMode;
 
@@ -156,10 +172,21 @@ public abstract class TutorialPlaythrough
         }
     }
 
-    public void OpenNavigationMenu()
+    public void openNavigationMenu()
     {
         this.navigationMenu.refresh();
         this.creatorOrStudent.mainGui = this.navigationMenu;
+        this.creatorOrStudent.mainGui.open(creatorOrStudent);
+    }
+
+    public void openStepEditorMenu()
+    {
+        //Checks to see if current player is the creator of the tutorial they are playing
+        if (!creatorOrStudent.player.getUniqueId().equals(tutorial.getUUIDOfAuthor()))
+        {
+            return;
+        }
+        this.creatorOrStudent.mainGui = this.currentStagePlaythrough.currentStepPlaythrough.getEditorMenu();
         this.creatorOrStudent.mainGui.open(creatorOrStudent);
     }
 
@@ -347,35 +374,34 @@ public abstract class TutorialPlaythrough
      */
     public void previousStage()
     {
-        if (this instanceof Lesson lesson)
+        //Checks if the stage has progress
+        if (currentStagePlaythrough.inProgress()) //Has progress
         {
-            //Checks if the stage has progress
-            if (currentStagePlaythrough.inProgress()) //Has progress
+            //If in progress, attempt to reset to the start of the stage
+            currentStagePlaythrough.terminateEarly();
+            currentStagePlaythrough.startStage(1, false);
+
+            //Save the positions if moved
+            if (this instanceof Lesson lesson)
+                lesson.savePositions();
+        }
+
+        else //Has no progress - attempt move to previous stage
+        {
+            //Only move to start of previous stage if there is one
+            if (iStageIndex > 1)
             {
-                //If in progress, attempt to reset to the start of the stage
+                //Terminate and start previous stage from start
+                currentStagePlaythrough.terminateEarly();
+                iStageIndex--;
+                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex - 1);
+                //Reset the stage
                 currentStagePlaythrough.terminateEarly();
                 currentStagePlaythrough.startStage(1, false);
 
                 //Save the positions if moved
-                lesson.savePositions();
-            }
-
-            else //Has no progress - attempt move to previous stage
-            {
-                //Only move to start of previous stage if there is one
-                if (iStageIndex > 1)
-                {
-                    //Terminate and start previous stage from start
-                    currentStagePlaythrough.terminateEarly();
-                    iStageIndex--;
-                    currentStagePlaythrough = stagePlaythroughs.get(iStageIndex - 1);
-                    //Reset the stage
-                    currentStagePlaythrough.terminateEarly();
-                    currentStagePlaythrough.startStage(1, false);
-
-                    //Save the positions if moved
+                if (this instanceof Lesson lesson)
                     lesson.savePositions();
-                }
             }
         }
     }
@@ -385,30 +411,28 @@ public abstract class TutorialPlaythrough
      */
     public void previousStageStepBack()
     {
-        if (this instanceof Lesson lesson)
+        //Checks that there is a previous stage
+        if (iStageIndex > 1)
         {
-            //Checks that there is a previous stage
-            if (iStageIndex > 1)
-            {
-                //Close the current stage
-                currentStagePlaythrough.terminateEarly(); //This should already be called but we call again
+            //Close the current stage
+            currentStagePlaythrough.terminateEarly(); //This should already be called but we call again
 
-                //Move to the previous stage
-                iStageIndex--;
-                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex-1);
+            //Move to the previous stage
+            iStageIndex--;
+            currentStagePlaythrough = stagePlaythroughs.get(iStageIndex-1);
 
-                //Reset the new stage
-                currentStagePlaythrough.terminateEarly();
+            //Reset the new stage
+            currentStagePlaythrough.terminateEarly();
 
-                //Displays all virtual blocks but the last step
-                currentStagePlaythrough.displayAllVirtualBlocks(currentStagePlaythrough.getStage().steps.size() - 1);
+            //Displays all virtual blocks but the last step
+            currentStagePlaythrough.displayAllVirtualBlocks(currentStagePlaythrough.getStage().steps.size() - 1);
 
-                //Starts the stage on the largest step
-                currentStagePlaythrough.startStage(Integer.MAX_VALUE, false);
+            //Starts the stage on the largest step
+            currentStagePlaythrough.startStage(Integer.MAX_VALUE, false);
 
-                //Save the positions if moved
+            //Save the positions if moved
+            if (this instanceof Lesson lesson)
                 lesson.savePositions();
-            }
         }
     }
 
@@ -417,24 +441,22 @@ public abstract class TutorialPlaythrough
      */
     public void skipStage()
     {
-        if (this instanceof Lesson lesson)
+        //If they have already completed this stage or one above it, attempt to move them on
+        if (iStageIndex <= iHighestStageCompleted)
         {
-            //If they have already completed this stage or one above it, attempt to move them on
-            if (iStageIndex <= lesson.iHighestStageCompleted)
+            //Only move them on if there is a higher stage
+            if (iStageIndex < stagePlaythroughs.size())
             {
-                //Only move them on if there is a higher stage
-                if (iStageIndex < stagePlaythroughs.size())
-                {
-                    //Terminate and start next stage from start
-                    currentStagePlaythrough.terminateEarly();
-                    currentStagePlaythrough.displayAllVirtualBlocks(-1);
-                    currentStagePlaythrough = stagePlaythroughs.get(iStageIndex);
-                    iStageIndex++;
-                    currentStagePlaythrough.startStage(1, false);
+                //Terminate and start next stage from start
+                currentStagePlaythrough.terminateEarly();
+                currentStagePlaythrough.displayAllVirtualBlocks(-1);
+                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex);
+                iStageIndex++;
+                currentStagePlaythrough.startStage(1, false);
 
-                    //Save the positions if moved
+                //Save the positions if moved
+                if (this instanceof Lesson lesson)
                     lesson.savePositions();
-                }
             }
         }
     }
@@ -466,7 +488,7 @@ public abstract class TutorialPlaythrough
      */
     public boolean canMoveBackStage()
     {
-        if (this instanceof Lesson lesson && currentStagePlaythrough != null)
+        if (currentStagePlaythrough != null)
             return currentStagePlaythrough.inProgress() || iStageIndex > 1;
         return false;
     }
@@ -477,9 +499,7 @@ public abstract class TutorialPlaythrough
      */
     public boolean canMoveForwardsStage()
     {
-        if (this instanceof Lesson lesson)
-            return (iStageIndex <= lesson.iHighestStageCompleted && iStageIndex < stagePlaythroughs.size());
-        return false;
+        return (iStageIndex <= iHighestStageCompleted && iStageIndex < stagePlaythroughs.size());
     }
 
     /**

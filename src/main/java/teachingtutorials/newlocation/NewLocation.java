@@ -88,6 +88,9 @@ public class NewLocation extends TutorialPlaythrough
 
         //Update the user's current Playthrough
         creatorOrStudent.setCurrentPlaythrough(this);
+
+        iHighestStageCompleted = 0;
+        iHighestStepCompleted = 0;
     }
 
     public int getTutorialID()

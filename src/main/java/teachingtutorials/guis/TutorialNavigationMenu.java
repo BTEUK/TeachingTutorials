@@ -2,6 +2,7 @@ package teachingtutorials.guis;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
@@ -125,6 +126,38 @@ public class TutorialNavigationMenu extends Gui
                         @Override
                         public void leftClick(User u) {
                             tutorialPlaythrough.callVideoLink();
+                        }
+                    });
+        }
+
+        //Editor mode switcher
+        if (tutorialPlaythrough.getCreatorOrStudent().player.getUniqueId().equals(tutorialPlaythrough.getTutorial().getUUIDOfAuthor()) && tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        {
+            super.setItem(4, Utils.createItem(Material.WRITABLE_BOOK, 1, TutorialGUIUtils.optionTitle("Switch to edit mode"), TutorialGUIUtils.optionLore("Restart step in edit mode")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u) {
+                            //Switch the playthrough mode
+                            tutorialPlaythrough.setCurrentPlaythroughMode(PlaythroughMode.EditingLocation);
+                        }
+                    });
+        }
+        else if (tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
+        {
+            super.setItem(4, Utils.createItem(Material.WRITABLE_BOOK, 1, TutorialGUIUtils.optionTitle("Open step editor menu")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u) {
+                            //Open the step editor menu
+                            tutorialPlaythrough.openStepEditorMenu();
                         }
                     });
         }

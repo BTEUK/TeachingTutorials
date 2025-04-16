@@ -12,6 +12,7 @@ import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
 import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
 import teachingtutorials.tutorialobjects.LocationStep;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.StepPlaythrough;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
@@ -72,7 +73,7 @@ public class StepEditorMenu extends Gui
             public void runPostClose()
             {
             }
-        });
+        }, locationStep.getVideoWalkthroughLink());
 
         this.instructionsBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
         {
@@ -86,7 +87,7 @@ public class StepEditorMenu extends Gui
             public void runPostClose()
             {
             }
-        });
+        }, locationStep.getInstructions());
 
         //Adds the items to the gui
         addMenuOptions();
@@ -288,6 +289,46 @@ public class StepEditorMenu extends Gui
                     u.mainGui.open(u);
                 }
             });
+        }
+
+        //Links back to the navigator menu
+        if (stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
+        {
+            super.setItem(18, Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.optionTitle("Back to Navigator"), TutorialGUIUtils.optionLore("Return to lesson mode")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u) {
+                            //If in edit mode, switch mode
+                            if (StepEditorMenu.this.stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
+                                stepPlaythrough.getParentStage().getTutorialPlaythrough().setCurrentPlaythroughMode(PlaythroughMode.PlayingLesson);
+
+                            u.player.closeInventory();
+                            stepPlaythrough.getParentStage().getTutorialPlaythrough().openNavigationMenu();
+                        }
+                    });
+        }
+        else if (stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
+        {
+            super.setItem(18, Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.optionTitle("Back to Navigator"), TutorialGUIUtils.optionLore("")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u) {
+                            //If in edit mode, switch mode
+                            if (StepEditorMenu.this.stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
+                                stepPlaythrough.getParentStage().getTutorialPlaythrough().setCurrentPlaythroughMode(PlaythroughMode.PlayingLesson);
+
+                            u.player.closeInventory();
+                            stepPlaythrough.getParentStage().getTutorialPlaythrough().openNavigationMenu();
+                        }
+                    });
         }
     }
 

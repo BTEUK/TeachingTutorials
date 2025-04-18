@@ -7,11 +7,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.utils.plugins.Luckperms;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Level;
 
 /**
@@ -27,7 +27,7 @@ public class TutorialsPromotionService implements PromotionService {
     }
 
     @Override
-    public void promote(UUID uuid, String name) {
+    public void promote(Player player) {
 
         //---------------------------------------------------
         //----------------Promotes the player----------------
@@ -47,26 +47,26 @@ public class TutorialsPromotionService implements PromotionService {
 
         if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("none")) {
             //Do nothing
-            plugin.getLogger().log(Level.INFO, "Performing no promotion for " + name);
+            plugin.getLogger().log(Level.INFO, "Performing no promotion for " + player.getName());
         }
         //Deals with a promotion on a track
         else if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("track")) {
             //Notifies console
-            plugin.getLogger().log(Level.INFO, "Performing a 'track' promote for " + name);
+            plugin.getLogger().log(Level.INFO, "Performing a 'track' promote for " + player.getName());
 
             //Gets the luckperms user
-            plugin.getLogger().log(Level.FINE, "Retrieving the luckperms user for " + name);
-            net.luckperms.api.model.user.User lpUser = Luckperms.getUser(uuid);
+            plugin.getLogger().log(Level.FINE, "Retrieving the luckperms user for " + player.getName());
+            net.luckperms.api.model.user.User lpUser = Luckperms.getUser(player.getUniqueId());
 
             //Go through all of a user's groups and see if they have a group with a weight above that of the target promotion
-            plugin.getLogger().log(Level.FINE, "Extracting the parent groups (ranks) for " + name);
+            plugin.getLogger().log(Level.FINE, "Extracting the parent groups (ranks) for " + player.getName());
             List<String> groups = lpUser.getNodes().stream()
                     .filter(NodeType.INHERITANCE::matches)
                     .map(NodeType.INHERITANCE::cast)
                     .map(InheritanceNode::getGroupName)
                     .toList();
             int iNumGroups = groups.size();
-            plugin.getLogger().log(Level.FINE, iNumGroups + " parent groups (ranks) were found for " + name);
+            plugin.getLogger().log(Level.FINE, iNumGroups + " parent groups (ranks) were found for " + player.getName());
 
 
             int iNumGroupsInTrack = szTracks.length;
@@ -99,7 +99,7 @@ public class TutorialsPromotionService implements PromotionService {
                 //Verification complete
             else {
                 //Let's find the index of the highest rank the player has in the track
-                plugin.getLogger().log(Level.FINE, "Find the index of the highest rank that " + name + " has on the track");
+                plugin.getLogger().log(Level.FINE, "Find the index of the highest rank that " + player.getName() + " has on the track");
 
                 //Compares each of a user's groups to the groups in the relevant track
                 for (j = 0; j < iNumGroups; j++) {
@@ -117,13 +117,13 @@ public class TutorialsPromotionService implements PromotionService {
                 //User is not currently on the track
                 if (iHighestIndexOnTrack == -1) {
                     //Promote the player onto the track
-                    plugin.getLogger().log(Level.INFO, name + " is not currently on the track, TeachingTutorials will run a promote command to put the player onto the '" + szTrack + "' track");
-                    Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(console, "lp user " + name + " promote " + szTrack));
+                    plugin.getLogger().log(Level.INFO, player.getName() + " is not currently on the track, TeachingTutorials will run a promote command to put the player onto the '" + szTrack + "' track");
+                    Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(console, "lp user " + player.getName() + " promote " + szTrack));
                     iHighestIndexOnTrack = 0;
                 }
                 if (iHighestIndexOnTrack >= iIndexNewRank) {
                     //No action should be taken, user is already at the new rank or higher
-                    plugin.getLogger().log(Level.INFO, name + " has either the required rank, or a greater rank, so TeachingTutorials will not take any promote action");
+                    plugin.getLogger().log(Level.INFO, player.getName() + " has either the required rank, or a greater rank, so TeachingTutorials will not take any promote action");
                 } else {
                     //Calculate the amount of promotes to perform
                     int iDifference = iIndexNewRank - iHighestIndexOnTrack;
@@ -135,44 +135,44 @@ public class TutorialsPromotionService implements PromotionService {
                         Bukkit.getScheduler().runTask(plugin, new Runnable() {
                             @Override
                             public void run() {
-                                Bukkit.dispatchCommand(console, "lp user " + name + " promote " + szTrack);
+                                Bukkit.dispatchCommand(console, "lp user " + player.getName() + " promote " + szTrack);
                             }
                         });
                     }
 
                     //Broadcasts the promotion to the whole server
-                    broadcastPromotion(name, szRankNew);
+                    broadcastPromotion(player, szRankNew);
                 }
             }
         }
         //Deals with a promotion on a rank - will just add a rank
         else if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("rank")) {
             //Notifies console
-            plugin.getLogger().log(Level.INFO, "Performing a 'rank' promote for " + name);
+            plugin.getLogger().log(Level.INFO, "Performing a 'rank' promote for " + player.getName());
 
             Bukkit.getScheduler().runTask(plugin, new Runnable() {
                 @Override
                 public void run() {
-                    Bukkit.dispatchCommand(console, "lp user " + name + " parent add " + szRankNew);
+                    Bukkit.dispatchCommand(console, "lp user " + player.getName() + " parent add " + szRankNew);
                 }
             });
 
             //Broadcasts the promotion to the whole server
-            broadcastPromotion(name, szRankNew);
+            broadcastPromotion(player, szRankNew);
         }
 
         //Deals with a manual exchange of ranks
         else if (szCompulsoryTutorialPromotionType.equalsIgnoreCase("manualpromote")) {
             //Notifies console
-            plugin.getLogger().log(Level.INFO, "Performing a 'manual promote' for " + name);
+            plugin.getLogger().log(Level.INFO, "Performing a 'manual promote' for " + player.getName());
 
             Bukkit.getScheduler().runTask(plugin, () -> {
-                Bukkit.dispatchCommand(console, "lp user " + name + " parent remove " + szRankOld);
-                Bukkit.dispatchCommand(console, "lp user " + name + " parent add " + szRankNew);
+                Bukkit.dispatchCommand(console, "lp user " + player.getName() + " parent remove " + szRankOld);
+                Bukkit.dispatchCommand(console, "lp user " + player.getName() + " parent add " + szRankNew);
             });
 
             //Broadcasts the promotion to the whole server
-            broadcastPromotion(name, szRankNew);
+            broadcastPromotion(player, szRankNew);
         }
 
     }
@@ -184,10 +184,10 @@ public class TutorialsPromotionService implements PromotionService {
 
     /**
      * Broadcasts a promotion message to the whole server
-     * @param name The name of the player that is being promoted
+     * @param player The player that is being promoted
      * @param szRankNew The name of the rank that the player has been promoted to
      */
-    private void broadcastPromotion(String name, String szRankNew)
+    private void broadcastPromotion(Player player, String szRankNew)
     {
         //Formats the promotion broadcast message
         String szMessage;
@@ -197,11 +197,11 @@ public class TutorialsPromotionService implements PromotionService {
                 szRankNew.charAt(0) == 'O' || szRankNew.charAt(0) == 'o' ||
                 szRankNew.charAt(0) == 'U' || szRankNew.charAt(0) == 'u')
         {
-            szMessage = ChatColor.AQUA + name +" is now an " +szRankNew +" !";
+            szMessage = ChatColor.AQUA + player.getName() +" is now an " +szRankNew +" !";
         }
         else
         {
-            szMessage = ChatColor.AQUA + name +" is now a " +szRankNew +" !";
+            szMessage = ChatColor.AQUA + player.getName() +" is now a " +szRankNew +" !";
         }
 
         //Broadcast promotion

@@ -175,7 +175,7 @@
         <dependency>
             <groupId>com.github.BTEUK</groupId>
             <artifactId>TeachingTutorialsAPI</artifactId>
-            <version>fa5ca1ffff</version>
+            <version>970d3dc3f7</version>
         </dependency>
         <dependency>
             <groupId>com.onarandombox.multiversecore</groupId>

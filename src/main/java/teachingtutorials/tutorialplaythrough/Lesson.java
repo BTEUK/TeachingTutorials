@@ -478,7 +478,7 @@ public class Lesson extends TutorialPlaythrough
             plugin.getLogger().log(Level.INFO, "Promoting player " +creatorOrStudent.player.getName() +" after Lesson " +this.iLessonID +" was completed");
 
             //Promote the player using the promotion service.
-            plugin.getPromotionService().promote(creatorOrStudent.player.getUniqueId(), creatorOrStudent.player.getName());
+            plugin.getPromotionService().promote(creatorOrStudent.player);
         }
 
         //Update player lesson status in the plugin

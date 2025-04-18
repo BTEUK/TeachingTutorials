@@ -259,6 +259,7 @@ public class TeachingTutorials extends JavaPlugin
         ServicesManager servicesManager = this.getServer().getServicesManager();
         // Register backup promotion service.
         servicesManager.register(PromotionService.class, new TutorialsPromotionService(this), this, ServicePriority.Lowest);
+        getLogger().info(servicesManager.getKnownServices().toString());
         RegisteredServiceProvider<PromotionService> registeredPromotionService = servicesManager.getRegistration(PromotionService.class);
         if (registeredPromotionService != null) {
             promotionService = registeredPromotionService.getProvider();

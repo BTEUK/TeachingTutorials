@@ -361,7 +361,7 @@ public class TeachingTutorials extends JavaPlugin
                 //Extracts the jth virtual block group
                 virtualBlockGroup = virtualBlockGroups.get(j);
 
-                //Calls for the blocks to be displayed
+                //Calls for the blocks to be displayed. This will only action if the group is not stale.
                 virtualBlockGroup.displayBlocks();
             }
         }, 0, config.getLong("Virtual_Block_Refresh"));
@@ -409,6 +409,24 @@ public class TeachingTutorials extends JavaPlugin
                 {
                     if (!WorldEdit.isCurrentCalculationOngoing())
                     {
+                        int iTasksActive = virtualBlockGroups.size();
+                        for (int j = iTasksActive-1 ; j >=0 ; j--)
+                        {
+                            VirtualBlockGroup<Location, BlockData> virtualBlockGroup = virtualBlockGroups.get(j);
+                            //Attempt to remove stale groups
+                            if (virtualBlockGroup.isStale())
+                            {
+                                virtualBlockGroup.removeBlocks();
+                                TeachingTutorials.this.getLogger().log(Level.FINE, "Found stale at head, removing a virtual blocks group for " +virtualBlockGroup.getOwner());
+                                virtualBlockGroups.remove(j);
+                            }
+                            //If this group is not stale then break the clean up
+                            else
+                            {
+                                break;
+                            }
+                        }
+
                         //Get the list of virtual blocks
                         VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
 
@@ -416,7 +434,7 @@ public class TeachingTutorials extends JavaPlugin
                         VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
 
                         //Goes through all virtual block groups - will do this going from end of tutorial to start
-                        int iTasksActive = virtualBlockGroups.length;
+                        iTasksActive = virtualBlockGroups.length;
                         for (int j = iTasksActive-1 ; j >=0 ; j--)
                         {
                             //Extracts the jth virtual block group
@@ -432,7 +450,7 @@ public class TeachingTutorials extends JavaPlugin
                     }
                 }
             });
-        }, 0, config.getLong("World_Reset_Period"));
+        }, 1, config.getLong("World_Reset_Period"));
 
         //---------------------------------------
         //---------------Listeners---------------
@@ -458,6 +476,7 @@ public class TeachingTutorials extends JavaPlugin
     public void addVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
     {
         this.getLogger().log(Level.INFO, "A group of virtual blocks have just been added to the list of active groups");
+        virtualBlocks.setActive();
         virtualBlockGroups.add(virtualBlocks);
     }
 
@@ -467,11 +486,8 @@ public class TeachingTutorials extends JavaPlugin
      */
     public void removeVirtualBlocks(VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlocks)
     {
-        //Resets the views
+        //Resets the views and marks the group as stale
         virtualBlocks.removeBlocks();
-
-        //Removes from the list of groups to send updates for
-        virtualBlockGroups.remove(virtualBlocks);
     }
 
     /**

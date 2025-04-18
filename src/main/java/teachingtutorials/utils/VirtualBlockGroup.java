@@ -32,9 +32,38 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
      */
     private ConcurrentHashMap<Location, BlockData> realWorldBlocks = new ConcurrentHashMap<>();
 
+    /**
+     * If true, marks that the group is not to be displayed and is ready to be removed from the list of active virtual block
+     * groups once the safety mechanism is ready. The group is only remianing in the master list so that the safety reset
+     * mechanism of virtual blocks maintains it's proper order.
+     */
+    private boolean bStale = false;
+
     public VirtualBlockGroup(TutorialPlaythrough tutorialPlaythrough)
     {
         this.tutorialPlaythrough = tutorialPlaythrough;
+    }
+
+    public String getOwner()
+    {
+        return tutorialPlaythrough.getCreatorOrStudent().player.getName();
+    }
+
+    /**
+     * Sets the group to be not stale
+     */
+    public void setActive()
+    {
+        bStale = false;
+    }
+
+    /**
+     *
+     * @return Whether the group is stale
+     */
+    public boolean isStale()
+    {
+        return bStale;
     }
 
     /**
@@ -80,6 +109,9 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
      */
     public void displayBlocks()
     {
+        if (bStale)
+            return;
+
         //Sends the changes to the player
         tutorialPlaythrough.getCreatorOrStudent().player.sendMultiBlockChange((Map<Location, BlockData>) this);
 
@@ -95,6 +127,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
 
     /**
      * Removes the virtual blocks from the player and all spies, sets their views back to the real world.
+     * <p>Marks the group as stale</p>
      */
     public void removeBlocks()
     {
@@ -112,6 +145,8 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
         {
             spies.get(i).sendMultiBlockChange(realWorldBlocks);
         }
+
+        this.bStale = true;
     }
 
     /**
@@ -166,7 +201,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
         final BlockData[] virtualBlockData = realWorldBlocks.values().toArray(BlockData[]::new);
         int iLocations = locations.length;
 
-        Bukkit.getLogger().log(Level.FINE, ChatColor.AQUA +"Resetting the blocks to the world");
+        Bukkit.getLogger().log(Level.FINE, ChatColor.AQUA +"Resetting the blocks to the world for "+getOwner());
 
         Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), () -> {
             //Set the blocks in the world

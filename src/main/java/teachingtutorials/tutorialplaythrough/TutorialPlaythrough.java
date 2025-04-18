@@ -501,21 +501,16 @@ public abstract class TutorialPlaythrough
         //Removes virtual blocks
         Stack<VirtualBlockGroup<org.bukkit.Location, BlockData>> virtualBlockGroups = plugin.getVirtualBlockGroups();
 
-        VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlockGroup;
-
         //Goes through the list of the plugin's active virtual block groups
-        for (int i = 0 ; i < virtualBlockGroups.size() ; i++)
+        int iTasksActive = virtualBlockGroups.size();
+        for (int j = iTasksActive-1 ; j >=0 ; j--)
         {
-            virtualBlockGroup = virtualBlockGroups.get(i);
-
+            VirtualBlockGroup<org.bukkit.Location, BlockData> virtualBlockGroup = virtualBlockGroups.get(j);
             //Checks whether the virtual block group is of this tutorial playthrough
             if (virtualBlockGroup.isOfPlaythrough(this))
             {
-                //Removes the list from the plugin's list of lists
-                // and resets the blocks back to the original state for the player and spies
-                this.plugin.removeVirtualBlocks(virtualBlockGroup);
-
-                i--;
+                //Removes the blocks from the player view and marks them as stale
+                virtualBlockGroup.removeBlocks();
             }
         }
 

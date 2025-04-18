@@ -202,7 +202,6 @@ public class LibraryMenu extends Gui
                         {
                             //Delete the gui
                             delete();
-                            user.mainGui = null;
                         }
                         //It might fail due to the user being in a lesson currently, in which case a message will already have been displayed
                         else if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))

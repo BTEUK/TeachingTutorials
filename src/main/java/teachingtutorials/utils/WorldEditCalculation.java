@@ -300,6 +300,7 @@ public class WorldEditCalculation
     {
         this.worldEditEventListener.unregisterWorldChangeListener();
         tryResettingWorld();
+        teachingtutorials.utils.WorldEdit.setCalculationFinished();
     }
 }
 

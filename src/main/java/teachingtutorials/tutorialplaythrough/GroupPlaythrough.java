@@ -168,6 +168,8 @@ public class GroupPlaythrough
             //Registers the first tasks. Tasks unregister themselves once complete
             currentTask.register();
             plugin.getLogger().log(Level.FINE, "First task registered: "+currentTask.getLocationTask().type);
+
+            status = StepPlaythroughStatus.ActiveStarted;
         }
         else //If there are no tasks in the group, move on
         {
@@ -248,6 +250,7 @@ public class GroupPlaythrough
         {
             tasks.get(i).unregister();
         }
+        status = StepPlaythroughStatus.Finished;
     }
 
     /**

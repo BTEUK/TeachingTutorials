@@ -244,7 +244,7 @@ public class NewLocation extends TutorialPlaythrough
         this.stage = NewLocationProcess.creatingLocationForDB;
 
         //Creates a new location object
-        this.location = new Location(this.getTutorialID(), true);
+        this.location = new Location(this.getTutorialID());
 
         //Adds the location to the database
         if (location.insertNewLocation())

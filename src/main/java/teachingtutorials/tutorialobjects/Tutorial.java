@@ -254,7 +254,7 @@ public class Tutorial
         for (i = 0 ; i < iNumInUseTutorials ; i++)
         {
             //Determines whether tutorial i has any locations
-            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID(), dbConnection, logger).length != 0);
+            tutorialHasLocation[i] = Location.getAreThereInUseLocationsForTutorial(allInUseTutorials[i].getTutorialID(), dbConnection, logger);
 
             if (tutorialHasLocation[i])
             {
@@ -468,7 +468,7 @@ public class Tutorial
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 0 WHERE `TutorialID` = "+ this.iTutorialID;
             }
-            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID, plugin.getDBConnection(), plugin.getLogger()).length > 0)
+            else if (Location.getAreThereInUseLocationsForTutorial(this.iTutorialID, plugin.getDBConnection(), plugin.getLogger()))
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 1 WHERE `TutorialID` = "+ this.iTutorialID;
             }

@@ -355,14 +355,14 @@ public class Lesson extends TutorialPlaythrough
             return false;
         }
 
-        //Get a list of all LocationID for the tutorial of this Lesson
+        //Get a list of all LocationID of in use Locations for the tutorial of this Lesson
         int[] iLocationIDs;
-        iLocationIDs = Location.getAllLocationIDsForTutorial(this.tutorial.getTutorialID(), TeachingTutorials.getInstance().getDBConnection(), TeachingTutorials.getInstance().getLogger());
+        iLocationIDs = Location.getAllInUseLocationsForTutorial(this.tutorial.getTutorialID(), TeachingTutorials.getInstance().getDBConnection(), TeachingTutorials.getInstance().getLogger());
 
         //Checks to see if any locations were found
         if (iLocationIDs.length == 0)
         {
-            plugin.getLogger().log(Level.WARNING, "No locations could be found for the Tutorial with ID: "+tutorial.getTutorialID() +". ("+tutorial.getTutorialName() +").");
+            plugin.getLogger().log(Level.WARNING, "No in-use locations could be found for the Tutorial with ID: "+tutorial.getTutorialID() +". ("+tutorial.getTutorialName() +").");
             return false;
         }
         else

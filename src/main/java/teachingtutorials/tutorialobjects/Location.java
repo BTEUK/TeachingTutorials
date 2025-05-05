@@ -51,10 +51,12 @@ public class Location
      * @param iLocationID The locationID of the location to load from the DB
      * @param iTutorialID The tutorialID of the location's tutorial
      */
-    public Location(int iLocationID, int iTutorialID)
+    public Location(int iLocationID, int iTutorialID, boolean bInUse, String szLocationName)
     {
         this.iLocationID = iLocationID;
         this.iTutorialID = iTutorialID;
+        this.bInUse = bInUse;
+        this.szLocationName = szLocationName;
 
         //Loads the bukkit world for this location
         this.world = Bukkit.getWorld(this.getLocationID()+"");
@@ -73,6 +75,14 @@ public class Location
     public int getLocationID()
     {
         return iLocationID;
+    }
+
+    /**
+     * @return The ID of the Tutorial which this Location is of
+     */
+    public int getTutorialID()
+    {
+        return iTutorialID;
     }
 
     /**
@@ -152,18 +162,18 @@ public class Location
     }
 
     /**
-     * Fetches a list of LocationID for all of the In Use Locations of a given Tutorial
+     * Fetches a list of Locations for all of the In Use Locations of a given Tutorial
      * @param iTutorialID The tutorial ID of the tutorial for which to fetch the locations for
      * @param dbConnection A DB connection object
      * @return A list of locationIDs
      */
-    public static int[] getAllInUseLocationsForTutorial(int iTutorialID, DBConnection dbConnection, Logger logger)
+    public static Location[] getAllInUseLocationsForTutorial(int iTutorialID, DBConnection dbConnection, Logger logger)
     {
         String sql;
         Statement SQL = null;
         ResultSet resultSet = null;
         int iLocations = 0;
-        int iLocationIDs[];
+        Location[] locations;
         int i;
 
         try
@@ -179,27 +189,124 @@ public class Location
                 iLocations++;
             }
 
-            iLocationIDs = new int[iLocations];
+            locations = new Location[iLocations];
 
-            //Executes the query
+            //Move to start and get the location information
             resultSet = SQL.executeQuery(sql);
-            for (i = 0 ; i < iLocationIDs.length ; i++)
+            for (i = 0 ; i < iLocations ; i++)
             {
                 resultSet.next();
-                iLocationIDs[i] = resultSet.getInt("LocationID");
+                locations[i] = new Location(resultSet.getInt("LocationID"),
+                        iTutorialID,
+                        resultSet.getBoolean("InUse"),
+                        resultSet.getString("LocationName"));
             }
         }
         catch (SQLException se)
         {
-            logger.log(Level.SEVERE, "SQL - SQL Error fetching location IDs for tutorial with ID: "+iTutorialID, se);
-            iLocationIDs = new int[0];
+            logger.log(Level.SEVERE, "SQL - SQL Error fetching locations for tutorial with ID: "+iTutorialID, se);
+            locations = new Location[0];
         }
         catch (Exception e)
         {
-            logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching location IDs for tutorial with ID: "+iTutorialID, e);
-            iLocationIDs = new int[0];
+            logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching locations for tutorial with ID: "+iTutorialID, e);
+            locations = new Location[0];
         }
-        return iLocationIDs;
+        return locations;
+    }
+
+    /**
+     * Fetches a list of all Locations for a tutorial, will all Location information filled
+     * @param iTutorialID The tutorial ID of the tutorial for which to fetch the locations for
+     * @param dbConnection A DB connection object
+     * @param logger A reference to a logger to log output to
+     * @return A list of locationIDs
+     */
+    public static Location[] getAllLocationForTutorial(int iTutorialID, DBConnection dbConnection, Logger logger)
+    {
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+        int iLocations = 0;
+        Location[] locations;
+        int i;
+
+        try
+        {
+            //Compiles the command to fetch all the in use locations for the tutorial
+            sql = "SELECT * FROM `Locations` WHERE `TutorialID` = " +iTutorialID;
+            SQL = dbConnection.getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+            while (resultSet.next())
+            {
+                iLocations++;
+            }
+
+            locations = new Location[iLocations];
+
+            //Move to start and get the location information
+            resultSet = SQL.executeQuery(sql);
+            for (i = 0 ; i < iLocations ; i++)
+            {
+                resultSet.next();
+                locations[i] = new Location(resultSet.getInt("LocationID"),
+                                            iTutorialID,
+                                            resultSet.getBoolean("InUse"),
+                                            resultSet.getString("LocationName"));
+            }
+        }
+        catch (SQLException se)
+        {
+            logger.log(Level.SEVERE, "SQL - SQL Error fetching locations for tutorial with ID: "+iTutorialID, se);
+            locations = new Location[0];
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching locations for tutorial with ID: "+iTutorialID, e);
+            locations = new Location[0];
+        }
+        return locations;
+    }
+
+    /**
+     * Get the start location of a Location by getting the start location of the first step.
+     * @param dbConnection A reference to a database connection
+     * @param logger A reference to a logger to which to log output
+     * @param iLocationID The ID of the location to get the start location of
+     * @return An array containing latitude, longitude, start yaw, start pitch, or null if the location could not be fetched
+     */
+    public static double[] getStartCoordinatesOfLocation(DBConnection dbConnection, Logger logger, int iLocationID)
+    {
+        double[] coordinates = null;
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch all the in use locations for the tutorial
+            sql = "SELECT Latitude,Longitude,StartYaw,StartPitch FROM `LocationSteps` WHERE `Location` = " +iLocationID +" Order By Step";
+            SQL = dbConnection.getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+
+            if (resultSet.next())
+                coordinates = new double[]{resultSet.getDouble("Latitude"), resultSet.getDouble("Longitude"),
+                        resultSet.getDouble("StartYaw"), resultSet.getDouble("StartPitch")};
+        }
+        catch (SQLException se)
+        {
+            logger.log(Level.SEVERE, "SQL - SQL Error fetching location start from location steps for location: "+iLocationID, se);
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching location start from location steps for location: "+iLocationID, e);
+        }
+        return coordinates;
     }
 
     //---------------------------------------------------
@@ -249,10 +356,10 @@ public class Location
     }
 
     /**
-     * Updates the database with the current Location name in this object for this location
-     * @return Whether the update completed
+     * Updates the name of this location in the DB
+     * @return whether the update was made successfully
      */
-    public boolean updateName()
+    public boolean updateName(DBConnection dbConnection, Logger logger, String szNewName)
     {
         String sql;
         Statement SQL = null;
@@ -261,29 +368,32 @@ public class Location
 
         try
         {
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
-            sql = "UPDATE `Locations` SET LocationName = '" +szLocationName  +"' WHERE LocationID = "+iLocationID;
+            SQL = dbConnection.getConnection().createStatement();
+            sql = "UPDATE `Locations` SET LocationName = '" +szNewName  +"' WHERE LocationID = "+iLocationID;
             iCount = SQL.executeUpdate(sql);
+
+            //Updates the value of the name stored in memory
+            this.szLocationName = szNewName;
 
             return iCount == 1;
         }
         catch (SQLException se)
         {
-            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL - SQL Error updating name of location", se);
+            logger.log(Level.SEVERE, "SQL - SQL Error updating name of location", se);
             return false;
         }
         catch (Exception e)
         {
-            TeachingTutorials.getInstance().getLogger().log(Level.SEVERE, "SQL - Non-SQL Error updating name of location", e);
+            logger.log(Level.SEVERE, "SQL - Non-SQL Error updating name of location", e);
             return false;
         }
     }
 
     /**
-     * Updates the database with the current in use state in this object for this location
+     * Changes the boolean value of whether this tutorial is "in-use" or not in the DB. Negates the current value.
      * @return Whether the update completed
      */
-    public boolean updateInUse()
+    public boolean toggleInUse()
     {
         String sql;
         Statement SQL = null;
@@ -294,11 +404,13 @@ public class Location
         {
             SQL = TeachingTutorials.getInstance().getConnection().createStatement();
             if (bInUse)
-                sql = "UPDATE `Locations` SET InUse = 1 WHERE LocationID = "+iLocationID;
-            else
                 sql = "UPDATE `Locations` SET InUse = 0 WHERE LocationID = "+iLocationID;
+            else
+                sql = "UPDATE `Locations` SET InUse = 1 WHERE LocationID = "+iLocationID;
 
             iCount = SQL.executeUpdate(sql);
+
+            bInUse = !bInUse;
 
             return iCount == 1;
         }

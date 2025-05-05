@@ -1,13 +1,7 @@
 package teachingtutorials.tutorialplaythrough;
 
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.luckperms.api.node.NodeType;
-import net.luckperms.api.node.types.InheritanceNode;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.listeners.PlaythroughCommandListeners;
@@ -17,16 +11,13 @@ import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
-import teachingtutorials.utils.plugins.Luckperms;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * A class representing a Lesson type playthrough of a tutorial. This is what most Tutorial Playthroughs will be.
@@ -52,7 +43,7 @@ public class Lesson extends TutorialPlaythrough
     public float[] fDifficultyTotals = new float[5];
 
     /**
-     * The only constructor available to initiate a lesson object
+     * Used to initiate a lesson object when only the Tutorial to play through is known
      * @param player The User for which this Lesson is being initiated
      * @param plugin A reference to the instance of the TeachingTutorials plugin
      * @param tutorial The tutorial which will be played in this lesson
@@ -60,6 +51,18 @@ public class Lesson extends TutorialPlaythrough
     public Lesson(User player, TeachingTutorials plugin, Tutorial tutorial)
     {
         super(plugin, player, tutorial, PlaythroughMode.PlayingLesson);
+    }
+
+    /**
+     * Used to initiate a lesson object when the Location to play through is known
+     * @param player The User for which this Lesson is being initiated
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
+     * @param location The location which will be played in this lesson
+     */
+    public Lesson(User player, TeachingTutorials plugin, Location location)
+    {
+        super(plugin, player, Tutorial.fetchByTutorialID(location.getTutorialID(), plugin.getDBConnection(), plugin.getLogger()), PlaythroughMode.PlayingLesson);
+        this.location = location;
     }
 
     public int getLessonID()
@@ -174,7 +177,11 @@ public class Lesson extends TutorialPlaythrough
     private boolean createAndSetUpNewLesson()
     {
         //Selects a location
-        if (selectLocation())
+        boolean bLocationFound = true;
+        if (this.location == null)
+            bLocationFound = selectLocation();
+
+        if (bLocationFound)
         {
             //Inform console of lesson start
             plugin.getLogger().log(Level.INFO,  ChatColor.AQUA + "Lesson starting for "
@@ -355,12 +362,12 @@ public class Lesson extends TutorialPlaythrough
             return false;
         }
 
-        //Get a list of all LocationID of in use Locations for the tutorial of this Lesson
-        int[] iLocationIDs;
-        iLocationIDs = Location.getAllInUseLocationsForTutorial(this.tutorial.getTutorialID(), TeachingTutorials.getInstance().getDBConnection(), TeachingTutorials.getInstance().getLogger());
+        //Get a list of all Locations of in use Locations for the tutorial of this Lesson
+        Location[] locations;
+        locations = Location.getAllInUseLocationsForTutorial(this.tutorial.getTutorialID(), TeachingTutorials.getInstance().getDBConnection(), TeachingTutorials.getInstance().getLogger());
 
         //Checks to see if any locations were found
-        if (iLocationIDs.length == 0)
+        if (locations.length == 0)
         {
             plugin.getLogger().log(Level.WARNING, "No in-use locations could be found for the Tutorial with ID: "+tutorial.getTutorialID() +". ("+tutorial.getTutorialName() +").");
             return false;
@@ -368,15 +375,15 @@ public class Lesson extends TutorialPlaythrough
         else
         {
             //Selects a random index
-            int iRandomIndex = (int) Math.random()*(iLocationIDs.length-1);
+            int iRandomIndex = (int) Math.random()*(locations.length-1);
 
             //Notifies console of Location selected
-            plugin.getLogger().log(Level.INFO, "LocationID selected as " +iLocationIDs[iRandomIndex] +" for LessonID " +this.iLessonID);
+            plugin.getLogger().log(Level.INFO, "LocationID selected as " +locations[iRandomIndex].getLocationID() +" for LessonID " +this.iLessonID);
 
             creatorOrStudent.player.sendMessage(Display.aquaText("Loading the world for you"));
 
             //Initialises the Lesson's location object with this lesson
-            this.location = new Location(iLocationIDs[iRandomIndex], tutorial.getTutorialID());
+            this.location = locations[iRandomIndex];
 
             return true;
         }
@@ -517,7 +524,8 @@ public class Lesson extends TutorialPlaythrough
         try
         {
             //Compiles the command to fetch the lesson in progress - assumes a player can only have one lesson ongoing at a time
-            sql = "SELECT * FROM `Lessons` WHERE `UUID` = '" +creatorOrStudent.player.getUniqueId() +"' AND `Finished` = 0";
+            sql = "SELECT * FROM `Lessons` JOIN `Locations` ON `Lessons`.LocationID = `Locations`.`LocationID`" +
+                    " WHERE `UUID` = '" +creatorOrStudent.player.getUniqueId() +"' AND `Finished` = 0";
             SQL = plugin.getConnection().createStatement();
 
             //Executes the query and extracts the information into this Lesson and this Lesson's Tutorial object
@@ -544,7 +552,8 @@ public class Lesson extends TutorialPlaythrough
                 creatorOrStudent.player.sendMessage(Display.aquaText("Loading the world for you"));
 
                 //Initialises the location - The Location constructor will fetch the location details as well
-                this.location = new Location(resultSet.getInt("LocationID"), resultSet.getInt("TutorialID"));
+                this.location = new Location(resultSet.getInt("Lessons.LocationID"), resultSet.getInt("TutorialID"), true,
+                        resultSet.getString("LocationName"));
                 return true;
             }
             else

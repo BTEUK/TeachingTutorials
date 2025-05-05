@@ -50,13 +50,6 @@ public abstract class PlaythroughTask
      */
     protected VirtualBlockGroup<Location, BlockData> virtualBlocks;
 
-    /**
-     * Stores whether the task is initialised as part of a new location creation
-     */
-    // This could be accessed via parentGroup but it is used so much within the children of the Task class
-    // that having a separate reference to it significantly improves readability of those classes.
-    protected final boolean bCreatingNewLocation;
-
     //Things in place for the full scoring update
     public float fPerformance;
 //    public float[] fFinalScores = new float[5];
@@ -81,10 +74,11 @@ public abstract class PlaythroughTask
         this.parentGroupPlaythrough = groupPlaythrough;
         this.locationTask = locationTask;
 
-        this.bCreatingNewLocation = false;
-
         //Initiates a new virtual blocks group list
         this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough);
+
+        //Listens out for difficulty when editing a task answer - There will only be one difficulty listener per task to avoid bugs
+        difficultyListener = new DifficultyListener(this.plugin, this.player, this);
     }
 
     /**
@@ -100,8 +94,6 @@ public abstract class PlaythroughTask
         this.player = player;
         this.parentGroupPlaythrough = groupPlaythrough;
         this.locationTask = new LocationTask(task, groupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.getLocationID());
-
-        this.bCreatingNewLocation = true;
 
         //Initiates a new virtual blocks group list
         this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough);
@@ -136,7 +128,8 @@ public abstract class PlaythroughTask
         //Marks the task as not being completable anymore, since it has been completed
         bActive = false;
 
-        if (!parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.bLocationCreation)
+        //Calculates the score
+        if (parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
         {
             //A reference to the parent lesson
             Lesson lesson = (Lesson) parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough;

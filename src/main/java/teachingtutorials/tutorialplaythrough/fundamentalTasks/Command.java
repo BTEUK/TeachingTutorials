@@ -19,6 +19,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -78,21 +79,14 @@ public class Command extends PlaythroughTask implements Listener
             this.szTargetCommandArgs = this.szTargetCommandArgs + commandAnswers[i];
         }
 
-        //Adds a space before the correct command arguments if there is an argument required
-        //This is needed because a command with no argument will have no trailing space, but a command with arguments does have a space after the base command
-        if (!this.szTargetCommandArgs.equals(""))
-        {
-            this.szTargetCommandArgs = " " + szTargetCommandArgs;
-        }
-
         //Uses the details of the command from the DB and determines what action should be taken after completion
         this.actionType = CommandActionType.valueOf(locationTask.szDetails);
 
-        //Makes the calculation of virtual blocks if it is a virtual blocks action command
+        this.tasksInGroup = previousTasks;
+
+        //Adds the virtual block to the list
         if (actionType.equals(CommandActionType.virtualBlocks))
-        {
-            calculateVirtualBlocks(previousTasks);
-        }
+            calculateVirtualBlocks();
     }
 
     /**
@@ -111,7 +105,7 @@ public class Command extends PlaythroughTask implements Listener
         this.actionType = CommandActionType.valueOf(task.szDetails);
 
         //Loads the tasks into a global list for use later
-        tasksInGroup = tasks;
+        this.tasksInGroup = tasks;
     }
 
     /**
@@ -120,13 +114,28 @@ public class Command extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
-        //Output the required command to assist debugging
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                    +". Task: " +this.getLocationTask().iTaskID);
-        else
-            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
-                    +". Command Task: " +this.getLocationTask().iTaskID);
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
+
+        //Log registration and output the required command to assist debugging
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Command Task: " +this.getLocationTask().iTaskID
+                            +". Target command = "+this.szTargetCommand + " " +this.szTargetCommandArgs);
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Editing Command Task: " +this.getLocationTask().iTaskID
+                            +". Original Target command = "+this.szTargetCommand + " " +this.szTargetCommandArgs);
+                break;
+            case CreatingLocation:
+                plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                        +". Command Task: " +this.getLocationTask().iTaskID);
+                break;
+        }
 
         super.register();
 
@@ -151,9 +160,9 @@ public class Command extends PlaythroughTask implements Listener
         //Extracts the command
         String command = event.getMessage();
 
-        //Checks whether we are creating a new location
-        if (bCreatingNewLocation) //Set the answers
-        {
+        //Checks whether we are creating a new location or editing
+        if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        { // Sets the answers/edits the answers
             LocationTask locationTask = getLocationTask();
 
             //Catches the /tutorials command
@@ -173,8 +182,9 @@ public class Command extends PlaythroughTask implements Listener
             //Checks whether there are parameters or just the bare command
             if (command.contains(" "))
             {
-                szTargetCommand = command.substring(1, event.getMessage().indexOf(" "));
-                szTargetCommandArgs = command.replace("/" +szTargetCommand+" ", "");
+                int iIndexSpace = event.getMessage().indexOf(" ");
+                szTargetCommand = command.substring(1, iIndexSpace);
+                szTargetCommandArgs = command.substring(iIndexSpace+1);
             }
             else
             {
@@ -183,6 +193,7 @@ public class Command extends PlaythroughTask implements Listener
             }
 
             String szAnswers = szTargetCommand+","+szTargetCommandArgs;
+            plugin.getLogger().log(Level.INFO, "Thew new command answers (command,args): "+szAnswers);
             locationTask.setAnswers(szAnswers);
 
             //Data is added to database once difficulty is provided
@@ -201,7 +212,7 @@ public class Command extends PlaythroughTask implements Listener
                     break;
                 case virtualBlocks:
                     //Calculates the list of virtual blocks
-                    calculateVirtualBlocks(tasksInGroup);
+                    calculateVirtualBlocks();
 
                     //Displays the virtual blocks
                     displayVirtualBlocks();
@@ -214,10 +225,14 @@ public class Command extends PlaythroughTask implements Listener
             }
         }
 
-        //Not a new location - a lesson playthrough
+        //Not a new location or editing - a lesson playthrough
         else if (command.startsWith("/"+szTargetCommand))
         {
-            command = command.replace(("/"+szTargetCommand), "");
+            if (command.contains(" "))
+                command = command.replace(("/"+szTargetCommand+" "), "");
+            else
+                command = command.replace(("/"+szTargetCommand), "");
+
             if (command.equals(szTargetCommandArgs))
             {
                 Display.ActionBar(player, Display.colouredText("Correct command", NamedTextColor.DARK_GREEN));
@@ -292,10 +307,12 @@ public class Command extends PlaythroughTask implements Listener
 
     /**
      * Calculates the list of virtual blocks to be displayed upon completion of this command
-     * @param tasks A list of tasks within the parent group, which should contain a selection task
      */
-    private void calculateVirtualBlocks(ArrayList<PlaythroughTask> tasks)
+    protected void calculateVirtualBlocks()
     {
+        //Reset the virtual blocks list
+        virtualBlocks.clear();
+
         // For now, this only works for cuboid selections, but more selection mechanics will be made available in the future)
 
         int iOrder = super.getLocationTask().iOrder;
@@ -308,7 +325,7 @@ public class Command extends PlaythroughTask implements Listener
             //Sets the action type to none - adds no virtual blocks to the list
             this.actionType = teachingtutorials.tutorialplaythrough.fundamentalTasks.CommandActionType.none;
         }
-        else if (!(tasks.get(iOrder - 2) instanceof Selection selection)) //Checks whether the previous task was a selection task
+        else if (!(tasksInGroup.get(iOrder - 2) instanceof Selection selection)) //Checks whether the previous task was a selection task
         {
             plugin.getLogger().log(Level.WARNING, ChatColor.RED +"There was no previous selection task before the virtual blocks command task, changing to a no action command task");
 

@@ -10,12 +10,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
@@ -52,8 +52,8 @@ public class Place extends PlaythroughTask implements Listener
         //Extracts the material
         mTargetMaterial = Material.getMaterial(szCoordinates3AndMaterial[3]);
 
-        //Adds the virtual block
-        addVirtualBlock();
+        //Adds the virtual block to the list
+        calculateVirtualBlocks();
     }
 
     /**
@@ -74,14 +74,29 @@ public class Place extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
+
         //Output the required block and location to assist debugging
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
-            plugin.getLogger().log(Level.INFO, "Lesson: "+((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
-        else
-            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
-                    +". Place Task: " +this.getLocationTask().iTaskID);
+        //Calculate virtual blocks for Lesson mode
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Place Task: " +this.getLocationTask().iTaskID
+                            +". Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Editing Place Task: " +this.getLocationTask().iTaskID
+                            +". Original Target block = "+this.mTargetMaterial +" at ("+iTargetCoords[0]+","+iTargetCoords[1]+","+iTargetCoords[2]+")");
+                break;
+            case CreatingLocation:
+                plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                        +". Place Task: " +this.getLocationTask().iTaskID);
+                break;
+        }
 
         super.register();
 
@@ -132,9 +147,9 @@ public class Place extends PlaythroughTask implements Listener
         int iBlockY = newBlockLocation.getBlockY();
         int iBlockZ = newBlockLocation.getBlockZ();
 
-        //Checks whether it is a new location
-        if (bCreatingNewLocation)
-        {
+        //Checks whether it is a new location or editing
+        if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        { //Edits or sets the answers
             //Store the material
             mTargetMaterial = newBlockMaterial;
 
@@ -157,7 +172,7 @@ public class Place extends PlaythroughTask implements Listener
             //This is what moves it onto the next task
 
             //Adds the virtual block to the list
-            addVirtualBlock();
+            calculateVirtualBlocks();
 
             //Displays the virtual blocks
             displayVirtualBlocks();
@@ -248,8 +263,9 @@ public class Place extends PlaythroughTask implements Listener
     /**
      * Uses the target coordinates and target material to calculate the virtual block, and adds this to the list
      */
-    public void addVirtualBlock()
+    public void calculateVirtualBlocks()
     {
+        this.virtualBlocks.clear();
         Location location = new Location(this.parentGroupPlaythrough.getParentStep().getParentStage().getLocation().getWorld(), iTargetCoords[0], iTargetCoords[1], iTargetCoords[2]);
         this.virtualBlocks.put(location, mTargetMaterial.createBlockData());
     }

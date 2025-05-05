@@ -24,7 +24,7 @@ public class Tutorial
     private final int iTutorialID;
 
     /** The name of the tutorial */
-    private final String szTutorialName;
+    private String szTutorialName;
 
     /** The UUID of the author of the tutorial */
     private final UUID authorUUID;
@@ -254,7 +254,7 @@ public class Tutorial
         for (i = 0 ; i < iNumInUseTutorials ; i++)
         {
             //Determines whether tutorial i has any locations
-            tutorialHasLocation[i] = (Location.getAllLocationIDsForTutorial(allInUseTutorials[i].getTutorialID(), dbConnection, logger).length != 0);
+            tutorialHasLocation[i] = Location.getAreThereInUseLocationsForTutorial(allInUseTutorials[i].getTutorialID(), dbConnection, logger);
 
             if (tutorialHasLocation[i])
             {
@@ -325,7 +325,7 @@ public class Tutorial
             }
             else
             {
-                logger.log(Level.INFO, "Could not find a Tutorial with an ID of " +iTutorialID);
+                logger.log(Level.WARNING, "Error fetching by TutorialID: Could not find a Tutorial with an ID of " +iTutorialID);
                 return null;
             }
         }
@@ -428,7 +428,7 @@ public class Tutorial
     /**
      * Sets all tutorials as not compulsory in the DB
      */
-    private static void setAllTutorialsNotCompulsory (TeachingTutorials plugin)
+    private static void setAllTutorialsNotCompulsory(TeachingTutorials plugin)
     {
         //Declare variables
         String szSql;
@@ -452,7 +452,7 @@ public class Tutorial
 
     /**
      * Changes the boolean value of whether this tutorial is "in-use" or not in the DB. Negates the current value.
-     * @return Whether or not it was changed succesfully
+     * @return Whether it was changed successfully
      */
     public boolean toggleInUse(TeachingTutorials plugin)
     {
@@ -468,7 +468,7 @@ public class Tutorial
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 0 WHERE `TutorialID` = "+ this.iTutorialID;
             }
-            else if (Location.getAllLocationIDsForTutorial(this.iTutorialID, plugin.getDBConnection(), plugin.getLogger()).length > 0)
+            else if (Location.getAreThereInUseLocationsForTutorial(this.iTutorialID, plugin.getDBConnection(), plugin.getLogger()))
             {
                 szSql = "UPDATE `Tutorials` SET `InUse` = 1 WHERE `TutorialID` = "+ this.iTutorialID;
             }
@@ -490,6 +490,41 @@ public class Tutorial
         catch (Exception e)
         {
             plugin.getLogger().log(Level.SEVERE, "SQL - Non-SQL error toggling the in use status", e);
+        }
+        return true;
+    }
+
+    /**
+     * Updates the name of this tutorial in the DB
+     * @return whether the update was made successfully
+     */
+    public boolean updateName(DBConnection dbConnection, Logger logger, String szNewName)
+    {
+        //Declare variables
+        String szSql;
+        Statement SQL;
+
+        try
+        {
+            //Updates the database
+            SQL = dbConnection.getConnection().createStatement();
+            szSql = "UPDATE `Tutorials` SET `TutorialName` = '"+szNewName +"' WHERE `TutorialID` = "+ this.iTutorialID;
+
+            //Updates the database
+            SQL.executeUpdate(szSql);
+
+            //Updates the value of the name stored in memory
+            this.szTutorialName = szNewName;
+        }
+        catch (SQLException se)
+        {
+            logger.log(Level.SEVERE, "SQL - SQL error updating tutorial name", se);
+            return false;
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "SQL - Non-SQL error updating tutorial name", e);
+            return false;
         }
         return true;
     }

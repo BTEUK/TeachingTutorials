@@ -14,6 +14,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -87,35 +88,50 @@ public class Tpll extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
-        //Output the required tpll coordinates to assist debugging
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
-            );
-        else
-            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
-                    +". Tpll Task: " +this.getLocationTask().iTaskID);
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
+
+        //Output the required tpll coordinates to assist debugging and display the maker on the world if approriate
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Tpll Task: " +this.getLocationTask().iTaskID
+                            +". Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
+                    );
+
+                //Displays the marker on the world
+                World world = this.parentGroupPlaythrough.getParentStep().getParentStage().getLocation().getWorld();
+
+                iMarkerTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+                    @Override
+                    public void run()
+                    {
+                        if (bActive)
+                            player.spawnParticle(Particle.REDSTONE, GeometricUtils.convertToBukkitLocation(world, dTargetCoords[0], dTargetCoords[1]).add(0, 1, 0), 10, new Particle.DustOptions(Color.GREEN, 3));
+                        else
+                        {
+                            //We cancel the schedule so it shouldn't reach this too much
+                        }
+                    }
+                }, 0L, 15L);
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Tpll Task: " +this.getLocationTask().iTaskID
+                            +". Original Target tpll = ("+dTargetCoords[0]+","+dTargetCoords[1]+")"
+                    );
+                break;
+            case CreatingLocation:
+                plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                        +". Tpll Task: " +this.getLocationTask().iTaskID);
+                break;
+        }
 
         super.register();
 
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
-
-        //Displays the marker on the world
-        World world = this.parentGroupPlaythrough.getParentStep().getParentStage().getLocation().getWorld();
-
-        iMarkerTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-            @Override
-            public void run()
-            {
-                if (bActive)
-                    player.spawnParticle(Particle.REDSTONE, GeometricUtils.convertToBukkitLocation(world, dTargetCoords[0], dTargetCoords[1]).add(0, 1, 0), 10, new Particle.DustOptions(Color.GREEN, 3));
-                else
-                {
-                    //We cancel the schedule so it shouldn't reach this too much
-                }
-            }
-        }, 0L, 15L);
     }
 
     /**
@@ -159,10 +175,10 @@ public class Tpll extends PlaythroughTask implements Listener
                 if (!GeometricUtils.tpllPlayer(world, latLong.getLat(), latLong.getLng(), player))
                     return; //Returns if the tpll was not in the bounds of the earth
 
-                //Checks whether it is a new location
-                if (bCreatingNewLocation)
+                //Checks whether it is a new location or editing
+                if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
                 {
-                    //Set the answers
+                    //Set or edits the answers
                     LocationTask locationTask = this.getLocationTask();
                     locationTask.setAnswers(latLong.getLat()+","+latLong.getLng());
 
@@ -227,8 +243,9 @@ public class Tpll extends PlaythroughTask implements Listener
         //Unregisters this task
         HandlerList.unregisterAll(this);
 
-        //Cancels the schedule
-        Bukkit.getScheduler().cancelTask(iMarkerTaskID);
+        //Cancels the marker schedule
+        if (iMarkerTaskID != 0)
+            Bukkit.getScheduler().cancelTask(iMarkerTaskID);
 
         //Marks the task as complete
         taskComplete();
@@ -242,8 +259,9 @@ public class Tpll extends PlaythroughTask implements Listener
     {
         super.deactivate();
 
-        //Cancels the schedule
-        Bukkit.getScheduler().cancelTask(iMarkerTaskID);
+        //Cancels the marker schedule
+        if (iMarkerTaskID != 0)
+            Bukkit.getScheduler().cancelTask(iMarkerTaskID);
 
         //Unregisters this task
         HandlerList.unregisterAll(this);

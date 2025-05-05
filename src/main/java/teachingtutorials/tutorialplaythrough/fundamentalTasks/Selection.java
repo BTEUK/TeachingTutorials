@@ -19,6 +19,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
+import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
@@ -98,16 +99,32 @@ public class Selection extends PlaythroughTask implements Listener
     @Override
     public void register()
     {
-        //Output the required selection point coordinates to assist debugging
-        if (!this.parentGroupPlaythrough.getParentStep().getParentStage().bLocationCreation)
-            plugin.getLogger().log(Level.INFO, "Lesson: " +((Lesson) this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough()).getLessonID()
-                +". Task: " +this.getLocationTask().iTaskID
-                +". Target point 1 (lat, long, height) = ("+dTargetCoords1[0]+","+dTargetCoords1[1]+","+dTargetCoords1[2]+")"
-                +". Target point 2 (lat, long, height) = ("+dTargetCoords2[0]+","+dTargetCoords2[1]+","+dTargetCoords2[2]+")"
-            );
-        else
-            plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
-                    +". Selection Task: " +this.getLocationTask().iTaskID);
+        PlaythroughMode currentMode = this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode();
+
+        //Output the required selection locations to assist debugging
+        switch (currentMode)
+        {
+            case PlayingLesson:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Selection Task: " +this.getLocationTask().iTaskID
+                            +". Target point 1 (lat, long, height) = ("+dTargetCoords1[0]+","+dTargetCoords1[1]+","+dTargetCoords1[2]+")"
+                            +". Target point 2 (lat, long, height) = ("+dTargetCoords2[0]+","+dTargetCoords2[1]+","+dTargetCoords2[2]+")"
+                    );
+                break;
+            case EditingLocation:
+                if (this.parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough() instanceof Lesson lesson)
+                    plugin.getLogger().log(Level.INFO, "Lesson: " +lesson.getLessonID()
+                            +". Editing Selection Task: " +this.getLocationTask().iTaskID
+                            +". Original Target point 1 (lat, long, height) = ("+dTargetCoords1[0]+","+dTargetCoords1[1]+","+dTargetCoords1[2]+")"
+                            +". Original Target point 2 (lat, long, height) = ("+dTargetCoords2[0]+","+dTargetCoords2[1]+","+dTargetCoords2[2]+")"
+                    );
+                break;
+            case CreatingLocation:
+                plugin.getLogger().log(Level.INFO, "New Location being made by :"+player.getName()
+                        +". Selection Task: " +this.getLocationTask().iTaskID);
+                break;
+        }
 
         //Prepares the selection task - sets the starting state
         bSelection1Made = bSelection2Made = false;
@@ -143,9 +160,9 @@ public class Selection extends PlaythroughTask implements Listener
             return;
         }
 
-        //Checks whether it is a new location
-        if (bCreatingNewLocation)
-        {
+        //Checks whether it is a new location or editing
+        if (!parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.PlayingLesson))
+        { // Edits or sets answers
             //Checks whether it is a left click or right click and stores the coordinates
             if (event.getAction().equals(Action.LEFT_CLICK_BLOCK))
             {
@@ -153,6 +170,8 @@ public class Selection extends PlaythroughTask implements Listener
                 dTargetCoords1[0] = longLatOfSelectedBlock[1];
                 dTargetCoords1[1] = longLatOfSelectedBlock[0];
                 dTargetCoords1[2] = event.getClickedBlock().getY();
+
+                Display.ActionBar(player, Display.colouredText("Position 1 selected", NamedTextColor.GREEN));
             }
             else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK))
             {
@@ -160,6 +179,8 @@ public class Selection extends PlaythroughTask implements Listener
                 dTargetCoords2[0] = longLatOfSelectedBlock[1];
                 dTargetCoords2[1] = longLatOfSelectedBlock[0];
                 dTargetCoords2[2] = event.getClickedBlock().getY();
+
+                Display.ActionBar(player, Display.colouredText("Position 2 selected", NamedTextColor.GREEN));
             }
             else
             {

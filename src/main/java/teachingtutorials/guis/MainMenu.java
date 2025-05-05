@@ -7,12 +7,10 @@ import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialobjects.Tutorial;
-import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The main menu of the TeachingTutorials system from which all functions can be accessed
@@ -56,8 +54,6 @@ public class MainMenu extends Gui
 
         //Initiates the next tutorial object - decides the next tutorial
         Tutorial nextTutorial = Lesson.decideTutorial(user, plugin.getDBConnection(), plugin.getLogger());
-        if (nextTutorial == null)
-            return;
 
         //Gets a reference to the config
         FileConfiguration config = plugin.getConfig();
@@ -73,7 +69,7 @@ public class MainMenu extends Gui
             iCompulsoryTutorialID = compulsoryTutorials[0].getTutorialID();
 
         //'Continue' menu button
-        ItemStack continueLearning_CompulsoryComplete;
+        ItemStack continueLearning_CompulsoryComplete = null;
         if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
         {
             //Get current tutorial ID and sets up the tutorial object from this
@@ -86,7 +82,7 @@ public class MainMenu extends Gui
                     TutorialGUIUtils.optionTitle("Resume Your Lesson"),
                     TutorialGUIUtils.optionLore(currentTutorial.getTutorialName()));
         }
-        else
+        else if (nextTutorial != null)
         {
             //Sets up the menu icon with the new tutorial's name
             continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
@@ -204,20 +200,23 @@ public class MainMenu extends Gui
                     tutorialForContinue = nextTutorial;
 
                 //----- Continue Learning Option -----
-                super.setItem(17 - 1, continueLearning_CompulsoryComplete, new guiAction() {
-                    @Override
-                    public void rightClick(User u)
-                    {
-                        leftClick(u);
-                    }
-                    @Override
-                    public void leftClick(User u)
-                    {
-                        if (performEvent(EventType.CONTINUE, u, plugin, tutorialForContinue))
-                            //Deletes this gui
-                            delete();
-                    }
-                });
+                if (tutorialForContinue != null)
+                {
+                    super.setItem(17 - 1, continueLearning_CompulsoryComplete, new guiAction() {
+                        @Override
+                        public void rightClick(User u)
+                        {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u)
+                        {
+                            if (performEvent(EventType.CONTINUE, u, plugin, tutorialForContinue))
+                                //Deletes this gui
+                                delete();
+                        }
+                    });
+                }
             }
 
             // They have not completed the compulsory tutorial
@@ -322,7 +321,8 @@ public class MainMenu extends Gui
                 tutorialForContinue = nextTutorial;
 
             //Continue learning, compulsory complete
-            super.setItem(16 - 1, continueLearning_CompulsoryComplete, new guiAction() {
+            if (tutorialForContinue != null)
+                super.setItem(16 - 1, continueLearning_CompulsoryComplete, new guiAction() {
                 @Override
                 public void rightClick(User u)
                 {

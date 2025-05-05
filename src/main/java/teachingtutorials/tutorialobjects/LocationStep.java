@@ -57,13 +57,20 @@ public class LocationStep
     /** Whether or not the hologram location has been set yet - when creating a new location */
     private boolean bHologramLocationSet;
 
+    /** Whether or not the Location step is already saved
+     * <p></p>
+     * This is used to determine whether to edit or update the location step
+     */
+    private boolean bIsSaved;
+
     /**
      * Creates the location step from the Location and Step
      * @param location A reference to the location of this LocationStep
      * @param step A reference to the step of this LocationStep
      */
-    public LocationStep(Location location, Step step)
+    public LocationStep(Location location, Step step, boolean bIsSaved)
     {
+        this.bIsSaved = bIsSaved;
         this.location = location;
         this.step = step;
         this.szInstructions = "";
@@ -100,18 +107,38 @@ public class LocationStep
     }
 
     /**
+     *
+     * @return A copy of the video link
+     */
+    public String getVideoWalkthroughLink()
+    {
+        return this.szVideoWalkthroughLink;
+    }
+
+
+    /**
      * Checks whether all of the extra information is set - the start location, the instructions and the
      * hologram instructions
-     * @return Whether all of the extra information is set
+     * @return Whether all of the extra information is set for a LocationStep in a NewLocation context
      */
     public boolean isOtherInformationSet(Logger logger)
     {
         boolean bAllExtraInformationIsSet = (bLocationSet && bInstructionsSet) && bHologramLocationSet;
         if (bAllExtraInformationIsSet)
             logger.log(Level.INFO, "All extra information is set");
-
         return bAllExtraInformationIsSet;
     }
+
+    public boolean isLocationSet()
+    {
+        return bLocationSet;
+    }
+
+    public boolean isHologramLocationSet()
+    {
+        return bHologramLocationSet;
+    }
+
 
     //------------------------------------------------
     //--------------------Database--------------------
@@ -125,7 +152,7 @@ public class LocationStep
      */
     public static LocationStep getFromStepAndLocation(Location location, Step step)
     {
-        LocationStep locationStep = new LocationStep(location, step);
+        LocationStep locationStep = new LocationStep(location, step, true);
 
         String sql;
         Statement SQL = null;
@@ -172,13 +199,16 @@ public class LocationStep
      */
     public boolean storeDetailsInDB(TeachingTutorials plugin)
     {
+        //Diverts to the update
+        if (bIsSaved)
+            return updateDetailsInDB(plugin);
+
         //Sanitise the instructions
         String szNewInstructions = szInstructions.replace("\\'", "'");
         szNewInstructions = szNewInstructions.replace("'", "\\'");
 
         String sql;
         Statement SQL = null;
-        ResultSet resultSet = null;
 
         int iCount;
 
@@ -200,6 +230,7 @@ public class LocationStep
                     +")";
             iCount = SQL.executeUpdate(sql);
 
+            this.bIsSaved = true;
             return iCount == 1;
         }
         catch (SQLException se)
@@ -210,6 +241,58 @@ public class LocationStep
         catch (Exception e)
         {
             plugin.getLogger().log(Level.SEVERE, "SQL - Non-Sql error adding new location step", e);
+            return false;
+        }
+    }
+
+    /**
+     * Updates the details in the database with the information in this object
+     * @param plugin A reference to the instance of the TeachingTutorials plugin - used for accessing the DB and the
+     *               logger
+     * @return Whether the database update was successful
+     */
+    private boolean updateDetailsInDB(TeachingTutorials plugin)
+    {
+        //Diverts to the add
+        if (!bIsSaved)
+            return storeDetailsInDB(plugin);
+
+        //Sanitise the instructions
+        String szNewInstructions = szInstructions.replace("\\'", "'");
+        szNewInstructions = szNewInstructions.replace("'", "\\'");
+
+        String sql;
+        Statement SQL = null;
+
+        int iCount;
+
+        try
+        {
+            SQL = plugin.getConnection().createStatement();
+
+            sql = "UPDATE `LocationSteps` SET `Latitude` = "+dStartLatitude
+                    + ", `Longitude` = " +dStartLongitude
+                    + ", `StartYaw` = " +fStartYaw
+                    + ", `StartPitch` = " +fStartPitch
+                    + ", `Instructions` = '" +szNewInstructions+"'"
+                    + ", `InstructionsX` = " +dHologramLocationX
+                    + ", `InstructionsY` = " +dHologramLocationY
+                    + ", `InstructionsZ` = " +dHologramLocationZ
+                    + ", `VideoWalkthroughLink` = '" +szVideoWalkthroughLink+"'"
+            +" WHERE Location = "+this.location.getLocationID() +" AND Step = "+this.step.getStepID()+";";
+
+            iCount = SQL.executeUpdate(sql);
+
+            return iCount == 1;
+        }
+        catch (SQLException se)
+        {
+            plugin.getLogger().log(Level.SEVERE, "SQL - SQL Error updating new location step", se);
+            return false;
+        }
+        catch (Exception e)
+        {
+            plugin.getLogger().log(Level.SEVERE, "SQL - Non-Sql error updating new location step", e);
             return false;
         }
     }
@@ -260,10 +343,9 @@ public class LocationStep
 
             bLocationSet = true;
         }
-        else
-        {
 
-        }
+        if (bIsSaved)
+            updateDetailsInDB(TeachingTutorials.getInstance());
     }
 
     /**
@@ -302,6 +384,9 @@ public class LocationStep
         stepPlaythrough.displayInstructions(Display.DisplayType.hologram, player, szStepName, player.getWorld());
 
         this.bHologramLocationSet = true;
+
+        if (bIsSaved)
+            updateDetailsInDB(TeachingTutorials.getInstance());
     }
 
     /**
@@ -334,6 +419,9 @@ public class LocationStep
         //Instructions may be blank at this point, but this is fine and is displayed blank on the hologram
 
         this.bInstructionsSet = true;
+
+        if (bIsSaved)
+            updateDetailsInDB(TeachingTutorials.getInstance());
     }
 
     /**

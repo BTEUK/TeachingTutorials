@@ -108,6 +108,10 @@ public class WorldEdit
         {
             szCommandLabel = szCommandLabel.substring(plSep + 1);
         }
+        if (szCommandArgs.length > 0)
+        {
+            szCommandLabel = szCommandLabel+" ";
+        }
         StringBuilder sb = new StringBuilder(szCommandLabel);
         String szWorldEditCommand = Joiner.on(" ").appendTo(sb, szCommandArgs).toString();
 

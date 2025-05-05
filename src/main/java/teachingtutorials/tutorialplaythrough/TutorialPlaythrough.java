@@ -43,6 +43,25 @@ public abstract class TutorialPlaythrough
     /** The index (0 indexed) of the stage to start next. Therefore also equals the stage currently on if 1 indexed */
     protected int iStageIndex;
 
+    /**
+     * The highest step that has been fully completed as part of this lesson. (1 index).
+     * <p> </p>
+     * In combination with the highest stage completed variable, this is used to determine the step which
+     * a player can wind forwards to.
+     */
+    protected int iHighestStepCompleted;
+
+    /**
+     * The highest stage that has been fully completed as part of this lesson. (1 index).
+     * <p> </p>
+     * In combination with the highest step completed variable, this is used to determine the stage which
+     * a player can wind forwards to.
+     */
+    protected int iHighestStageCompleted;
+
+    /** The current mode which the playthrough is in */
+    private PlaythroughMode currentPlaythroughMode;
+
     /** The listener listening out for if a player falls into the void */
     protected Falling fallListener;
 
@@ -62,11 +81,12 @@ public abstract class TutorialPlaythrough
      * @param creatorOrStudent A reference to the user who is to do this playthrough
      * @param tutorial A reference to the tutorial of which this is a playthrough
      */
-    public TutorialPlaythrough(TeachingTutorials plugin, User creatorOrStudent, Tutorial tutorial)
+    public TutorialPlaythrough(TeachingTutorials plugin, User creatorOrStudent, Tutorial tutorial, PlaythroughMode playthroughMode)
     {
         this.plugin = plugin;
         this.creatorOrStudent = creatorOrStudent;
         this.tutorial = tutorial;
+        this.currentPlaythroughMode = playthroughMode;
 
         //Fetches a list of stage playthroughs for this lesson and puts that list into the main list
         this.stagePlaythroughs = StagePlaythrough.fetchStagesByTutorialIDForPlaythrough(this.getCreatorOrStudent().player, plugin, this);
@@ -100,6 +120,74 @@ public abstract class TutorialPlaythrough
     public User getCreatorOrStudent()
     {
         return creatorOrStudent;
+    }
+
+    public PlaythroughMode getCurrentPlaythroughMode()
+    {
+        return currentPlaythroughMode;
+    }
+
+    public boolean setCurrentPlaythroughMode(PlaythroughMode playthroughMode)
+    {
+        //Checks to see if current player is the creator of the tutorial they are playing
+        if (!creatorOrStudent.player.getUniqueId().equals(tutorial.getUUIDOfAuthor()))
+        {
+            return false;
+        }
+
+        //Block changes during location creation
+        if (currentPlaythroughMode.equals(PlaythroughMode.CreatingLocation))
+            return false;
+
+        //Check to see if the mode is actually to be changed
+        if (!currentPlaythroughMode.equals(playthroughMode))
+        {
+            //Update the mode
+            this.currentPlaythroughMode = playthroughMode;
+
+            //Perform any necessary actions to adjust gameplay
+            try
+            {
+                currentStagePlaythrough.currentStepPlaythrough.switchPlaythroughMode();
+
+                //Take the location edit menu away from the user and refresh the navigation menu
+                if (playthroughMode.equals(PlaythroughMode.PlayingLesson))
+                {
+                    this.navigationMenu.refresh();
+                    this.creatorOrStudent.mainGui = this.navigationMenu;
+                }
+
+                //That's all kinda global stuff though. No actual step editor menu changes
+
+                return true;
+            }
+            catch (NullPointerException e)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public void openNavigationMenu()
+    {
+        this.navigationMenu.refresh();
+        this.creatorOrStudent.mainGui = this.navigationMenu;
+        this.creatorOrStudent.mainGui.open(creatorOrStudent);
+    }
+
+    public void openStepEditorMenu()
+    {
+        //Checks to see if current player is the creator of the tutorial they are playing
+        if (!creatorOrStudent.player.getUniqueId().equals(tutorial.getUUIDOfAuthor()))
+        {
+            return;
+        }
+        this.creatorOrStudent.mainGui = this.currentStagePlaythrough.currentStepPlaythrough.getEditorMenu();
+        this.creatorOrStudent.mainGui.open(creatorOrStudent);
     }
 
     /**
@@ -286,35 +374,34 @@ public abstract class TutorialPlaythrough
      */
     public void previousStage()
     {
-        if (this instanceof Lesson lesson)
+        //Checks if the stage has progress
+        if (currentStagePlaythrough.inProgress()) //Has progress
         {
-            //Checks if the stage has progress
-            if (currentStagePlaythrough.inProgress()) //Has progress
+            //If in progress, attempt to reset to the start of the stage
+            currentStagePlaythrough.terminateEarly();
+            currentStagePlaythrough.startStage(1, false);
+
+            //Save the positions if moved
+            if (this instanceof Lesson lesson)
+                lesson.savePositions();
+        }
+
+        else //Has no progress - attempt move to previous stage
+        {
+            //Only move to start of previous stage if there is one
+            if (iStageIndex > 1)
             {
-                //If in progress, attempt to reset to the start of the stage
+                //Terminate and start previous stage from start
+                currentStagePlaythrough.terminateEarly();
+                iStageIndex--;
+                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex - 1);
+                //Reset the stage
                 currentStagePlaythrough.terminateEarly();
                 currentStagePlaythrough.startStage(1, false);
 
                 //Save the positions if moved
-                lesson.savePositions();
-            }
-
-            else //Has no progress - attempt move to previous stage
-            {
-                //Only move to start of previous stage if there is one
-                if (iStageIndex > 1)
-                {
-                    //Terminate and start previous stage from start
-                    currentStagePlaythrough.terminateEarly();
-                    iStageIndex--;
-                    currentStagePlaythrough = stagePlaythroughs.get(iStageIndex - 1);
-                    //Reset the stage
-                    currentStagePlaythrough.terminateEarly();
-                    currentStagePlaythrough.startStage(1, false);
-
-                    //Save the positions if moved
+                if (this instanceof Lesson lesson)
                     lesson.savePositions();
-                }
             }
         }
     }
@@ -324,30 +411,28 @@ public abstract class TutorialPlaythrough
      */
     public void previousStageStepBack()
     {
-        if (this instanceof Lesson lesson)
+        //Checks that there is a previous stage
+        if (iStageIndex > 1)
         {
-            //Checks that there is a previous stage
-            if (iStageIndex > 1)
-            {
-                //Close the current stage
-                currentStagePlaythrough.terminateEarly(); //This should already be called but we call again
+            //Close the current stage
+            currentStagePlaythrough.terminateEarly(); //This should already be called but we call again
 
-                //Move to the previous stage
-                iStageIndex--;
-                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex-1);
+            //Move to the previous stage
+            iStageIndex--;
+            currentStagePlaythrough = stagePlaythroughs.get(iStageIndex-1);
 
-                //Reset the new stage
-                currentStagePlaythrough.terminateEarly();
+            //Reset the new stage
+            currentStagePlaythrough.terminateEarly();
 
-                //Displays all virtual blocks but the last step
-                currentStagePlaythrough.displayAllVirtualBlocks(currentStagePlaythrough.getStage().steps.size() - 1);
+            //Displays all virtual blocks but the last step
+            currentStagePlaythrough.displayAllVirtualBlocks(currentStagePlaythrough.getStage().steps.size() - 1);
 
-                //Starts the stage on the largest step
-                currentStagePlaythrough.startStage(Integer.MAX_VALUE, false);
+            //Starts the stage on the largest step
+            currentStagePlaythrough.startStage(Integer.MAX_VALUE, false);
 
-                //Save the positions if moved
+            //Save the positions if moved
+            if (this instanceof Lesson lesson)
                 lesson.savePositions();
-            }
         }
     }
 
@@ -356,24 +441,22 @@ public abstract class TutorialPlaythrough
      */
     public void skipStage()
     {
-        if (this instanceof Lesson lesson)
+        //If they have already completed this stage or one above it, attempt to move them on
+        if (iStageIndex <= iHighestStageCompleted)
         {
-            //If they have already completed this stage or one above it, attempt to move them on
-            if (iStageIndex <= lesson.iHighestStageCompleted)
+            //Only move them on if there is a higher stage
+            if (iStageIndex < stagePlaythroughs.size())
             {
-                //Only move them on if there is a higher stage
-                if (iStageIndex < stagePlaythroughs.size())
-                {
-                    //Terminate and start next stage from start
-                    currentStagePlaythrough.terminateEarly();
-                    currentStagePlaythrough.displayAllVirtualBlocks(-1);
-                    currentStagePlaythrough = stagePlaythroughs.get(iStageIndex);
-                    iStageIndex++;
-                    currentStagePlaythrough.startStage(1, false);
+                //Terminate and start next stage from start
+                currentStagePlaythrough.terminateEarly();
+                currentStagePlaythrough.displayAllVirtualBlocks(-1);
+                currentStagePlaythrough = stagePlaythroughs.get(iStageIndex);
+                iStageIndex++;
+                currentStagePlaythrough.startStage(1, false);
 
-                    //Save the positions if moved
+                //Save the positions if moved
+                if (this instanceof Lesson lesson)
                     lesson.savePositions();
-                }
             }
         }
     }
@@ -405,7 +488,7 @@ public abstract class TutorialPlaythrough
      */
     public boolean canMoveBackStage()
     {
-        if (this instanceof Lesson lesson && currentStagePlaythrough != null)
+        if (currentStagePlaythrough != null)
             return currentStagePlaythrough.inProgress() || iStageIndex > 1;
         return false;
     }
@@ -416,9 +499,7 @@ public abstract class TutorialPlaythrough
      */
     public boolean canMoveForwardsStage()
     {
-        if (this instanceof Lesson lesson)
-            return (iStageIndex <= lesson.iHighestStageCompleted && iStageIndex < stagePlaythroughs.size());
-        return false;
+        return (iStageIndex <= iHighestStageCompleted && iStageIndex < stagePlaythroughs.size());
     }
 
     /**

@@ -18,7 +18,7 @@ public abstract class Gui implements GuiInterface {
 
     //Information about the gui.
     private final UUID uuid;
-    private final Inventory inv;
+    private Inventory inv;
     private final Map<Integer, guiAction> actions;
 
     public Gui(int invSize, Component invName) {
@@ -81,6 +81,30 @@ public abstract class Gui implements GuiInterface {
         u.player.openInventory(inv);
         openInventories.put(u.player.getUniqueId(), getUuid());
 
+    }
+
+    /**
+     * Creates a new inventory with the new name, copies the inventory items from the old inventory to the new inventory,
+     * then opens the new inventory.
+     * @param newName The new name for the menu
+     */
+    public void editName(Component newName, User user)
+    {
+        //Create new inventory with new name
+        Inventory newInventory = Bukkit.createInventory(null, inv.getSize(), newName);
+
+        //Copy old inventory items to new inventory
+        int iSize = inv.getSize();
+        for (int i = 0 ; i < iSize ; i++)
+        {
+            newInventory.setItem(i, inv.getItem(i));
+        }
+
+        //Set the inventory of this GUI to the new inventory
+        inv = newInventory;
+
+        //Reopen the gui
+        this.open(user);
     }
 
     public void delete() {

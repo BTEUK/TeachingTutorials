@@ -40,120 +40,51 @@ public class CreatorTutorialsMenu extends Gui
      */
     public CreatorTutorialsMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
     {
-        //Sets up the menu with the icons already in place
-        super(getGUI(tutorials));
+        super(calculateNumRows(tutorials.length)*9, inventoryName);
         this.plugin = plugin;
         this.user = user;
         this.tutorials = tutorials;
 
-        //Adds the click actions
-        setActions();
+        //Adds the items
+        addItems();
     }
 
     /**
-     * Creates an inventory design for the current status of a creator's tutorials
-     * @param allTutorials A list of tutorials to include in the menu
-     * @return An inventory filled with icons, informing the user of the current state of their tutorials, including which
-     * ones are in use
+     * Populates the menu with icons and actions
      */
-    private static Inventory getGUI (Tutorial[] allTutorials)
+    private void addItems()
     {
-        //Declare variables
-        int i;
-        int iTutorials;
-        int iDiv;
-        int iMod;
-        int iRows;
+        //Indicates that the creator has no tutorials
+        if (tutorials.length == 0)
+            setItem(5-1, Utils.createItem(Material.BARRIER, 1, TutorialGUIUtils.optionTitle("You have no tutorials")));
 
-        Inventory inventory;
-
-        //Works out how many rows in the inventory are needed
-        iTutorials = allTutorials.length;
-        iDiv = iTutorials/9;
-        iMod = iTutorials%9;
-
-        if (iMod != 0 || iDiv == 0)
+        //Adds the tutorial icons
+        int iNumTutorials = tutorials.length;
+        if (iNumTutorials > 45)
+            iNumTutorials = 45;
+        for (int i = 0 ; i < iNumTutorials ; i++)
         {
-            iDiv = iDiv + 1;
-        }
+            int finalI = i;
+            setItem(i, Utils.createItem(Material.WRITTEN_BOOK, 1,
+                            TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()),
+                            TutorialGUIUtils.optionLore("Click to manage Tutorial")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
 
-        //Enables an empty row and then a row for the back button
-        iRows = iDiv+2;
-
-        //------------------------------
-
-        //Create inventories
-        inventory = Bukkit.createInventory(null, iRows * 9);
-        inventory.clear();
-
-        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventoryName);
-
-        //Inv slot 0 = the first one
-
-        //Indicates that the creator has no tutorials if they don't own any
-        if (allTutorials.length == 0)
-        {
-            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1, TutorialGUIUtils.optionTitle("You have no tutorials"));
-            inventory.setItem(5-1, noTutorials);
+                        @Override
+                        public void leftClick(User u) {
+                            u.mainGui = new TutorialManageMenu(plugin, user, tutorials[finalI], CreatorTutorialsMenu.this);
+                            u.mainGui.open(u);
+                        }
+                    });
         }
 
         //Adds back button
         ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.backButton("Back to creator menu"));
-        inventory.setItem((iRows * 9)-1, back);
-
-        //Creates the menu options
-        for (i = 0 ; i < allTutorials.length ; i++)
-        {
-            ItemStack tutorial;
-            //Sets tutorial name bold for tutorials in use
-            if (allTutorials[i].isInUse())
-                tutorial = Utils.createItem(Material.WRITTEN_BOOK, 1,
-                        TutorialGUIUtils.optionTitle(allTutorials[i].getTutorialName()).decoration(TextDecoration.BOLD, true),
-                        TutorialGUIUtils.optionLore("In Use - Left click to remove from use"),
-                        TutorialGUIUtils.optionLore("Right click to add a new location"));
-            else
-                tutorial = Utils.createItem(Material.BOOK, 1,
-                        TutorialGUIUtils.optionTitle(allTutorials[i].getTutorialName()),
-                        TutorialGUIUtils.optionLore("Not in Use - Left click to set in use"),
-                        TutorialGUIUtils.optionLore("Right click to add a new location"));
-            inventory.setItem(i, tutorial);
-        }
-
-        toReturn.setContents(inventory.getContents());
-        return toReturn;
-    }
-
-    /**
-     * Sets the click actions for each slot of the menu
-     */
-    private void setActions()
-    {
-        //Declare variables
-        int i;
-        int iTutorials;
-        int iDiv;
-        int iMod;
-        int iRows;
-
-        //Works out how many rows in the inventory are needed
-        iTutorials = tutorials.length;
-        iDiv = iTutorials/9;
-        iMod = iTutorials%9;
-
-        if (iMod != 0 || iDiv == 0)
-        {
-            iDiv = iDiv + 1;
-        }
-
-        //Enables an empty row and then a row for the back button
-        iRows = iDiv+2;
-
-        //------------------------------
-
-        //Inv slot 0 = the first one
-
-        //Adds back button
-        setAction((iRows * 9) - 1, new guiAction() {
+        setItem((calculateNumRows(tutorials.length) * 9) - 1, back, new guiAction() {
             @Override
             public void rightClick(User u) {
                 leftClick(u);
@@ -166,58 +97,6 @@ public class CreatorTutorialsMenu extends Gui
                 u.mainGui.open(u);
             }
         });
-
-        //Creates the actions for clicking on the tutorials
-        for (i = 0 ; i < tutorials.length ; i++)
-        {
-            int iSlot = i;
-
-            setAction(i, new guiAction() {
-                @Override
-                public void rightClick(User u) {
-                    rightClicked(u, iSlot);
-                }
-
-                @Override
-                public void leftClick(User u) {
-                    leftClicked(u, iSlot);
-                }
-            });
-        }
-    }
-
-    //Left click is for toggling whether a tutorial is in use or not
-    private void leftClicked(User u, int iSlot)
-    {
-        if (tutorials[iSlot].toggleInUse(plugin))
-        {
-            this.refresh();
-        }
-        else
-        {
-            u.player.sendMessage(Display.errorText("There are no locations for this tutorial"));
-        }
-    }
-
-    //Right click is for creating a new location
-    private void rightClicked(User u, int iSlot)
-    {
-        //Only starts the new location process if the creator is idle
-        if (user.getCurrentMode().equals(Mode.Idle))
-        {
-            delete();
-            u.mainGui = null;
-
-            //Creates a NewLocation object
-            NewLocation newLocation = new NewLocation(user, tutorials[iSlot], plugin);
-
-            //Launches them into the new location adding process
-            newLocation.launchNewLocationAdding();
-        }
-        else
-        {
-            user.player.sendMessage(Display.errorText("Complete or pause your current tutorial or location creation first"));
-        }
     }
 
     /**
@@ -228,13 +107,66 @@ public class CreatorTutorialsMenu extends Gui
         //Clears items from the gui
         this.clearGui();
 
-        //Adds icons to the gui
-        this.getInventory().setContents(getGUI(tutorials).getContents());
-
-        //Adds click actions to the gui
-        this.setActions();
+        //Adds the items back
+        this.addItems();
 
         //Opens the gui
         this.open(user);
+    }
+
+    /**
+     * Refreshes the name on the tutorial icons
+     */
+    public void refreshTutorialIcons()
+    {
+        //Adds the tutorial icons
+        int iNumTutorials = tutorials.length;
+        if (iNumTutorials > 45)
+            iNumTutorials = 45;
+        for (int i = 0 ; i < iNumTutorials ; i++)
+        {
+            setItem(i, Utils.createItem(Material.WRITTEN_BOOK, 1,
+                            TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()),
+                            TutorialGUIUtils.optionLore("Click to manage Tutorial")));
+        }
+    }
+
+    /**
+     * Calculates the number of rows needed to form an inventory for a given number of tutorials
+     * @param iNumTutorials The number of tutorials
+     * @return The number of rows needed to form an inventory
+     */
+    public static int calculateNumRows(int iNumTutorials)
+    {
+        int iDiv;
+        int iMod;
+
+        //Works out how many rows in the inventory are needed
+        iDiv = iNumTutorials/9;
+        iMod = iNumTutorials%9;
+
+        if (iMod != 0 || iDiv == 0)
+        {
+            iDiv = iDiv + 1;
+        }
+
+        //Add row for the back button
+        int iRows = iDiv+1;
+
+        //Add an extra for pleasure
+        if (iRows < 6)
+            iRows++;
+
+        else if (iRows == 6)
+        {
+            // Do nothing
+        }
+        else
+        {
+            iRows = 6;
+        }
+
+        //Enables an empty row and then a row for the back button
+        return iRows;
     }
 }

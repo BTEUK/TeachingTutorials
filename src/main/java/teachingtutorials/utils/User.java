@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.tutorialplaythrough.Lesson;
@@ -408,8 +409,7 @@ public class User
      */
     public void reassessHasIncompleteLesson(DBConnection dbConnection, Logger logger)
     {
-        int iTutorialIDOfCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(player.getUniqueId(), dbConnection, logger);
-        this.bHasIncompleteLesson = (iTutorialIDOfCurrentLesson != -1);
+        this.bHasIncompleteLesson = (LessonObject.getUnfinishedLessonsOfPlayer(player.getUniqueId(), dbConnection, logger).length > 0);
     }
 
     //---------------------------------------------------

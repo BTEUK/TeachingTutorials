@@ -7,13 +7,12 @@ import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialobjects.LessonObject;
+import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialobjects.Tutorial;
-import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
-
-import java.util.logging.Level;
 
 /**
  * A menu which displays all of the tutorials available for a player to play through and allows them to select one to do
@@ -32,19 +31,23 @@ public class LibraryMenu extends Gui
     /** Stores a list of all in use tutorials */
     private Tutorial[] tutorials;
 
+    /** The list of lessons that this player has ongoing */
+    private final LessonObject[] lessons;
+
     /**
      *
      * @param plugin An instance of the plugin
      * @param user The user for which the menu is being created for
      * @param tutorials A list of all in use tutorials which have locations
      */
-    public LibraryMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
+    public LibraryMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials, LessonObject[] userCurrentLesson)
     {
         //Sets up the menu with the icons already in place
         super(getGUI(tutorials));
         this.plugin = plugin;
         this.user = user;
         this.tutorials = tutorials;
+        this.lessons = userCurrentLesson;
 
         //Adds the click-actions to the menu
         setActions();
@@ -153,23 +156,12 @@ public class LibraryMenu extends Gui
             }
         });
 
-        //Initiates the current tutorial object
-//        Tutorial currentTutorial = null;
-
-        int iTutorialIDCurrentLesson = -1;
-
-        if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-        {
-            //Get current lesson's tutorial ID and sets up the tutorial object from this
-            iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
-        }
 
         //Inv slot 0 = the first one
         //Adds the actions of each slot
         for (i = 0 ; i < tutorials.length ; i++)
         {
             int iSlot = i;
-            int finalITutorialIDCurrentLesson = iTutorialIDCurrentLesson;
             setAction(iSlot, new Gui.guiAction() {
                 @Override
                 public void rightClick(User user) {
@@ -178,40 +170,70 @@ public class LibraryMenu extends Gui
 
                 @Override
                 public void leftClick(User user) {
-                    boolean startTheLesson = false;
-
-                    if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                    {
-                        if (finalITutorialIDCurrentLesson != tutorials[iSlot].getTutorialID())
-                            user.player.sendMessage(Display.errorText("You cannot start a new tutorial before you finish your current one"));
-                        else
-                            startTheLesson = true;
-                    }
-                    else
-                    {
-                        startTheLesson = true;
-                    }
-
-                    if (startTheLesson)
-                    {
-                        //Creates a Lesson object
-                        Lesson newLesson = new Lesson(user, plugin, tutorials[iSlot]);
-
-                        //Launches them into the new lesson
-                        if (newLesson.startLesson(false))
-                        {
-                            //Delete the gui
-                            delete();
-                        }
-                        //It might fail due to the user being in a lesson currently, in which case a message will already have been displayed
-                        else if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                        {
-                        }
-                        else
-                            user.player.sendMessage(Display.errorText("A problem occurred, please let staff know"));
-                    }
+                    startTutorial(tutorials[iSlot], null);
                 }
             });
+        }
+    }
+
+    /**
+     * Handles the logic when a player wishes to start a tutorial
+     * @param tutorialToStart A reference to the Tutorial that the player wishes to start
+     * @return
+     */
+    public boolean startTutorial(Tutorial tutorialToStart, Location locationToStart)
+    {
+        //Check whether the player already has a current lesson for this tutorial
+        boolean bLessonFound = false;
+        for (LessonObject lesson : lessons)
+        {
+            if (tutorialToStart.getTutorialID() == lesson.getTutorialID())
+            {
+                //Open confirmation menu
+                //If location matters then check that
+                if (locationToStart != null)
+                {
+                    if (locationToStart.getLocationID() == lesson.getLocation().getLocationID())
+                    {
+                        bLessonFound = true;
+
+                        user.mainGui = new LessonContinueConfirmer(plugin, user, this, lesson, "You have a lesson at this location already");
+                        user.mainGui.open(user);
+
+                        //Break, let the other menu take over
+                        break;
+                    }
+                }
+                else
+                {
+                    bLessonFound = true;
+                    //If not then open confirmation menu
+                    user.mainGui = new LessonContinueConfirmer(plugin, user, this, lesson, "You have a lesson for this tutorial already");
+                    user.mainGui.open(user);
+
+                    //Break, let the other menu take over
+                    break;
+                }
+            }
+        }
+
+        //If player doesn't have current lesson for this tutorial then create a new one
+        if (!bLessonFound)
+        {
+            Lesson lesson;
+            if (locationToStart == null)
+            {
+                lesson = new Lesson(user, plugin, tutorialToStart);
+            }
+            else
+            {
+                lesson = new Lesson(user, plugin, locationToStart);
+            }
+            return lesson.startLesson(true);
+        }
+        else
+        {
+            return true;
         }
     }
 

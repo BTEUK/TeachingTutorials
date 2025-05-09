@@ -292,43 +292,7 @@ public class TeachingTutorials extends JavaPlugin
                     user = User.identifyUser(instance, event.getPlayer());
                     if (user != null)
                     {
-                        switch (event.getEventType())
-                        {
-                            case RESTART:
-                            case CONTINUE:
-                            case LIBRARY:
-                                Tutorial specifiedTutorial;
-                                //Extract the tutorial details
-                                if (event.getData() == 0)
-                                {
-                                    if (user.hasIncompleteLessons(dbConnection, getLogger()))
-                                        specifiedTutorial = Tutorial.fetchByTutorialID(Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), dbConnection, getLogger()), dbConnection, getLogger());
-                                    else
-                                        specifiedTutorial = Lesson.decideTutorial(user, dbConnection, getLogger());
-
-                                }
-                                else
-                                    specifiedTutorial = Tutorial.fetchByTutorialID(event.getData(), dbConnection, getLogger());
-
-                                //If it is still null then abort
-                                if (specifiedTutorial == null)
-                                {
-                                    user.player.sendMessage(Display.errorText("A tutorials error occurred, please report this to staff"));
-                                }
-                                else
-                                {
-                                    //Creates a Lesson object
-                                    Lesson newLesson = new Lesson(user, instance, specifiedTutorial);
-
-                                    //Starts the lesson, resetting the progress only if event is a restart event
-                                    newLesson.startLesson(event.getEventType().equals(EventType.RESTART));
-                                    break;
-                                }
-                            case ADMIN_MENU:
-                                MainMenu.performEvent(EventType.ADMIN_MENU, user, TeachingTutorials.getInstance(), null);
-                                break;
-                        }
-
+                        MainMenu.performEvent(event.getEventType(), user, TeachingTutorials.this, event.getData());
                         /*
                         We only want the event to be removed if the player was on the server and the event took place
                         There may be a delay/lag period where the event is in the DB but the user isn't yet on the server
@@ -337,10 +301,8 @@ public class TeachingTutorials extends JavaPlugin
                          */
                         event.remove();
                     }
-                    else
-                    {
+                    //else
                         //Do nothing, they may still be in server transport
-                    }
                 }
             }
         }, 0L, config.getLong("Events_Check_Period"));

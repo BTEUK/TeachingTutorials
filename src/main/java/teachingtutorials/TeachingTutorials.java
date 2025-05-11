@@ -842,9 +842,10 @@ public class TeachingTutorials extends JavaPlugin
                         //Insert the new group into the groups table
                         Task task = tasks.get(l);
 
+                        //Compile the details string for the DB details field
                         String szDetails = "";
 
-                        if (task.type.equals("command"))
+                        if (task.type.equals(FundamentalTaskType.command))
                         {
                             szDetails = task.szDetails;
                         }
@@ -1010,7 +1011,7 @@ public class TeachingTutorials extends JavaPlugin
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            getLogger().log(Level.WARNING, "IO error reading tutorial file", e);
             sb = new StringBuilder();
         }
         return sb.toString();

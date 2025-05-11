@@ -490,7 +490,7 @@ public class Location
             TeachingTutorials.getInstance().getLogger().log(Level.INFO, iCount +" LocationTasks were deleted");
 
             //Removes the location specific step details
-            sql = "DELETE FROM `LocationSteps` WHERE `LocationID` = " +iLocationID;
+            sql = "DELETE FROM `LocationSteps` WHERE `Location` = " +iLocationID;
             iCount = SQL.executeUpdate(sql);
             TeachingTutorials.getInstance().getLogger().log(Level.INFO, iCount +" LocationSteps were deleted");
 

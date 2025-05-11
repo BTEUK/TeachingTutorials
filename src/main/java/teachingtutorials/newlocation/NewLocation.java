@@ -410,8 +410,16 @@ public class NewLocation extends TutorialPlaythrough
                 else
                     plugin.getLogger().log(Level.WARNING, "Location with LocationID = "+location.getLocationID() +" could not be deleted");
 
-                //Delete the world
-                Multiverse.deleteWorld(location.getLocationID()+"");
+                //Teleport the player off the world
+                User.teleportPlayerToLobby(creatorOrStudent.player, plugin, 0);
+
+                //Delete the world after some time, to ensure player has left
+                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        Multiverse.deleteWorld(location.getLocationID()+"");
+                    }
+                }, 2L);
                 break;
             default:
                 break;

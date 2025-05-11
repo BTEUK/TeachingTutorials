@@ -120,7 +120,7 @@ public class Event
                         iCompulsoryTutorialID = compulsoryTutorials[0].getTutorialID();
 
                     iData = iCompulsoryTutorialID;
-                    eventType = EventType.RESTART;
+                    eventType = EventType.RESTART_LESSON;
                 }
                 else
                 {

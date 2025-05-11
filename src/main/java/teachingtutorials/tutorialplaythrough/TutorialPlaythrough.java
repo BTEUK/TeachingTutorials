@@ -40,7 +40,10 @@ public abstract class TutorialPlaythrough
     /** A reference to the current stage*/
     protected StagePlaythrough currentStagePlaythrough;
 
-    /** The index (0 indexed) of the stage to start next. Therefore also equals the stage currently on if 1 indexed */
+    /** The index (0 indexed) of the stage to start next. Therefore also equals the stage currently on if 1 indexed
+     * <p></p>
+     * A playthrough starts on iStageIndex = 0; It is incremented when nextStage() is called.
+     */
     protected int iStageIndex;
 
     /**

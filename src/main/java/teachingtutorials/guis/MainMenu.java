@@ -5,12 +5,13 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.tutorialobjects.LessonObject;
+import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialobjects.Tutorial;
+import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
-
-import java.util.logging.Level;
 
 /**
  * The main menu of the TeachingTutorials system from which all functions can be accessed
@@ -23,11 +24,27 @@ public class MainMenu extends Gui
     /** Notes the size of the inventory */
     private static final int iNumRows = 27;
 
+    /** Gets the config */
+    private final FileConfiguration config = TeachingTutorials.getInstance().getConfig();
+
+    /** Gets the compulsory tutorial setting */
+    private final boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial.Enabled");
+
+    /** The Tutorial of the compulsory tutorial. Null if no compulsory tutorial is set */
+    private Tutorial compulsoryTutorial;
+
     /** A reference to the TeachingTutorials plugin instance */
     private final TeachingTutorials plugin;
 
     /** A reference to the user for which this menu is for */
     private final User user;
+
+    /** A list of the current lessons that a player has ongoing **/
+    private LessonObject[] currentLessons;
+
+    /** The next tutorial which a player would play if clicking continue learning */
+    private Tutorial nextTutorial;
+
 
     /**
      *
@@ -40,8 +57,26 @@ public class MainMenu extends Gui
         this.plugin = plugin;
         this.user = user;
 
+        fetchInformation();
+
         //Adds the icons and actions to the menu
         addMenuOptions();
+    }
+
+    private void fetchInformation()
+    {
+        //Get compulsory tutorial
+        Tutorial[] compulsoryTutorials = Tutorial.fetchAll(true, true, null, plugin.getDBConnection(), plugin.getLogger());
+        if (compulsoryTutorials.length == 0)
+            compulsoryTutorial = null;
+        else
+            compulsoryTutorial = compulsoryTutorials[0];
+
+        //Get the current unfinished lessons of the player
+        currentLessons = LessonObject.getUnfinishedLessonsOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
+
+        //Get the next tutorial for this player
+        nextTutorial = Lesson.decideTutorial(user, plugin.getDBConnection(), plugin.getLogger());
     }
 
     /**
@@ -49,308 +84,33 @@ public class MainMenu extends Gui
      */
     private void addMenuOptions()
     {
-        //Initiates the current tutorial object
-        Tutorial currentTutorial = null;
-
-        //Initiates the next tutorial object - decides the next tutorial
-        Tutorial nextTutorial = Lesson.decideTutorial(user, plugin.getDBConnection(), plugin.getLogger());
-
-        //Gets a reference to the config
-        FileConfiguration config = plugin.getConfig();
-        boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial.Enabled");
-
-        //Get compulsory tutorial ID
-        int iCompulsoryTutorialID;
-
-        Tutorial[] compulsoryTutorials = Tutorial.fetchAll(true, true, null, plugin.getDBConnection(), plugin.getLogger());
-        if (compulsoryTutorials.length == 0)
-            iCompulsoryTutorialID = -1;
-        else
-            iCompulsoryTutorialID = compulsoryTutorials[0].getTutorialID();
-
-        //'Continue' menu button
-        ItemStack continueLearning_CompulsoryComplete = null;
-        if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-        {
-            //Get current tutorial ID and sets up the tutorial object from this
-            int iTutorialIDCurrentLesson = Lesson.getTutorialOfCurrentLessonOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
-            plugin.getLogger().log(Level.INFO, "Player is currently playing a lesson on tutorial: "+iTutorialIDCurrentLesson);
-            currentTutorial = Tutorial.fetchByTutorialID(iTutorialIDCurrentLesson, plugin.getDBConnection(), plugin.getLogger());
-
-            //Sets up the menu icon with the name of the current tutorial
-            continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                    TutorialGUIUtils.optionTitle("Resume Your Lesson"),
-                    TutorialGUIUtils.optionLore(currentTutorial.getTutorialName()));
-        }
-        else if (nextTutorial != null)
-        {
-            //Sets up the menu icon with the new tutorial's name
-            continueLearning_CompulsoryComplete = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                    TutorialGUIUtils.optionTitle("Start a new Tutorial:"),
-                    TutorialGUIUtils.optionLore(nextTutorial.getTutorialName()));
-        }
-
-        //Tutorial library
-        ItemStack tutorialLibrary = Utils.createItem(Material.BOOKSHELF, 1,
-                TutorialGUIUtils.optionTitle("Tutorial Library"),
-                TutorialGUIUtils.optionLore("Browse all of our available tutorials"));
-
-
         //-----------------------------------------------------------------------
         //--------------------- Begin Adding the Menu Items ---------------------
         //-----------------------------------------------------------------------
 
-        //Checks the system has the compulsory tutorial feature enabled
-        if (bCompulsoryTutorialEnabled && iCompulsoryTutorialID >= 0)
+        //Checks the system has the compulsory tutorial feature enabled and the user hasn't completed the compulsory tutorial
+        if (bCompulsoryTutorialEnabled && compulsoryTutorial != null && !user.bHasCompletedCompulsory)
         {
-            //Fetches the details of the compulsory tutorial
-            Tutorial compulsoryTutorial = Tutorial.fetchByTutorialID(iCompulsoryTutorialID, plugin.getDBConnection(), plugin.getLogger());
-
-            //User has already completed the compulsory tutorial
-            if (user.bHasCompletedCompulsory)
+            //Check if they have started the compulsory
+            LessonObject compulsoryLesson = null;
+            for (LessonObject lesson : currentLessons)
             {
-                //---- Compulsory Tutorial Option ----
-                ItemStack compulsory;
-
-                boolean bUserRedoingCompulsoryTutorial;
-                if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                    bUserRedoingCompulsoryTutorial = currentTutorial.getTutorialID() == iCompulsoryTutorialID;
-                else
-                    bUserRedoingCompulsoryTutorial = false;
-                //User is currently redoing the compulsory tutorial
-                if (bUserRedoingCompulsoryTutorial)
+                if (lesson.getTutorialID() == compulsoryTutorial.getTutorialID())
                 {
-                    compulsory = Utils.createItem(Material.BOOK, 1,
-                            TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
-                            TutorialGUIUtils.optionLore("Restart the starter tutorial again"));
-
-                    super.setItem(11 - 1, compulsory, new guiAction() {
-                        @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
-                            if (performEvent(EventType.RESTART, u, plugin, compulsoryTutorial))
-                                //Deletes this gui
-                                delete();
-                        }
-                    });
-                }
-                //User is currently in a different tutorial
-                else if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                {
-                    compulsory = Utils.createItem(Material.ENCHANTED_BOOK, 1,
-                            TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
-                            TutorialGUIUtils.optionLore("Finish your current lesson first!"));
-                    super.setItem(11 - 1, compulsory, new guiAction() {
-                        @Override
-                        public void rightClick(User u)
-                        {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u)
-                        {
-                            //Do nothing
-                        }
-                    });
-
-                }
-                //User is not in any tutorial
-                else
-                {
-                    compulsory = Utils.createItem(Material.BOOK, 1,
-                            TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
-                            TutorialGUIUtils.optionLore("Refresh your essential knowledge"));
-
-                    super.setItem(11 - 1, compulsory, new guiAction() {
-                        @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
-                            if (performEvent(EventType.RESTART, u, plugin, compulsoryTutorial))
-                                //Deletes this gui
-                                delete();
-                        }
-                    });
-                }
-
-                //---------- Library Option ----------
-                super.setItem(14 - 1, tutorialLibrary, new guiAction() {
-                    @Override
-                    public void rightClick(User u) {
-                        leftClick(u);
-                    }
-                    @Override
-                    public void leftClick(User u) {
-                        if (performEvent(EventType.LIBRARY, u, plugin, null))
-                            //Deletes this gui
-                            delete();
-                    }
-                });
-
-                //Decide on continue option
-                Tutorial tutorialForContinue;
-                if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                    tutorialForContinue = currentTutorial;
-                else
-                    tutorialForContinue = nextTutorial;
-
-                //----- Continue Learning Option -----
-                if (tutorialForContinue != null)
-                {
-                    super.setItem(17 - 1, continueLearning_CompulsoryComplete, new guiAction() {
-                        @Override
-                        public void rightClick(User u)
-                        {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u)
-                        {
-                            if (performEvent(EventType.CONTINUE, u, plugin, tutorialForContinue))
-                                //Deletes this gui
-                                delete();
-                        }
-                    });
+                    compulsoryLesson = lesson;
+                    break;
                 }
             }
 
-            // They have not completed the compulsory tutorial
+            if (compulsoryLesson == null)
+                compulsoryNeverStarted();
             else
-            {
-                ItemStack resumeCompulsory;
-                ItemStack restartCompulsory;
-                ItemStack beginCompulsory;
-
-                //They are currently in the compulsory tutorial for the first time
-                //OR: The user was in another lesson and someone added a compulsory tutorial to the system
-                if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                {
-                    //Player is in a lesson other than the compulsory but hasn't started the compulsory (compulsory added to system)
-                    if (currentTutorial.getTutorialID() != iCompulsoryTutorialID)
-                    {
-                        ItemStack erroneousTutorial = Utils.createItem(Material.BOOK, 1,
-                                TutorialGUIUtils.optionTitle("Continue Your Tutorial"),
-                                TutorialGUIUtils.optionLore("You must then complete the starter tutorial"));
-
-                        Tutorial finalCurrentTutorial = currentTutorial;
-                        super.setItem(14 - 1, erroneousTutorial, new guiAction() {
-                            @Override
-                            public void rightClick(User u) {
-                                leftClick(u);
-                            }
-                            @Override
-                            public void leftClick(User u) {
-                                if (performEvent(EventType.CONTINUE, u, plugin, finalCurrentTutorial))
-                                    //Deletes this gui
-                                    delete();
-                            }
-                        });
-                    }
-
-                    //Player is half way through the compulsory tutorial but hasn't ever finished it
-                    else
-                    {
-                        restartCompulsory = Utils.createItem(Material.BOOK, 1,
-                                TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
-                                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
-
-                        resumeCompulsory = Utils.createItem(Material.WRITABLE_BOOK, 1,
-                                TutorialGUIUtils.optionTitle("Resume the Starter Tutorial"),
-                                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
-
-                        super.setItem(12 - 1, restartCompulsory, new guiAction() {
-                            @Override
-                            public void rightClick(User u) {
-                                leftClick(u);
-                            }
-                            @Override
-                            public void leftClick(User u) {
-                                if (performEvent(EventType.RESTART, u, plugin, compulsoryTutorial))
-                                    //Deletes this gui
-                                    delete();
-                            }
-                        });
-
-                        super.setItem(16 - 1, resumeCompulsory, new guiAction() {
-                            @Override
-                            public void rightClick(User u) {
-                                leftClick(u);
-                            }
-                            @Override
-                            public void leftClick(User u) {
-                                if (performEvent(EventType.CONTINUE, u, plugin, compulsoryTutorial))
-                                    //Deletes this gui
-                                    delete();
-                            }
-                        });
-                    }
-                }
-                else // They have never started the compulsory tutorial
-                {
-                    beginCompulsory = Utils.createItem(Material.BOOK, 1,
-                            TutorialGUIUtils.optionTitle("Begin the Starter Tutorial"),
-                            TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
-
-                    super.setItem(14 - 1, beginCompulsory, new guiAction() {
-                        @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
-                            if (performEvent(EventType.RESTART, u, plugin, compulsoryTutorial))
-                                //Deletes this gui
-                                delete();
-                        }
-                    });
-                }
-            }
+                compulsoryNotFinished(compulsoryLesson);
         }
-        else // There is no compulsory tutorial
-        {
-            //Decide on continue option
-            Tutorial tutorialForContinue;
-            if (user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                tutorialForContinue = currentTutorial;
-            else
-                tutorialForContinue = nextTutorial;
+        else
+            //User has not completed compulsory tutorial or doesn't need to
+            compulsoryFinished();
 
-            //Continue learning, compulsory complete
-            if (tutorialForContinue != null)
-                super.setItem(16 - 1, continueLearning_CompulsoryComplete, new guiAction() {
-                @Override
-                public void rightClick(User u)
-                {
-                    leftClick(u);
-                }
-                @Override
-                public void leftClick(User u)
-                {
-                    if (performEvent(EventType.CONTINUE, u, plugin, tutorialForContinue))
-                        //Deletes this gui
-                        delete();
-                }
-            });
-
-            //Library
-            super.setItem(12 - 1, tutorialLibrary, new guiAction() {
-                @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-                @Override
-                public void leftClick(User u) {
-                    if (performEvent(EventType.LIBRARY, u, plugin, null))
-                        //Deletes this gui
-                        delete();
-                }
-            });
-        }
 
         //Admin and creator menu
         if (user.player.hasPermission("TeachingTutorials.Admin") || user.player.hasPermission("TeachingTutorials.Creator"))
@@ -364,47 +124,341 @@ public class MainMenu extends Gui
                 }
                 @Override
                 public void leftClick(User u) {
-                    if (performEvent(EventType.ADMIN_MENU, u, plugin, null))
-                        //Deletes this gui
-                        delete();
+                    user.mainGui = new CreatorMenu(plugin, user);
+                    user.mainGui.open(user);
+                    delete();
                 }
             });
         }
     }
 
     /**
-     * Performs an event arising from any click of an option on the main menu
+     * Adds the menu items for if the compulsory tutorial has never been started
+     */
+    private void compulsoryNeverStarted()
+    {
+        ItemStack beginCompulsory = Utils.createItem(Material.BOOK, 1,
+                TutorialGUIUtils.optionTitle("Begin the Starter Tutorial"),
+                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
+
+        super.setItem(14 - 1, beginCompulsory, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                startTutorial(compulsoryTutorial, null);
+            }
+        });
+
+    }
+
+    /**
+     * Adds the menu items for if the compulsory tutorial has been started but never finished
+     * @param compulsoryLesson The lesson object for the compulsory tutorial lesson they currently have ongoing
+     */
+    private void compulsoryNotFinished(LessonObject compulsoryLesson)
+    {
+        //Restart compulsory
+        ItemStack restartCompulsory = Utils.createItem(Material.BOOK, 1,
+                TutorialGUIUtils.optionTitle("Restart the Starter Tutorial"),
+                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
+
+        super.setItem(12 - 1, restartCompulsory, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                resumeLesson(compulsoryLesson, true);
+            }
+        });
+
+
+        //Resume compulsory
+        ItemStack resumeCompulsory = Utils.createItem(Material.WRITABLE_BOOK, 1,
+                TutorialGUIUtils.optionTitle("Resume the Starter Tutorial"),
+                TutorialGUIUtils.optionLore("Gain the " +config.getString("Compulsory_Tutorial.RankNew") +" rank"));
+
+        super.setItem(16 - 1, resumeCompulsory, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                resumeLesson(compulsoryLesson, false);
+            }
+        });
+    }
+
+    /**
+     * Adds the menu items for if the compulsory tutorial has been completed, and the main tutorials system is unlocked
+     */
+    private void compulsoryFinished()
+    {
+        //Compulsory tutorial
+        ItemStack compulsory = Utils.createItem(Material.JUNGLE_DOOR, 1,
+                TutorialGUIUtils.optionTitle("Redo the Starter Tutorial"),
+                TutorialGUIUtils.optionLore("Refresh your essential knowledge"));
+
+        super.setItem(10, compulsory, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u)
+            {
+                startTutorial(compulsoryTutorial, null);
+            }
+        });
+
+
+        //---------- Library Option ----------
+        ItemStack tutorialLibrary = Utils.createItem(Material.BOOKSHELF, 1,
+                TutorialGUIUtils.optionTitle("Tutorial Library"),
+                TutorialGUIUtils.optionLore("Browse all of our available tutorials"));
+
+        super.setItem(12, tutorialLibrary, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u)
+            {
+                user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations(plugin.getDBConnection(), plugin.getLogger()),
+                        LessonObject.getUnfinishedLessonsOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger()));
+                user.mainGui.open(user);
+                delete();
+            }
+        });
+
+
+        //Current lessons
+        ItemStack currentLessons = Utils.createItem(Material.WRITABLE_BOOK, 1,
+                TutorialGUIUtils.optionTitle("Current Lessons"),
+                TutorialGUIUtils.optionLore("View your unfinished lessons"));
+        super.setItem(14, currentLessons, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+            @Override
+            public void leftClick(User u) {
+                user.mainGui = new LessonsMenu(plugin, user, MainMenu.this, MainMenu.this.currentLessons);
+                user.mainGui.open(user);
+            }
+        });
+
+
+        //Continue learning/next tutorial
+        ItemStack continueLearning = Utils.createItem(Material.END_CRYSTAL, 1,
+                TutorialGUIUtils.optionTitle("Start a new Tutorial:"),
+                TutorialGUIUtils.optionLore(nextTutorial.getTutorialName()));
+
+        if (nextTutorial != null)
+            super.setItem(16 , continueLearning, new guiAction() {
+                @Override
+                public void rightClick(User u)
+                {
+                    leftClick(u);
+                }
+                @Override
+                public void leftClick(User u)
+                {
+                    startTutorial(nextTutorial, null);
+                }
+            });
+    }
+
+
+    /**
+     * Handles the logic when a player wishes to resume a lesson
+     * @param lessonToResume A reference to the Lesson that the player wishes to resume
+     * @param bResetProgress Whether to reset the reset the progress to stage 1 step 1 when starting the lesson
+     * @return
+     */
+    private boolean resumeLesson(LessonObject lessonToResume, boolean bResetProgress)
+    {
+        Lesson lessonPlaythrough = new Lesson(user, plugin, lessonToResume);
+        return lessonPlaythrough.startLesson(bResetProgress);
+    }
+
+    /**
+     * Handles the logic when a player wishes to start a tutorial
+     * @param tutorialToStart A reference to the Tutorial that the player wishes to start
+     * @return
+     */
+    public boolean startTutorial(Tutorial tutorialToStart, Location locationToStart)
+    {
+        //Check whether the player already has a current lesson for this tutorial
+        boolean bLessonFound = false;
+        for (LessonObject lesson : currentLessons)
+        {
+            if (tutorialToStart.getTutorialID() == lesson.getTutorialID())
+            {
+                //Open confirmation menu
+                //If location matters then check that
+                if (locationToStart != null)
+                {
+                    if (locationToStart.getLocationID() == lesson.getLocation().getLocationID())
+                    {
+                        bLessonFound = true;
+
+                        user.mainGui = new LessonContinueConfirmer(plugin, user, this, lesson, "You have a lesson at this location already");
+                        user.mainGui.open(user);
+
+                        //Break, let the other menu take over
+                        break;
+                    }
+                }
+                else
+                {
+                    bLessonFound = true;
+                    //If not then open confirmation menu
+                    user.mainGui = new LessonContinueConfirmer(plugin, user, this, lesson, "You have a lesson for this tutorial already");
+                    user.mainGui.open(user);
+
+                    //Break, let the other menu take over
+                    break;
+                }
+            }
+        }
+
+        //If player doesn't have current lesson for this tutorial then create a new one
+        if (!bLessonFound)
+        {
+            Lesson lesson;
+            if (locationToStart == null)
+            {
+                lesson = new Lesson(user, plugin, tutorialToStart);
+            }
+            else
+            {
+                lesson = new Lesson(user, plugin, locationToStart);
+            }
+            return lesson.startLesson(true);
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    /**
+     * Performs externally initiated events
      * @param event The type of event to perform
      * @param user A reference to the person performing this event
      * @param plugin A reference to the instance of the TeachingTutorials plugin
-     * @param tutorialToPlay A tutorial object representing the tutorial to play - this may be null for some events
+     * @param iData Data related to the event
      * @return Whether the event performed successfully
      */
-    public static boolean performEvent(EventType event, User user, TeachingTutorials plugin, Tutorial tutorialToPlay)
+    public static boolean performEvent(EventType event, User user, TeachingTutorials plugin, int iData)
     {
-        Lesson lesson;
+        LessonObject lessonToContinue;
+
         switch (event) {
-            case RESTART:
-                lesson = new Lesson(user, plugin, tutorialToPlay);
-                return lesson.startLesson(true);
-            case CONTINUE:
-                //Creates a lesson with the user
-                lesson = new Lesson(user, plugin, tutorialToPlay);
-                return lesson.startLesson(false);
+            case RESTART_LESSON:
+                lessonToContinue = LessonObject.getLessonByLessonID(iData, plugin.getDBConnection(), plugin.getLogger());
+                if (lessonToContinue == null)
+                {
+                    user.player.sendMessage(Display.errorText("Could not find the lesson you intend to continue"));
+                    return false;
+                }
+                else if (lessonToContinue.isFinished())
+                {
+                    user.player.sendMessage(Display.errorText("The lesson you intend to continue is already finished"));
+                    return false;
+                }
+                else
+                {
+                    Lesson lesson = new Lesson(user, plugin, lessonToContinue);
+                    return lesson.startLesson(true);
+                }
+
+            case CONTINUE_LESSON:
+                lessonToContinue = LessonObject.getLessonByLessonID(iData, plugin.getDBConnection(), plugin.getLogger());
+                if (lessonToContinue == null)
+                {
+                    user.player.sendMessage(Display.errorText("Could not find the lesson you intend to continue"));
+                    return false;
+                }
+                else if (lessonToContinue.isFinished())
+                {
+                    user.player.sendMessage(Display.errorText("The lesson you intend to continue is already finished"));
+                    return false;
+                }
+                else
+                {
+                    Lesson lesson = new Lesson(user, plugin, lessonToContinue);
+                    return lesson.startLesson(false);
+                }
+
             case ADMIN_MENU:
-                user.mainGui = new CreatorMenu(plugin, user);
-                user.mainGui.open(user);
-                return true;
-            //Here I use the library event as the action arising from clicking the library
-            //If it is an externally added event via the database then this method is not called
-            // and instead something different happens, because we use that event for when
-            // a player clicks a tutorial on the tutorial library to start
-            case LIBRARY:
-                user.mainGui = new LibraryMenu(plugin, user, Tutorial.getInUseTutorialsWithLocations(TeachingTutorials.getInstance().getDBConnection(), TeachingTutorials.getInstance().getLogger()));
-                user.mainGui.open(user);
-                return true;
-            default:
+                if (user.player.hasPermission("TeachingTutorials.Admin") || user.player.hasPermission("TeachingTutorials.Creator"))
+                {
+                    user.mainGui = new CreatorMenu(plugin, user);
+                    user.mainGui.open(user);
+                    return true;
+                }
+                else
+                    return false;
+
+            case START_TUTORIAL:
+                Tutorial tutorialToStart = Tutorial.fetchByTutorialID(iData, plugin.getDBConnection(), plugin.getLogger());
+                if (tutorialToStart == null)
+                {
+                    user.player.sendMessage(Display.errorText("Could not find the tutorial you intend to start"));
+                    return false;
+                }
+                else if (!tutorialToStart.isInUse())
+                {
+                    user.player.sendMessage(Display.errorText("The tutorial you intend to start is not in use"));
+                    return false;
+                }
+                else
+                {
+                    Lesson lesson = new Lesson(user, plugin, tutorialToStart);
+                    return lesson.startLesson(true);
+                }
+
+            case START_LOCATION:
+                Location locationToStart = Location.getLocationByLocationID(plugin.getDBConnection(), plugin.getLogger(), iData);
+                if (locationToStart == null)
+                {
+                    user.player.sendMessage(Display.errorText("Could not find the location you intend to start"));
+                    return false;
+                }
+                else if (!locationToStart.isInUse())
+                {
+                    user.player.sendMessage(Display.errorText("The location you intend to start is not in use"));
+                    return false;
+                }
+
+                Tutorial tutorialOfLocationToStart = Tutorial.fetchByTutorialID(locationToStart.getTutorialID(), plugin.getDBConnection(), plugin.getLogger());
+                if (tutorialOfLocationToStart == null)
+                {
+                    user.player.sendMessage(Display.errorText("Could not find the tutorial you intend to start"));
+                    return false;
+                }
+                else if (!tutorialOfLocationToStart.isInUse())
+                {
+                    user.player.sendMessage(Display.errorText("The tutorial you intend to start is not in use"));
+                    return false;
+                }
+                else
+                {
+                    Lesson lesson = new Lesson(user, plugin, locationToStart);
+                    return lesson.startLesson(true);
+                }
+
+            case null, default:
                 return false;
+
         }
     }
 
@@ -415,17 +469,9 @@ public class MainMenu extends Gui
     public void refresh()
     {
         this.clearGui();
+        fetchInformation();
         this.addMenuOptions();
 
         this.open(user);
-    }
-
-    /**
-     * Resets the main gui of the user to null
-     */
-    @Override
-    public void delete()
-    {
-        super.delete();
     }
 }

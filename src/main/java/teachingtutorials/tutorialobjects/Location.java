@@ -34,9 +34,6 @@ public class Location
     //--------------------------------------------------
     //-------------------Constructors-------------------
     //--------------------------------------------------
-
-    //Used for creating a new location
-
     /**
      * Used for creating a new location
      * @param iTutorialID The ID of the tutorial for which this is a location of
@@ -50,6 +47,8 @@ public class Location
      * Used for loading a location from the DB
      * @param iLocationID The locationID of the location to load from the DB
      * @param iTutorialID The tutorialID of the location's tutorial
+     * @param bInUse Whether the Location is in use
+     * @param szLocationName The name of the Location
      */
     public Location(int iLocationID, int iTutorialID, boolean bInUse, String szLocationName)
     {
@@ -307,6 +306,48 @@ public class Location
             logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching location start from location steps for location: "+iLocationID, e);
         }
         return coordinates;
+    }
+
+
+    /**
+     * Fetches the Location from the database base with the given LocationID.
+     * @param dbConnection A reference to a database connection
+     * @param logger A reference to a logger to which to log output
+     * @param iLocationID The ID of the location to get the start location of
+     * @return A Location containing the information of the Location with the LocationID provided, or null if no location
+     * could be found with the LocationID provided
+     */
+    public static Location getLocationByLocationID(DBConnection dbConnection, Logger logger, int iLocationID)
+    {
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //Compiles the command to fetch all the in use locations for the tutorial
+            sql = "SELECT * FROM `Locations` WHERE `LocationID` = " +iLocationID;
+            SQL = dbConnection.getConnection().createStatement();
+
+            //Executes the query
+            resultSet = SQL.executeQuery(sql);
+
+            if (resultSet.next())
+                return new Location(iLocationID, resultSet.getInt("TutorialID"), resultSet.getBoolean("InUse"), resultSet.getString("LocationName"));
+            else
+                return null;
+
+        }
+        catch (SQLException se)
+        {
+            logger.log(Level.SEVERE, "SQL - SQL Error fetching location start from location steps for location: "+iLocationID, se);
+            return null;
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "SQL - Non-SQL Error fetching location start from location steps for location: "+iLocationID, e);
+            return null;
+        }
     }
 
     //---------------------------------------------------

@@ -6,6 +6,7 @@ import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
 import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.utils.*;
@@ -24,6 +25,9 @@ public class LocationManageMenu extends Gui
     /** A reference to the Location which this menu is for */
     private final Location location;
 
+    /** The list of lessons that this player has ongoing */
+    private final LessonObject[] lessons;
+
     private final TextEditorBookListener nameEditor;
 
     public LocationManageMenu(TeachingTutorials plugin, User user, TutorialLocationsMenu tutorialLocationsMenu, Location location)
@@ -34,6 +38,8 @@ public class LocationManageMenu extends Gui
         this.user = user;
         this.tutorialLocationsMenu = tutorialLocationsMenu;
         this.location = location;
+
+        this.lessons = LessonObject.getUnfinishedLessonsOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
 
         this.nameEditor = new TextEditorBookListener(plugin, user, this, "Edit Location Name", new BookCloseAction() {
             @Override
@@ -130,15 +136,7 @@ public class LocationManageMenu extends Gui
 
             @Override
             public void leftClick(User u) {
-                if (user.getCurrentMode().equals(Mode.Idle) && !user.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
-                {
-                    Lesson lesson = new Lesson(user, plugin, location);
-                    lesson.startLesson(true);
-                }
-                else
-                {
-                    user.player.sendMessage(Display.errorText("You have incomplete lessons so you cannot start a new lesson"));
-                }
+                startTutorial(location);
             }
         });
 
@@ -173,6 +171,44 @@ public class LocationManageMenu extends Gui
         });
     }
 
+    /**
+     * Handles the logic when a player wishes to start a tutorial
+     * @param locationToStart A reference to the Location that the player wishes to start
+     * @return
+     */
+    public boolean startTutorial(Location locationToStart)
+    {
+        //Check whether the player already has a current lesson for this tutorial
+        boolean bLessonFound = false;
+        for (LessonObject lesson : lessons)
+        {
+            //Open confirmation menu
+            //If location matters then check that
+            if (locationToStart != null)
+            {
+                if (locationToStart.getLocationID() == lesson.getLocation().getLocationID())
+                {
+                    bLessonFound = true;
+
+                    user.mainGui = new LessonContinueConfirmer(plugin, user, this, lesson, "You have a lesson at this location already");
+                    user.mainGui.open(user);
+                    //Break, let the other menu take over
+                    break;
+                }
+            }
+        }
+
+        //If player doesn't have current lesson for this tutorial then create a new one
+        if (!bLessonFound)
+        {
+            Lesson lesson = new Lesson(user, plugin, locationToStart);
+            return lesson.startLesson(true);
+        }
+        else
+        {
+            return true;
+        }
+    }
 
     /**
      * Refresh the gui.

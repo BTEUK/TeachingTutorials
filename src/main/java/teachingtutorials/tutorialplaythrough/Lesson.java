@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.listeners.Falling;
 import teachingtutorials.listeners.PlaythroughCommandListeners;
+import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.DBConnection;
@@ -15,7 +16,6 @@ import teachingtutorials.utils.User;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,6 +42,9 @@ public class Lesson extends TutorialPlaythrough
      */
     public float[] fDifficultyTotals = new float[5];
 
+    private final boolean bNewLesson;
+
+
     /**
      * Used to initiate a lesson object when only the Tutorial to play through is known
      * @param player The User for which this Lesson is being initiated
@@ -51,6 +54,8 @@ public class Lesson extends TutorialPlaythrough
     public Lesson(User player, TeachingTutorials plugin, Tutorial tutorial)
     {
         super(plugin, player, tutorial, PlaythroughMode.PlayingLesson);
+        bNewLesson = true;
+        initialSetupForNew();
     }
 
     /**
@@ -63,6 +68,48 @@ public class Lesson extends TutorialPlaythrough
     {
         super(plugin, player, Tutorial.fetchByTutorialID(location.getTutorialID(), plugin.getDBConnection(), plugin.getLogger()), PlaythroughMode.PlayingLesson);
         this.location = location;
+        bNewLesson = true;
+        initialSetupForNew();
+    }
+
+    /**
+     * Used to initiate a Lesson when the Lesson is already known
+     * @param player The User for which this Lesson is being initiated
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
+     * @param lessonObject The lesson to resume
+     */
+    public Lesson(User player, TeachingTutorials plugin, LessonObject lessonObject)
+    {
+        super(plugin, player, lessonObject.getTutorial(), PlaythroughMode.PlayingLesson);
+        bNewLesson = false;
+        initialSetupForResuming(lessonObject);
+    }
+
+    //For new lessons
+    private void initialSetupForNew()
+    {
+        //Set the 'next' stage to the first stage
+        this.iStageIndex = 0;
+
+        //Sets the Step-to-start as the first step
+        this.iStepToStart = 1;
+
+        this.iHighestStageCompleted = 0;
+        this.iHighestStepCompleted = 0;
+    }
+
+    //For resuming
+    private void initialSetupForResuming(LessonObject lessonObject)
+    {
+        this.iStageIndex = lessonObject.getStageAt() - 1;
+        this.iStepToStart = lessonObject.getStepAt();
+
+        this.iHighestStepCompleted = lessonObject.getHighestStepCompleted();
+        this.iHighestStageCompleted = lessonObject.getHighestStageCompleted();
+
+        this.location = lessonObject.getLocation();
+
+        this.iLessonID = lessonObject.getLessonID();
     }
 
     public int getLessonID()
@@ -81,37 +128,76 @@ public class Lesson extends TutorialPlaythrough
         //(Not already doing a tutorial, creating a tutorial or creating a location etc)
         if (!creatorOrStudent.getCurrentMode().equals(Mode.Idle))
         {
-            creatorOrStudent.player.sendMessage(Display.colouredText("Complete your current tutorial first", NamedTextColor.DARK_AQUA));
+            creatorOrStudent.player.sendMessage(Display.colouredText("Pause your current lesson first", NamedTextColor.DARK_AQUA));
             return false;
         }
 
-        //Checks to see whether a student has a lesson to finish - if so, will replace the tutorial with that one and resume it
-        if (creatorOrStudent.hasIncompleteLessons(plugin.getDBConnection(), plugin.getLogger()))
+        creatorOrStudent.player.sendMessage(Display.aquaText("Loading the world for you"));
+
+        //Is a new lesson
+        if (bNewLesson)
         {
-            //Attempts to resume the lesson if the student has a lesson that they need to complete
-            //Mind: This will overwrite the Tutorial object parsed to the Lesson initially
-            if (!resumeLesson(bResetProgress))
+            //Selects a location is not known
+            if (location == null)
             {
-                //If the lesson failed to resume display messages
-                creatorOrStudent.player.sendMessage(Display.colouredText("Could not resume lesson, speak to staff", NamedTextColor.RED));
-                plugin.getLogger().log(Level.WARNING, ChatColor.GOLD +"Could not resume lesson for player: "+creatorOrStudent.player.getName());
+                if (selectLocation())
+                {
+                    //Inform console of lesson start
+                    plugin.getLogger().log(Level.INFO,  ChatColor.AQUA + "Lesson starting for "
+                            +creatorOrStudent.player.getName()+" with LessonID = " +this.iLessonID
+                            +", Tutorial ID = " +this.tutorial.getTutorialID()
+                            +" and LocationID = "+this.location.getLocationID());
+                }
+                else
+                {
+                    //Log issue
+                    plugin.getLogger().log(Level.WARNING, ChatColor.GOLD + "No location found for " +creatorOrStudent.player.getName()+"'s lesson");
+
+                    //Notify player of issue - note it may be caused by a different issue to the one displayed, but it will say this for simplicity
+                    creatorOrStudent.player.sendMessage(Display.errorText("No location has been created for this tutorial yet :("));
+
+                    //Return false - lesson could not be created properly due to no location being found
+                    return false;
+                }
+            }
+
+            //Creates a new lesson in the DB and fetches it's LessonID
+            if (!addLessonToDB())
+            {
+                //Log issue
+                plugin.getLogger().log(Level.SEVERE, "Could not add new Lesson to the DB");
+
+                //Notify player of issue
+                creatorOrStudent.player.sendMessage(Display.errorText("An error occurred, speak to staff"));
+
+                //Return false - lesson could not be created properly
                 return false;
             }
         }
 
-        //If the user has no ongoing lessons to complete
+        //Is a resuming
         else
         {
-            //Attempts to create a new lesson will select a location and start it
-            if (!createAndSetUpNewLesson())
+            //Possibly need to reset the progress
+            if (bResetProgress)
             {
-                //If the lesson failed to be created display messages
-                creatorOrStudent.player.sendMessage(Display.colouredText("Could not create lesson, speak to staff", NamedTextColor.RED));
-                plugin.getLogger().log(Level.WARNING, ChatColor.GOLD +"Could not resume lesson for player: "+creatorOrStudent.player.getName());
+                //Set the 'next' stage to the first stage
+                this.iStageIndex = 0;
 
-                return false;
+                //Sets the Step-to-start as the first step
+                this.iStepToStart = 1;
             }
+
+            //Inform console of lesson start
+            plugin.getLogger().log(Level.INFO,  ChatColor.AQUA + "Lesson resuming for "
+                    +creatorOrStudent.player.getName()+" with LessonID = " +this.iLessonID
+                    +", Tutorial ID = " +this.tutorial.getTutorialID()
+                    +" and LocationID = "+this.location.getLocationID());
+
+            //Re-displays virtual blocks of steps already complete
+            displayVirtualBlocks(iStageIndex, iStepToStart-1);
         }
+
 
         //Removes the player's current blockspy
         creatorOrStudent.disableSpying();
@@ -124,9 +210,6 @@ public class Lesson extends TutorialPlaythrough
         playthroughCommandListeners = new PlaythroughCommandListeners(plugin);
         playthroughCommandListeners.register();
 
-        //Signals the next stage to start, at the required step, as previously determined
-        nextStage(iStepToStart, true);
-
         //Updates the user's "In Completed Lesson" status in RAM
         creatorOrStudent.setHasIncompleteLesson(true);
 
@@ -136,92 +219,12 @@ public class Lesson extends TutorialPlaythrough
         //Adds this lesson to the list of tutorial playthroughs ongoing on the server
         this.plugin.activePlaythroughs.add(this);
 
+        //Signals the next stage to start, at the required step, as previously determined
+        nextStage(iStepToStart, true);
+
         //Gives the player the navigation menu
         this.navigationMenu.refresh();
         this.creatorOrStudent.mainGui = this.navigationMenu;
-        return true;
-    }
-
-    /**
-     * Loads the data for a previously started lesson, fetches the Stages from the DB and displays all relevant virtual blocks.
-     * <p> </p>
-     * Will replace the Tutorial currently held in this Lesson with the one found in the Lesson DB table for this player.
-     * @param bResetProgress Whether to reset the progress to stage 1 step 1
-     * @return Whether or not the lesson resumed successfully
-     */
-    private boolean resumeLesson(boolean bResetProgress)
-    {
-        //Fetches the Tutorial ID, the location, the stage and the step the player is at in their current lesson
-        if (!fetchCurrentLessonOfPlayer(bResetProgress))
-            return false;
-
-        //Inform console of lesson start
-        plugin.getLogger().log(Level.INFO,  ChatColor.AQUA + "Lesson resuming for "
-            +creatorOrStudent.player.getName()+" with LessonID = " +this.iLessonID
-            +", Tutorial ID = " +this.tutorial.getTutorialID()
-            +" and LocationID = "+this.location.getLocationID());
-
-        //Redisplays virtual blocks of steps already complete
-        displayVirtualBlocks(iStageIndex, iStepToStart-1);
-
-        //Takes the stage position back for it to then be set forward again at the start of nextStage()
-        iStageIndex = iStageIndex - 1;
-
-        return true;
-    }
-
-    /**
-     * Creates a new lesson to be played by a student and adds the Lesson to the DB
-     * @return Whether the tutorial was created and added to the DB successfully
-     */
-    private boolean createAndSetUpNewLesson()
-    {
-        //Selects a location
-        boolean bLocationFound = true;
-        if (this.location == null)
-            bLocationFound = selectLocation();
-
-        if (bLocationFound)
-        {
-            //Inform console of lesson start
-            plugin.getLogger().log(Level.INFO,  ChatColor.AQUA + "Lesson starting for "
-                    +creatorOrStudent.player.getName()+" with LessonID = " +this.iLessonID
-                    +", Tutorial ID = " +this.tutorial.getTutorialID()
-                    +" and LocationID = "+this.location.getLocationID());
-
-
-            //Set the 'next' stage to the first stage
-            this.iStageIndex = 0;
-
-            //Sets the Step-to-start as the first step
-            this.iStepToStart = 1;
-        }
-        else
-        {
-            //Log issue
-            plugin.getLogger().log(Level.WARNING, ChatColor.GOLD + "No location found for " +creatorOrStudent.player.getName()+"'s lesson");
-
-            //Notify player of issue - note it may be caused by a different issue to the one displayed, but it will say this for simplicity
-            creatorOrStudent.player.sendMessage(Display.errorText("No location has been created for this tutorial yet :("));
-
-            //Return false - lesson could not be created properly due to no location being found
-            return false;
-        }
-
-        //Creates a new lesson in the DB and fetches it's LessonID
-        if (!addLessonToDB())
-        {
-            //Log issue
-            plugin.getLogger().log(Level.SEVERE, "Could not add new Lesson to the DB");
-
-            //Notify player of issue
-            creatorOrStudent.player.sendMessage(Display.errorText("An error occurred, speak to staff"));
-
-            //Return false - lesson could not be created properly
-            return false;
-        }
-        iHighestStageCompleted = 0;
-        iHighestStepCompleted = 0;
         return true;
     }
 
@@ -380,8 +383,6 @@ public class Lesson extends TutorialPlaythrough
             //Notifies console of Location selected
             plugin.getLogger().log(Level.INFO, "LocationID selected as " +locations[iRandomIndex].getLocationID() +" for LessonID " +this.iLessonID);
 
-            creatorOrStudent.player.sendMessage(Display.aquaText("Loading the world for you"));
-
             //Initialises the Lesson's location object with this lesson
             this.location = locations[iRandomIndex];
 
@@ -503,113 +504,6 @@ public class Lesson extends TutorialPlaythrough
     }
 
     //---------------------------------------------------
-    //--------------------SQL Fetches--------------------
-    //---------------------------------------------------
-
-    /**
-     * Fetches the information for a lesson that a user has not yet finished.
-     * <p> </p>
-     * Includes the LessonID, the StepAt and StageAt and loads all information on the Tutorial into the Tutorial object of this Lesson.
-     * <p> </p>
-     * If multiple lessons are somehow found in the database this will return the one at the top of the list of Lessons retrieved.
-     * @param bResetProgress Whether to replace the current StepAt and StageAt values with 1 and 1.
-     * @return Whether or not a lesson was found in the DB and if so whether the data was retrieved and stored properly.
-     */
-    private boolean fetchCurrentLessonOfPlayer(boolean bResetProgress)
-    {
-        String sql;
-        Statement SQL = null;
-        ResultSet resultSet = null;
-
-        try
-        {
-            //Compiles the command to fetch the lesson in progress - assumes a player can only have one lesson ongoing at a time
-            sql = "SELECT * FROM `Lessons` JOIN `Locations` ON `Lessons`.LocationID = `Locations`.`LocationID`" +
-                    " WHERE `UUID` = '" +creatorOrStudent.player.getUniqueId() +"' AND `Finished` = 0";
-            SQL = plugin.getConnection().createStatement();
-
-            //Executes the query and extracts the information into this Lesson and this Lesson's Tutorial object
-            resultSet = SQL.executeQuery(sql);
-            if (resultSet.next())
-            {
-                this.iLessonID = resultSet.getInt("LessonID");
-
-                //Used when resetting the progress
-                if (bResetProgress)
-                {
-                    this.iStageIndex = 1;
-                    this.iStepToStart = 1;
-                }
-                //Used when the position is to be fetched from the DB
-                else
-                {
-                    this.iStageIndex = resultSet.getInt("StageAt");
-                    this.iStepToStart = resultSet.getInt("StepAt");
-                    this.iHighestStepCompleted = resultSet.getInt("HighestStepCompleted");
-                    this.iHighestStageCompleted = resultSet.getInt("HighestStageCompleted");
-                }
-
-                creatorOrStudent.player.sendMessage(Display.aquaText("Loading the world for you"));
-
-                //Initialises the location - The Location constructor will fetch the location details as well
-                this.location = new Location(resultSet.getInt("Lessons.LocationID"), resultSet.getInt("TutorialID"), true,
-                        resultSet.getString("LocationName"));
-                return true;
-            }
-            else
-            {
-                //Reports issues to the console, returns false
-                plugin.getLogger().log(Level.WARNING, "An unfinished Lesson could not be found in the DB for user " +creatorOrStudent.player.getUniqueId() +" (" +creatorOrStudent.player.getName()+")");
-                return false;
-            }
-        }
-        catch (SQLException se)
-        {
-            //Reports issues to the console, returns false
-            plugin.getLogger().log(Level.SEVERE, "SQL Error fetching current lesson for "+creatorOrStudent.player.getName() +": "+creatorOrStudent.player.getUniqueId(), se);
-            return false;
-        }
-    }
-
-    /**
-     * Fetches the tutorial ID of the current in progress lesson for a player
-     * @param playerUUID The UUID of the player to get the Tutorial of the current lesson for
-     * @param dbConnection A connection to the database
-     * @param logger A reference to a plugin logger
-     * @return The id of the tutorial of the current lesson a player is in, or -1 if no lesson was found
-     */
-    public static int getTutorialOfCurrentLessonOfPlayer(UUID playerUUID, DBConnection dbConnection, Logger logger)
-    {
-        int iTutorialID;
-
-        String sql;
-        Statement SQL = null;
-        ResultSet resultSet = null;
-
-        try
-        {
-            //Sets up the statement
-            SQL = dbConnection.getConnection().createStatement();
-            sql = "SELECT `TutorialID` FROM `Lessons` WHERE `UUID` = '" +playerUUID +"' AND `Finished` = 0";
-
-            //Executes the query
-            resultSet = SQL.executeQuery(sql);
-            if (resultSet.next())
-            {
-                iTutorialID = resultSet.getInt("TutorialID");
-            }
-            else
-                iTutorialID = -1;
-        }
-        catch(SQLException se)
-        {
-            logger.log(Level.SEVERE, "Tutorials - SQL Error fetching current lesson for " +playerUUID, se);
-            iTutorialID = -1;
-        }
-        return iTutorialID;
-    }
-
-    //---------------------------------------------------
     //--------------------SQL Updates--------------------
     //---------------------------------------------------
 
@@ -628,7 +522,7 @@ public class Lesson extends TutorialPlaythrough
         try
         {
             //Sets up the statement
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = plugin.getDBConnection().getConnection().createStatement();
             szSql = "INSERT INTO `Lessons` (`UUID`, `TutorialID`, `Finished`, `StageAt`, `StepAt`, `LocationID`)" +
                     " VALUES ("
                     +"'"+creatorOrStudent.player.getUniqueId()+"', "

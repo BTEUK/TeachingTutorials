@@ -19,7 +19,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.GeometricUtils;
+import teachingtutorials.utils.GeometricUtils;
 import teachingtutorials.utils.Display;
 
 import java.text.DecimalFormat;
@@ -29,10 +29,17 @@ import java.text.DecimalFormat;
  */
 public class PlaythroughCommandListeners implements Listener
 {
+    /** BTE world generator settings - used for converting coordinates */
     private final EarthGeneratorSettings bteGeneratorSettings = EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS);
     private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("##.#####");
-    private TeachingTutorials plugin;
 
+    /** A reference to the instance of the TeachingTutorials plugin */
+    private final TeachingTutorials plugin;
+
+    /**
+     * Constructs the object and registers the event listeners
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
+     */
     public PlaythroughCommandListeners(TeachingTutorials plugin)
     {
         this.plugin = plugin;
@@ -41,6 +48,10 @@ public class PlaythroughCommandListeners implements Listener
         register();
     }
 
+    /**
+     * Checks various commands and intercepts them, including tpll, ll and gmask
+     * @param event A player command preprocess event
+     */
     @EventHandler(priority = EventPriority.LOW)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
@@ -50,7 +61,7 @@ public class PlaythroughCommandListeners implements Listener
         //Extracts the player to a local variable
         Player player = event.getPlayer();
 
-        //Checks that it is the correct command
+        //Extracts the command to a local variable
         String command = event.getMessage();
 
         if (command.startsWith("/tpll"))
@@ -61,8 +72,7 @@ public class PlaythroughCommandListeners implements Listener
             //Extracts the coordinates, deals with inaccuracies
             if (!command.startsWith("/tpll "))
             {
-                Display display = new Display(player, ChatColor.RED + "Incorrect tpll format. Must be /tpll [lattitude], [longitude]");
-                display.Message();
+                player.sendMessage(Display.errorText("Incorrect tpll format. Must be /tpll [lattitude], [longitude]"));
                 return;
             }
             command = command.replace("/tpll ", "");
@@ -72,8 +82,7 @@ public class PlaythroughCommandListeners implements Listener
             if (latLong == null)
             {
                 event.setCancelled(true);
-                Display display = new Display(player, ChatColor.RED + "Incorrect tpll format. Must be /tpll [lattitude], [longitude]");
-                display.Message();
+                player.sendMessage(Display.errorText("Incorrect tpll format. Must be /tpll [lattitude], [longitude]"));
                 return;
             }
 
@@ -90,6 +99,7 @@ public class PlaythroughCommandListeners implements Listener
             //Cancels the event
             event.setCancelled(true);
 
+            //Attempt to convert the coordinates, then formats a display and a link to the player in chat
             try
             {
                 double[] coords = bteGeneratorSettings.projection().toGeo(player.getLocation().getX(), player.getLocation().getZ());
@@ -99,38 +109,42 @@ public class PlaythroughCommandListeners implements Listener
                         .append(Component.text(",", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false)
                                 .append(Component.text(DECIMAL_FORMATTER.format(coords[0]), NamedTextColor.DARK_AQUA)));
 
-                Display display = new Display(player, tMessage);
-                display.Message();
+                player.sendMessage(tMessage);
                 Component message = Component.text("Click here to view the coordinates in Google Maps.", NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false);
                 message = message.clickEvent(ClickEvent.clickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/@?api=1&map_action=map&basemap=satellite&zoom=21&center=" + coords[1] + "," + coords[0]));
                 player.sendMessage(message);
             }
             catch (OutOfProjectionBoundsException e)
             {
-                Display display = new Display(player, ChatColor.RED +"You are not on the projection world");
-                display.Message();
+                player.sendMessage(Display.errorText("You are not on the projection world"));
             }
         }
 
         //Block gmask changes if it wasn't expected and dealt with by a tutorials task
         else if (command.startsWith("/gmask") || command.startsWith("//gmask"))
         {
+            //Cancels the event
             event.setCancelled(true);
 
+            //Notifies them of gmask block
             Component message = Component.text("You can only change your gmask when prompted if you are in a tutorial", NamedTextColor.DARK_AQUA).decoration(TextDecoration.ITALIC, false);
             player.sendMessage(message);
         }
-
     }
 
+    /**
+     * Registers the listeners with the server's event listeners
+     */
     public void register()
     {
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
+    /**
+     * Unregisters the listeners with the server's event listeners
+     */
     public void unregister()
     {
         HandlerList.unregisterAll(this);
     }
-
 }

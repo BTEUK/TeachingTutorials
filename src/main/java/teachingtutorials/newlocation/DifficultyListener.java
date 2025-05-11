@@ -1,7 +1,6 @@
 package teachingtutorials.newlocation;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,62 +8,85 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.fundamentalTasks.FundamentalTaskType;
-import teachingtutorials.fundamentalTasks.Task;
-import teachingtutorials.tutorials.LocationTask;
+import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
+import java.util.logging.Level;
 
+/**
+ * Used to allow a player to input a difficulty on each LocationTask
+ */
 public class DifficultyListener implements Listener
 {
-    TeachingTutorials plugin;
-    Player player;
-    LocationTask locationTask;
-    Task task;
-    FundamentalTaskType taskType;
-    boolean bReadyForDifficulty;
+    /** A reference to the instance of the TeachingTutorials plugin */
+    private final TeachingTutorials plugin;
 
-    public DifficultyListener(TeachingTutorials plugin, Player player, Task task, FundamentalTaskType taskType)
+    /** A reference to the instance of the player who is creating the new location */
+    private final Player player;
+
+    /** A reference to the playthrough task which is managing this DifficultyListener */
+    private final PlaythroughTask task;
+
+    /** Whether or not the listener is registered */
+    private boolean bRegistered;
+
+    /**
+     * Constructs the difficulty listener
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
+     * @param player A reference to the instance of the player who is creating the new location
+     * @param playthroughTask A reference to the playthrough task which is managing this DifficultyListener
+     */
+    public DifficultyListener(TeachingTutorials plugin, Player player, PlaythroughTask playthroughTask)
     {
         this.plugin = plugin;
         this.player = player;
-        this.task = task;
-        this.taskType = taskType;
-        bReadyForDifficulty = false;
+        this.task = playthroughTask;
+        bRegistered = false;
     }
 
+    /**
+     * Registers the event listeners with the server's listener system, if not already registered
+     */
     public void register()
     {
-        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+        //Ensures it is only registered once
+        if (!this.bRegistered)
+        {
+            this.bRegistered = true;
+            Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+        }
     }
 
-    public void setLocationTask(LocationTask locationTask)
-    {
-        this.locationTask = locationTask;
-        bReadyForDifficulty = true;
-    }
-
+    /** Returns whether this listener is ready to take the difficulty */
     public boolean getIsReady()
     {
-        return bReadyForDifficulty;
+        return bRegistered;
     }
 
-    //Want this /tutorials event to be handled first
+    //Want this /tutorials event to be handled first, so we set it to lowest priority so it can be cancelled straight away
+    /**
+     * Detects /tutorials commands, verifies the syntax, then stores the difficulties and triggers the tutorial to move
+     * on to the next task
+     * @param event A player command preprocess event
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
+        //Checks if it came from the relevant player
         if (event.getPlayer().getUniqueId().equals(player.getUniqueId()))
         {
+            //Extracts the command
             String command = event.getMessage();
+
+            //Verifies the syntax of the command
             if (command.matches("(/tutorials 0)\\.[0-9]+") || command.equals("/tutorials 1"))
             {
                 //Cancels the event
                 event.setCancelled(true);
 
-                if (!bReadyForDifficulty)
+                if (!bRegistered)
                 {
-                    Display display = new Display(event.getPlayer(), ChatColor.RED +"Complete the " +taskType.toString() +" task first");
-                    display.Message();
+                    event.getPlayer().sendMessage(Display.errorText("Complete the " +task.getLocationTask().type.toString() +" task first"));
                     return;
                 }
 
@@ -72,56 +94,42 @@ public class DifficultyListener implements Listener
                 command = command.replace("/tutorials ", "");
                 float fDifficulty = Float.parseFloat(command);
 
-                //Signals the listener to store the details of the new LocationTask in the DB
-                switch (taskType)
+                //Sets the difficulties of the location tasks
+                switch (task.getLocationTask().type)
                 {
                     case tpll:
-                        locationTask.setDifficulties(fDifficulty, 0, 0, 0, 0);
+                        task.getLocationTask().setDifficulties(fDifficulty, 0, 0, 0, 0);
                         break;
                     case selection:
                     case command:
-                        locationTask.setDifficulties(0, fDifficulty, 0, 0, 0);
+                        task.getLocationTask().setDifficulties(0, fDifficulty, 0, 0, 0);
                         break;
                     case chat:
-                        locationTask.setDifficulties(0, 0, 0, 0, 0);
+                        task.getLocationTask().setDifficulties(0, 0, 0, 0, 0);
                         break;
                     case place:
-                        locationTask.setDifficulties(0, 0, fDifficulty, 0, 0);
+                        task.getLocationTask().setDifficulties(0, 0, fDifficulty, 0, 0);
                         break;
                 }
-                if (locationTask.storeNewData())
+
+                //Attempt to store the new data into the DB
+                if (task.getLocationTask().storeNewData(plugin))
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask stored in database");
-                    Display display = new Display(player, ChatColor.GREEN +"Task stored in DB");
-                    display.Message();
+                    plugin.getLogger().log(Level.INFO, "LocationTask stored in database");
+                    player.sendMessage(Display.aquaText("Task answer successfully stored in DB"));
                 }
                 else
                 {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"LocationTask not stored in database");
-                    Display display = new Display(player, ChatColor.RED +"Task could not be stored in DB. Please report this");
-                    display.Message();
+                    plugin.getLogger().log(Level.SEVERE, "LocationTask not stored in database");
+                    player.sendMessage(Display.errorText("Task could not be stored in DB. Please report this"));
                 }
 
-//                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Unregistering difficulty listeners");
-
-//                //Unregisters all the difficulty listeners associated with the creator in question
-//                ArrayList<RegisteredListener> listeners = HandlerList.getRegisteredListeners(this.plugin);
-//                int iListeners = listeners.size();
-//                for (int i = 0 ; i < iListeners ; i++)
-//                {
-//                    RegisteredListener listener = listeners.get(i);
-//                    if (listener.getListener() instanceof DifficultyListener)
-//                    {
-//                        if (((DifficultyListener) listener.getListener()).player.getUniqueId().equals(event.getPlayer().getUniqueId()))
-//                        {
-//                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA +"Found a difficulty listener, unregistering");
-//                            HandlerList.unregisterAll(listener.getListener());
-//                        }
-//                    }
-//                }
-
+                //Unregisters this listener
                 HandlerList.unregisterAll(this);
 
+                bRegistered = false;
+
+                //Calls for the play-through to move on to the next task
                 task.newLocationSpotHit();
             }
         }

@@ -10,10 +10,18 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.utils.User;
 
+/**
+ * A PlayerCommandPreprocessEvent listener used to deal with /tutorial and /learn commands
+ */
 public class GlobalPlayerCommandProcess implements Listener
 {
-    private TeachingTutorials plugin;
+    /** A reference to the instance of the TeachingTutorials plugin */
+    private final TeachingTutorials plugin;
 
+    /**
+     * Constructs the listener object and registers the listener
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
+     */
     public GlobalPlayerCommandProcess(TeachingTutorials plugin)
     {
         this.plugin = plugin;
@@ -22,10 +30,15 @@ public class GlobalPlayerCommandProcess implements Listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    //Want the /tutorials endarea and /tutorials [difficulty], tpll and ll processes to occur first, then this, then the network
+    //Want the /tutorials endarea and /tutorials [difficulty], then this
+    /**
+     * Listens for PlayerCommandPreprocessEvent events and checks whether they are /tutorial commands
+     * @param event A PlayerCommandPreprocessEvent event
+     */
     @EventHandler(priority = EventPriority.LOW)
     public void commandEvent(PlayerCommandPreprocessEvent event)
     {
+        //If it has already been dealt with then do nothing
         if (event.isCancelled())
             return;
 
@@ -45,10 +58,13 @@ public class GlobalPlayerCommandProcess implements Listener
             {
                 //Check if the mainGui is not null.
                 if (user.mainGui != null)
+                {
                     //If not then open it after refreshing its contents.
                     user.mainGui.refresh();
+                    user.mainGui.open(user);
+                }
 
-                    //If no gui exists open the learning menu
+                //If no gui exists open the learning menu
                 else
                 {
                     //Creates a new main menu

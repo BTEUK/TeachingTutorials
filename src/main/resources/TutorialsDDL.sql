@@ -112,10 +112,11 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Locations` (
   `LocationID` INT NOT NULL AUTO_INCREMENT,
-  `Difficulty` FLOAT NULL DEFAULT NULL,
   `Latitude` DOUBLE NULL DEFAULT NULL,
   `Longitude` DOUBLE NULL DEFAULT NULL,
   `TutorialID` INT NOT NULL,
+  `InUse` TINYINT(1) DEFAULT 0,
+  `LocationName` VARCHAR(100) DEFAULT "",
   PRIMARY KEY (`LocationID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
@@ -127,7 +128,6 @@ DEFAULT CHARACTER SET = latin1;
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Players` (
   `UUID` CHAR(36) NOT NULL,
   `CompletedCompulsory` TINYINT NOT NULL DEFAULT '0',
-  `InLesson` TINYINT NOT NULL DEFAULT '0',
   PRIMARY KEY (`UUID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
@@ -144,6 +144,8 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Lessons` (
   `StageAt` INT NOT NULL DEFAULT '0',
   `StepAt` INT NOT NULL DEFAULT '0',
   `LocationID` INT NOT NULL,
+  `HighestStepCompleted` INT DEFAULT 0,
+  `HighestStageCompleted` INT DEFAULT 0,
   PRIMARY KEY (`LessonID`),
   INDEX `User` (`UUID` ASC) VISIBLE,
   INDEX `Tutorial1` (`TutorialID` ASC) VISIBLE,

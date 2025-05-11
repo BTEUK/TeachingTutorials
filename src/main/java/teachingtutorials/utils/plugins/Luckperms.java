@@ -9,6 +9,9 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.UUID;
 
+/**
+ * Handles Luckperm operations
+ */
 public class Luckperms
 {
     public static Track getTrack(String szTrack)
@@ -37,6 +40,11 @@ public class Luckperms
             return null;
     }
 
+    /**
+     * Gets a luckperms user from the UUID of the player
+     * @param uuid The uuid of the player
+     * @return
+     */
     public static User getUser(UUID uuid)
     {
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);

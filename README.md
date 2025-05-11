@@ -14,6 +14,10 @@ It will provide a foundation for a tutorials system which can be used throughout
 
 ## Credits
 #### WorldEdit
+#### WorldGuard
+#### Multiverse
+#### VoidGen
+
 
 ## Versions
-Native to minecraft 1.18.2, tested on 1.20.1
+Native to minecraft 1.18.2, tested up to 1.21.4

@@ -318,16 +318,13 @@ public class NewLocation extends TutorialPlaythrough
 
         //TODO: For the future, an idea could be to generate terrain as soon as 3 area selection points have been made
 
-        //Runs generation asynchronously
+        //Runs generation scheduling asynchronously
         Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
             @Override
             public void run() {
-                try {
-                    generateArea(world, startTP);
-                }
-                catch (OutOfProjectionBoundsException e)
+                try
                 {
-                    plugin.getLogger().log(Level.SEVERE, "Out of bounds exception. Could not generate the required area in the world", e);
+                    TerraMinusMinusGeneration(world, startTP);
                 }
                 catch (Exception e)
                 {
@@ -348,6 +345,7 @@ public class NewLocation extends TutorialPlaythrough
     {
         //Finds the start location
         org.bukkit.Location tpLocation = GeometricUtils.convertToBukkitLocation(world, startTP.getLat(), startTP.getLng());
+        tpLocation.add(0, 1, 0);
 
         //Registers the fall listener
         fallListener = new Falling(creatorOrStudent.player, tpLocation, plugin);
@@ -450,59 +448,14 @@ public class NewLocation extends TutorialPlaythrough
     }
 
     /**
-     * Generates the required area of the world with T-- generation.
+     * Generates the terrain of the world using TerraMinusMinus
      * <p> </p>
      * Once this is complete, it will teleport the player to the start location and begin the answer gathering phase.
      * @param world The world to generate the terrain in
      * @param startTP The start position of this Tutorial Location
-     * @throws OutOfProjectionBoundsException
      */
-    private void generateArea(World world, LatLng startTP) throws OutOfProjectionBoundsException
+    private void TerraMinusMinusGeneration(World world, LatLng startTP)
     {
-        //UK121Generation(world);
-
-        //Generates the world with T-- generation
-        TerraMinusMinusGeneration(world);
-
-        //Log to console and player
-        plugin.getLogger().log(Level.INFO, ChatColor.AQUA+"Generated the area in the world");
-        creatorOrStudent.player.sendMessage(Display.aquaText("Area generated"));
-
-        //Begins the teleportation and answer gathering phase
-        Bukkit.getScheduler().runTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                teleportCreatorAndStartLesson(world, startTP);
-            }
-        });
-    }
-
-    private void UK121Generation(World world) throws OutOfProjectionBoundsException
-    {
-        //Used to get the heights of an area
-        ElevationManager elevationManager = new ElevationManager(projection);;
-
-        //Gets heights for the area
-        iHeights = elevationManager.getHeights(ixMin, ixMax, izMin, izMax);
-
-        //Goes through the grid of heights and generates the block
-        for (int x = 0; x < ixMax - ixMax; x++)
-        {
-            for (int z = 0; z < izMax - izMin; z++)
-            {
-                world.getBlockState(x, iHeights[x][z], z).setType(Material.GRASS_BLOCK);
-            }
-        }
-    }
-
-    /**
-     * Generates the terrain of the world using TerraMinusMinus
-     * @param world The bukkit world object for this new location
-     */
-    private void TerraMinusMinusGeneration(World world)
-    {
-        CachedChunkData terraData;
-
         //Get chunk bounds
         int ixMinChunk = ixMin >> 4;
         int ixMaxChunk = ixMax >> 4;
@@ -514,53 +467,66 @@ public class NewLocation extends TutorialPlaythrough
         plugin.getLogger().log(Level.INFO, "Min Z Chunk: "+izMinChunk);
         plugin.getLogger().log(Level.INFO, "Max Z Chunk: "+izMaxChunk);
 
-        iHeights = new int[(1+ixMaxChunk-ixMinChunk)<<4][(1+izMaxChunk-izMinChunk)<<4];
-
         plugin.getLogger().log(Level.INFO, "Generating Terrain with terra-- generation");
 
-        //Go through each chunk and generate
+        int iChunksScheduled = 0;
+
+        //Go through each chunk and set up the generation task
         for (int ixChunk = ixMinChunk ; ixChunk <= ixMaxChunk ; ixChunk++)
         {
             for (int izChunk = izMinChunk ; izChunk <= izMaxChunk ; izChunk++)
             {
-                plugin.getLogger().log(Level.FINE, "Generating Chunk: "+ixChunk+","+izChunk);
-                
-                try
-                {
-                    terraData = loader.load(new ChunkPos(ixChunk, izChunk)).get();
+                int finalIxChunk = ixChunk;
+                int finalIzChunk = izChunk;
+                plugin.getLogger().log(Level.FINE, "Scheduling chunk: "+finalIxChunk+","+finalIzChunk);
 
-                    //Copy chunk data to a final
-                    int finalIxChunk = ixChunk;
-                    int finalIzChunk = izChunk;
-                    CachedChunkData finalTerraData = terraData;
-
-                    Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                         @Override
                         public void run() {
-                            for (int x = 0 ; x < 16 ; x++)
+                            plugin.getLogger().log(Level.FINE, "Generating Chunk: "+finalIxChunk+","+finalIzChunk);
+                            try
                             {
-                                for (int z = 0 ; z < 16 ; z++)
+                                CachedChunkData terraData = loader.load(new ChunkPos(finalIxChunk, finalIzChunk)).get();
+                                int starterX = finalIxChunk << 4;
+                                int starterZ = finalIzChunk << 4;
+
+                                for (int x = 0 ; x < 16 ; x++)
                                 {
-                                    final int iFinalxChunk = finalIxChunk;
-                                    final int iFinalX = x;
-                                    final int iFinalzChunk = finalIzChunk;
-                                    final int iFinalZ = z;
+                                    for (int z = 0 ; z < 16 ; z++)
+                                    {
+                                        world.getBlockAt(starterX + x, terraData.groundHeight(x, z), starterZ + z).setType(Material.GRASS_BLOCK);
+                                    }
+                                }
 
-                                    iHeights[((finalIxChunk -ixMinChunk)<<4) + x][((finalIzChunk -izMinChunk)<<4) + z] = finalTerraData.groundHeight(x, z);
+                                //All chunks scheduled
+                                if (finalIxChunk == ixMaxChunk && finalIzChunk == izMaxChunk)
+                                {
+                                    //Log to console and player
+                                    plugin.getLogger().log(Level.INFO, "Generated the area in the world");
+                                    creatorOrStudent.player.sendMessage(Display.aquaText("Area generated"));
 
-                                    Block block = world.getBlockAt((iFinalxChunk << 4) + iFinalX, iHeights[((iFinalxChunk-ixMinChunk)<<4) + iFinalX][((iFinalzChunk-izMinChunk)<<4) + iFinalZ], (iFinalzChunk << 4) + iFinalZ);
-                                    block.setType(Material.GRASS_BLOCK);
+                                    //Begins the teleportation and answer gathering phase
+                                    Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            teleportCreatorAndStartLesson(world, startTP);
+                                        }
+                                    });
                                 }
                             }
-                        }
-                    });
+                            catch (Exception e)
+                            {
+                                plugin.getLogger().log(Level.SEVERE, "Unable to generate block in the world: " +e.getMessage(), e);
+                            }
 
-                }
-                catch (Exception e)
-                {
-                    plugin.getLogger().log(Level.SEVERE, "Unable to generate block in the world: " +e.getMessage(), e);
-                    return;
-                }
+                        }
+                    }, iChunksScheduled/10 + iChunksScheduled/64);
+                //After 64 chunks, the next tick is free for any other processes.
+                //We use 64 to assist the CPU.
+
+                plugin.getLogger().log(Level.FINE, "Scheduled chunk: "+finalIxChunk+","+finalIzChunk +" to run in " +(iChunksScheduled/10 + iChunksScheduled/50) +" ticks");
+
+                iChunksScheduled++;
             }
         }
     }

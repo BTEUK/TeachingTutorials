@@ -11,6 +11,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
@@ -18,6 +19,7 @@ import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
+import teachingtutorials.utils.User;
 
 import java.util.logging.Level;
 
@@ -63,6 +65,13 @@ public class Tpll extends PlaythroughTask implements Listener
             this.fAccuracies[0] = Float.parseFloat(szAccuracies[0]);
             this.fAccuracies[1] = Float.parseFloat(szAccuracies[1]);
         }
+
+        this.taskEditorMenu = new LocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Tpll Difficulty Panel", NamedTextColor.AQUA),
+                this.getLocationTask(), this) {
+        };
     }
 
     /**
@@ -75,6 +84,13 @@ public class Tpll extends PlaythroughTask implements Listener
     Tpll(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
+
+        this.taskEditorMenu = new LocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Tpll Difficulty Panel", NamedTextColor.AQUA),
+                this.getLocationTask(), this) {
+        };
     }
 
     public float getGeometricDistance()
@@ -185,10 +201,13 @@ public class Tpll extends PlaythroughTask implements Listener
                     //Data is added to database once difficulty is provided
 
                     //Prompt difficulty
-                    player.sendMessage(Display.aquaText("Enter the difficulty of that tpll from 0 to 1 as a decimal. Use /tutorials [difficulty]"));
-                    difficultyListener.register();
+                    taskEditorMenu.taskFullySet();
+                    taskEditorMenu.refresh();
 
-                    //SpotHit is then called from inside the difficulty listener once the difficulty has been established
+                    User user = parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent();
+                    taskEditorMenu.open(user);
+
+                    //SpotHit is then called from inside the difficulty panel once the difficulty has been established
                     //This is what moves it onto the next task
                 }
                 else //Is an actual lesson

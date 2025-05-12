@@ -22,9 +22,9 @@ import java.util.logging.Level;
 /**
  * A base class for LocationTask editor menus. Defines the standard features of LocationTaskEditor menus, including
  * a link back to the Step Editor Menu, a place to define the difficulties of the task, and a confirm and continue
- * button to move on to the next task.
+ * button to save the data and move on to the next task.
  */
-public abstract class LocationTaskEditorMenu extends Gui
+public class LocationTaskEditorMenu extends Gui
 {
     /**
      * A reference to the parent menu / menu of the associated step of this location task
@@ -251,7 +251,14 @@ public abstract class LocationTaskEditorMenu extends Gui
                             if (locationTask.storeNewData(plugin))
                             {
                                 plugin.getLogger().log(Level.INFO, "LocationTask stored in database");
-                                user.player.sendMessage(Display.aquaText("Task answer successfully stored in DB"));
+                                switch (locationTask.type)
+                                {
+                                    case selection -> user.player.sendMessage(Display.aquaText("Selection task answer successfully stored in DB"));
+                                    case command -> user.player.sendMessage(Display.aquaText("Command task answer successfully stored in DB"));
+                                    case place -> user.player.sendMessage(Display.aquaText("Place task answer successfully stored in DB"));
+                                    case tpll -> user.player.sendMessage(Display.aquaText("Tpll task answer successfully stored in DB"));
+                                    case chat -> user.player.sendMessage(Display.aquaText("Chat task answer successfully stored in DB"));
+                                }
                             }
                             else
                             {
@@ -259,14 +266,17 @@ public abstract class LocationTaskEditorMenu extends Gui
                                 user.player.sendMessage(Display.errorText("Task could not be stored in DB. Please report this to a server admin"));
                             }
 
-                            //Calls for the play-through to move on to the next task
-                            playthroughTask.newLocationSpotHit();
-
                             //Refresh will block the task editing if all tasks are already added
                             LocationTaskEditorMenu.this.parentStepMenu.refresh();
-                            //Will open up the step menu if the step is not yet finished
-                            if (!LocationTaskEditorMenu.this.parentStepMenu.getAllInformationSet())
-                                LocationTaskEditorMenu.this.parentStepMenu.open(user);
+
+                            //Set the main menu to the location task menu
+                            LocationTaskEditorMenu.this.user.mainGui = LocationTaskEditorMenu.this.parentStepMenu;
+
+                            //Closes the menu
+                            LocationTaskEditorMenu.this.user.player.closeInventory();
+
+                            //Calls for the play-through to move on to the next task
+                            playthroughTask.newLocationSpotHit();
                         }
                     });
         }

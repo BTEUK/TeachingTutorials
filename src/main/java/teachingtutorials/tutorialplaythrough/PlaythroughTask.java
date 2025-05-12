@@ -54,9 +54,6 @@ public abstract class PlaythroughTask
     public float fPerformance;
 //    public float[] fFinalScores = new float[5];
 
-    /** The difficulty listener, used for creating new locations. It is used for inputting the difficulty of the task when recording the answers */
-    protected DifficultyListener difficultyListener;
-
     /** The menu used to edit the information and properties of this location task */
     protected LocationTaskEditorMenu taskEditorMenu;
 
@@ -76,9 +73,6 @@ public abstract class PlaythroughTask
 
         //Initiates a new virtual blocks group list
         this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough);
-
-        //Listens out for difficulty when editing a task answer - There will only be one difficulty listener per task to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this);
     }
 
     /**
@@ -97,9 +91,6 @@ public abstract class PlaythroughTask
 
         //Initiates a new virtual blocks group list
         this.virtualBlocks = new VirtualBlockGroup<>(this.parentGroupPlaythrough.parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough);
-
-        //Listens out for difficulty - There will only be one difficulty listener per task to avoid bugs
-        difficultyListener = new DifficultyListener(this.plugin, this.player, this);
     }
 
     /**

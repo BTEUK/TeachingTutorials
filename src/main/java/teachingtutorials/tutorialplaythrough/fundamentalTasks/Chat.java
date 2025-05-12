@@ -331,10 +331,10 @@ public class Chat extends PlaythroughTask implements Listener
         HandlerList.unregisterAll(this);
     }
 
-    //A public version is required for when spotHit is called from the difficulty listener
-    //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
+    //A public version is required for when spotHit is called from the difficulty panel
+    //This is required as it means that the tutorial can be halted until the difficulty panel completes the creation of the new LocationTask
     /**
-     * To be called from a difficulty listener when the difficulty has been specified.
+     * To be called from a difficulty panel when the difficulty has been specified.
      * <p> </p>
      * Will unregister the chat task and move forwards to the next task
      */

@@ -358,15 +358,13 @@ public class StepEditorMenu extends Gui
     }
 
     /**
-     * Clears items from the GUI, recreates the items and then opens the menu
+     * Clears items from the GUI, recreates the items
      */
     @Override
     public void refresh()
     {
         this.clearGui();
         this.addMenuOptions();
-
-        this.open(user);
     }
 
     /**

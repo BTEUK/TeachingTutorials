@@ -16,6 +16,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.Lesson;
@@ -23,6 +24,7 @@ import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
+import teachingtutorials.utils.User;
 import teachingtutorials.utils.WorldEdit;
 
 import java.util.ArrayList;
@@ -87,6 +89,13 @@ public class Command extends PlaythroughTask implements Listener
         //Adds the virtual block to the list
         if (actionType.equals(CommandActionType.virtualBlocks))
             calculateVirtualBlocks();
+
+        this.taskEditorMenu = new LocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Command Difficulty Panel", NamedTextColor.AQUA),
+                this.getLocationTask(), this) {
+        };
     }
 
     /**
@@ -106,6 +115,13 @@ public class Command extends PlaythroughTask implements Listener
 
         //Loads the tasks into a global list for use later
         this.tasksInGroup = tasks;
+
+        this.taskEditorMenu = new LocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Command Difficulty Panel", NamedTextColor.AQUA),
+                this.getLocationTask(), this) {
+        };
     }
 
     /**
@@ -166,16 +182,9 @@ public class Command extends PlaythroughTask implements Listener
             LocationTask locationTask = getLocationTask();
 
             //Catches the /tutorials command
-            //Note that this listener will still actually be active even as the logic for the difficulty is going through
-            //If this listener is performed first, the message will get sent that you can't run /tutorials
-            //Or it would change the desired command if not caught. It also then cancels the command so the difficulty wouldn't work
-            //If this listener is performed second, then the difficulty listener would've already unregistered and an unnecessary message would go through
             if (command.startsWith("/tutorials"))
             {
-                if (!difficultyListener.getIsReady())
-                {
-                    Display.ActionBar(player, Display.colouredText("You cannot set /tutorials an an answer. Did you make a mistake?", NamedTextColor.RED));
-                }
+                Display.ActionBar(player, Display.colouredText("You cannot set /tutorials an an answer. Did you make a mistake?", NamedTextColor.RED));
                 return;
             }
 
@@ -193,16 +202,19 @@ public class Command extends PlaythroughTask implements Listener
             }
 
             String szAnswers = szTargetCommand+","+szTargetCommandArgs;
-            plugin.getLogger().log(Level.INFO, "Thew new command answers (command,args): "+szAnswers);
+            plugin.getLogger().log(Level.INFO, "The new command answers (command,args): "+szAnswers);
             locationTask.setAnswers(szAnswers);
 
             //Data is added to database once difficulty is provided
 
             //Prompt difficulty
-            player.sendMessage(Display.aquaText("Enter the difficulty of that command from 0 to 1 as a decimal. Use /tutorials [difficulty]"));
-            difficultyListener.register();
+            taskEditorMenu.taskFullySet();
+            taskEditorMenu.refresh();
 
-            //SpotHit is then called from inside the difficulty listener once the difficulty has been established
+            User user = parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent();
+            taskEditorMenu.open(user);
+
+            //SpotHit is then called from inside the difficulty panel once the difficulty has been established
             //This is what moves it onto the next task
 
             //Does the desired command action
@@ -289,10 +301,10 @@ public class Command extends PlaythroughTask implements Listener
         HandlerList.unregisterAll(this);
     }
 
-    //A public version is required for when spotHit is called from the difficulty listener
-    //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
+    //A public version is required for when spotHit is called from the difficulty panel
+    //This is required as it means that the tutorial can be halted until the difficulty panel completes the creation of the new LocationTask
     /**
-     * To be called from a difficulty listener when the difficulty has been specified.
+     * To be called from a difficulty panel when the difficulty has been specified.
      * <p> </p>
      * Will unregister the command task and move forwards to the next task
      */

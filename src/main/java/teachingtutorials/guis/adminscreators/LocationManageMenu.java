@@ -1,9 +1,12 @@
-package teachingtutorials.guis;
+package teachingtutorials.guis.adminscreators;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.Gui;
+import teachingtutorials.guis.LessonContinueConfirmer;
+import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
 import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
 import teachingtutorials.tutorialobjects.LessonObject;

@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.newtutorial.TutorialCreationSession;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
@@ -57,7 +58,7 @@ public class CreatorMenu extends Gui
 
         ItemStack createTutorial = Utils.createItem(Material.WRITABLE_BOOK, 1,
                 TutorialGUIUtils.optionTitle("Create a new Tutorial"),
-                TutorialGUIUtils.optionLore("Create a new tutorial in game (coming soon)"));
+                TutorialGUIUtils.optionLore("Create a new tutorial in game"));
 
         //A variable used to mark at which inventory position the 'My Tutorials' option should appear at
         int iSlotMyTutorials;
@@ -99,17 +100,19 @@ public class CreatorMenu extends Gui
             }
         });
 
-        //Adds the 'create tutorials' item - a placeholder for when in game creation is added
+        //Adds the 'Create Tutorial' item
         setItem(16 - 1, createTutorial, new guiAction() {
             @Override
             public void rightClick(User u) {
-//                leftClick(u);
+                leftClick(u);
             }
             @Override
             public void leftClick(User u) {
-//                delete();
-//                u.mainGui = new TutorialCreationMenu(plugin, u);
-//                u.mainGui.open(u);
+                //Launches a new tutorial creation session
+                TutorialCreationSession session = new TutorialCreationSession(plugin, user);
+                session.startSession();
+
+                delete();
             }
         });
 

@@ -1,4 +1,4 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 import net.buildtheearth.terraminusminus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraminusminus.util.geo.LatLng;
@@ -12,11 +12,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
-import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.LocationTask;
-import teachingtutorials.tutorialplaythrough.Lesson;
-import teachingtutorials.tutorialplaythrough.PlaythroughMode;
-import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
 import teachingtutorials.utils.User;
@@ -54,13 +51,13 @@ public class Tpll extends PlaythroughTask implements Listener
         this.dTargetCoords[1] = Double.parseDouble(cords[1]);
 
         //Extracts the details - required accuracies
-        if (locationTask.szDetails.equals("")) // Deals with pre 1.1.0 tutorials
+        if (locationTask.getDetails().equals("")) // Deals with pre 1.1.0 tutorials
         {
             this.fAccuracies = new float[]{0.25f, 1};
         }
         else
         {
-            String[] szAccuracies = locationTask.szDetails.split(";");
+            String[] szAccuracies = locationTask.getDetails().split(";");
             this.fAccuracies = new float[2];
             this.fAccuracies[0] = Float.parseFloat(szAccuracies[0]);
             this.fAccuracies[1] = Float.parseFloat(szAccuracies[1]);

@@ -120,7 +120,41 @@ public class Tutorial
     //---------------------------------------------------
     //----------------------Setters----------------------
     //---------------------------------------------------
+    public void setTutorialName(String szTutorialName)
+    {
+        this.szTutorialName = szTutorialName;
+    }
 
+    //---------------------------------------------------
+    //---------------------- Utils ----------------------
+    //---------------------------------------------------
+
+    /**
+     * @return whether this tutorial and all of its child stages are fully filled and ready for adding
+     */
+    public boolean isComplete()
+    {
+        //Check name
+        if (szTutorialName.equals(""))
+            return false;
+
+        //Check whether there are any stages
+        int iNumStages = stages.size();
+        if (iNumStages == 0)
+            return false;
+
+        //Check the stages themselves
+        boolean bAllStagesComplete = true;
+        for (Stage stage : stages)
+        {
+            if (!stage.isComplete())
+            {
+                bAllStagesComplete = false;
+                break;
+            }
+        }
+        return bAllStagesComplete;
+    }
 
     //---------------------------------------------------
     //--------------------SQL Fetches--------------------
@@ -527,5 +561,105 @@ public class Tutorial
             return false;
         }
         return true;
+    }
+
+    /**
+     * Inserts this tutorial and all of its child stages, steps, groups and tasks into the database
+     * @param dbConnection A db connection
+     * @param logger A reference to a logger to output to
+     * @return Whether the tutorial was fully added successfully
+     */
+    public boolean addTutorialToDB(DBConnection dbConnection, Logger logger)
+    {
+        //Catch if tutorial info not completely set
+        if (!isComplete())
+        {
+            logger.warning("Tutorial information not fully set, aborting insert");
+            return false;
+        }
+
+        //Add tutorial
+        //Notes the ID of the current tutorial objects we are within
+        int iTutorialID;
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet;
+
+        logger.log(Level.INFO, "Adding tutorial to database");
+
+        //Insert the new tutorial into the tutorials table
+        try
+        {
+            SQL = dbConnection.getConnection().createStatement();
+            sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+szTutorialName+"', '"+authorUUID +"')";
+            SQL.executeUpdate(sql);
+
+            //Gets the TutorialID of the tutorial just inserted
+            sql = "Select LAST_INSERT_ID()";
+            resultSet = SQL.executeQuery(sql);
+            resultSet.next();
+            iTutorialID = resultSet.getInt(1);
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "Could not insert new tutorial into DB. Name: "+szTutorialName, e);
+            return false;
+        }
+
+        //Add the relevances into the DB
+        int i;
+        for (i = 0 ; i < 5 ; i++)
+        {
+            try
+            {
+                sql = "INSERT INTO `CategoryPoints` (`TutorialID`, `Category`, `Relevance`) VALUES (" + iTutorialID + ", '" + szCategoryEnumsInOrder[i] + "', " +((float) getCategoryUsage(i))/100f+ ")";
+                SQL.executeUpdate(sql);
+            }
+            catch (Exception e)
+            {
+                logger.log(Level.SEVERE, "Could not insert relevances into DB. Name: "+szTutorialName, e);
+                //Reverse tutorial addition
+                try {
+                    SQL = dbConnection.getConnection().createStatement();
+                    sql = "DELETE FROM Tutorials WHERE TutorialID = "+iTutorialID;
+                    SQL.executeUpdate(sql);
+                }
+                catch (SQLException se)
+                {
+                    return false;
+                }
+                break;
+            }
+        }
+
+        //Add the child stages
+        logger.log(Level.INFO, stages.size()+" stages in this tutorial");
+
+        boolean bAllStagesAdded = true;
+        for (Stage newStage : stages)
+        {
+            if (!newStage.addStageToDB(dbConnection, logger, iTutorialID))
+            {
+                bAllStagesAdded = false;
+                break;
+            }
+        }
+
+        if (!bAllStagesAdded)
+        {
+            //Reverse tutorial addition
+            try {
+                SQL = dbConnection.getConnection().createStatement();
+                sql = "DELETE FROM Tutorials WHERE TutorialID = "+iTutorialID;
+                SQL.executeUpdate(sql);
+            }
+            catch (SQLException se)
+            {
+            }
+            return false;
+        }
+        else
+            return true;
     }
 }

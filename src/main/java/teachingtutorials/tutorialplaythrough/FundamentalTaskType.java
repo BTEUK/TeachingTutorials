@@ -1,4 +1,4 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 /**
  * A list of all of the different types of fundamental tasks

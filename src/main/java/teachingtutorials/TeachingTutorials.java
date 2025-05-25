@@ -17,12 +17,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.commands.Blockspy;
 import teachingtutorials.commands.PlayersPlayingTutorialsCompleter;
 import teachingtutorials.services.TutorialsPromotionService;
-import teachingtutorials.tutorialobjects.Group;
-import teachingtutorials.tutorialobjects.Stage;
-import teachingtutorials.tutorialobjects.Step;
-import teachingtutorials.tutorialobjects.Tutorial;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.FundamentalTaskType;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
+import teachingtutorials.tutorialobjects.*;
+import teachingtutorials.tutorialplaythrough.FundamentalTaskType;
 import teachingtutorials.guis.*;
 import teachingtutorials.listeners.InventoryClickedOrClosed;
 import teachingtutorials.listeners.PlayerInteract;
@@ -581,7 +577,7 @@ public class TeachingTutorials extends JavaPlugin
                 }
                 typeOfLastObjectDealtWith = TutorialObject.Step;
 
-                Step step = new Step(szFields[0].replace("(",""), lastStage.steps.size()+1, szFields[1]);
+                Step step = new Step(szFields[0].replace("(",""), lastStage.steps.size()+1, Display.DisplayType.valueOf(szFields[1]));
                 lastStage.steps.add(step);
                 lastStep = step;
             }
@@ -600,26 +596,30 @@ public class TeachingTutorials extends JavaPlugin
                     return;
                 }
                 typeOfLastObjectDealtWith = TutorialObject.Group;
-                Group group = new Group(szFields[0].replace("(",""));
+                Group group = new Group();
                 lastStep.groups.add(group);
                 lastGroup = group;
             }
             //Task
             else if(szLines[iLine].startsWith("~"))
             {
+                //Checks whether we are expecting another task
                 if (!(typeOfLastObjectDealtWith.equals(TutorialObject.Group)||typeOfLastObjectDealtWith.equals(TutorialObject.Task)))
                 {
                     getLogger().log(Level.WARNING, "Tutorial config is not configured correctly, line: "+(iLine+1));
                     return;
                 }
                 typeOfLastObjectDealtWith = TutorialObject.Task;
-                Task task;
 
-                //1 is ~TaskType and 2 is the extra details
+                //Constructs the object
+                Task task = new Task(lastGroup.tasks.size()+1);
+
+                //Gets the fields. 1 is ~TaskType and 2 is the extra details
                 szFields = szLines[iLine].split(",");
 
+                //Extracts the task type
                 String szTaskType = szFields[0].replace("~", "");
-                FundamentalTaskType taskType = null;
+                FundamentalTaskType taskType;
                 try
                 {
                     taskType = FundamentalTaskType.valueOf(szTaskType);
@@ -627,8 +627,11 @@ public class TeachingTutorials extends JavaPlugin
                 catch (IllegalArgumentException e)
                 {
                     getLogger().log(Level.WARNING, "Invalid task type (\'" +szTaskType +"\') line: "+(iLine+1));
+                    return;
                 }
+                task.setType(taskType);
 
+                //Deals with the extra details
                 switch (taskType)
                 {
                     case tpll:
@@ -648,49 +651,51 @@ public class TeachingTutorials extends JavaPlugin
                         try
                         {
                             float iPerfectDistance = Float.parseFloat(szPrecisions[0]);
-                            float iLimit =  Float.parseFloat(szPrecisions[1]);
+                            float iAcceptableDistance =  Float.parseFloat(szPrecisions[1]);
 
-                            if (iLimit < iPerfectDistance)
+                            if (iAcceptableDistance < iPerfectDistance)
                             {
                                 getLogger().log(Level.WARNING, "Invalid tpll accuracy, the limit must be greater than or equal to the perfect distance, line: "+(iLine+1));
+                                return;
                             }
+                            else
+                            {
+                                task.setPerfectDistance(iPerfectDistance);
+                                task.setAcceptableDistance(iAcceptableDistance);
+                            }
+
                         }
                         catch (NumberFormatException e)
                         {
                             getLogger().log(Level.WARNING, "Invalid tpll accuracy, the accuracies must be integers or floats, line: "+(iLine+1));
                             return;
                         }
-
-                        //Adds the task to the list
-                        task = new Task(taskType, lastGroup.tasks.size()+1, szFields[1], lastGroup);
-                        lastGroup.tasks.add(task);
-                        break;
-                    //There are no extra details on the 3 following task types:
-                    case selection:
-                    case place:
-                    case chat:
-                        task = new Task(taskType, lastGroup.tasks.size()+1, " ", lastGroup);
-                        lastGroup.tasks.add(task);
                         break;
                     case command:
-                        //Checks the format of the command details
-                        if (!(szFields[1].equals("none") || szFields[1].equals("virtualBlocks") || szFields[1].equals("full")))
+                        switch (szFields[1])
                         {
-                            getLogger().log(Level.WARNING, "Invalid command type, line: "+(iLine+1));
-                            return;
+                            case "none":
+                                task.setCommandActionType(CommandActionType.none);
+                                break;
+                            case "virtualBlocks":
+                                task.setCommandActionType(CommandActionType.virtualBlocks);
+                                break;
+                            case "full":
+                                task.setCommandActionType(CommandActionType.full);
+                                break;
+                            default:
+                                getLogger().log(Level.WARNING, "Invalid command type, line: "+(iLine+1));
+                                return;
                         }
-
-                        //Adds the task to the list
-                        task = new Task(taskType, lastGroup.tasks.size()+1, szFields[1], lastGroup);
-                        lastGroup.tasks.add(task);
                         break;
-                    default:
-
                 } //End type switch
+
+                //Adds the task to the list of tasks
+                lastGroup.tasks.add(task);
             } //End task handler
         } //End iteration through lines
 
-        //If it has got to this stage, then the details are all sorted and stored in the tutorial object
+        //If it has got to this stage, then the details are all extracted and stored in the tutorial object
         if (addNewTutorialToDB(tutorial))
         {
             //Moves file to the archive folder
@@ -815,7 +820,7 @@ public class TeachingTutorials extends JavaPlugin
                     //Insert the new group into the groups table
                     Group group = groups.get(k);
 
-                    getLogger().log(Level.INFO, "Adding group "+k +". Name: "+ group.getName());
+                    getLogger().log(Level.INFO, "Adding group "+k);
                     try
                     {
                         sql = "INSERT INTO `Groups` (`StepID`)" +
@@ -845,15 +850,15 @@ public class TeachingTutorials extends JavaPlugin
                         //Compile the details string for the DB details field
                         String szDetails = "";
 
-                        if (task.type.equals(FundamentalTaskType.command))
+                        if (task.getType().equals(FundamentalTaskType.command))
                         {
-                            szDetails = task.szDetails;
+                            szDetails = task.getDetails();
                         }
 
                         try
                         {
                             sql = "INSERT INTO `Tasks` (`GroupID`, `TaskType`, `Order`, `Details`)" +
-                                    " VALUES (" +iGroupID+", '"+task.type+"', "+(l+1) +", '" +szDetails +"')";
+                                    " VALUES (" +iGroupID+", '"+task.getType().name()+"', "+(l+1) +", '" +szDetails +"')";
                             SQL.executeUpdate(sql);
                         }
                         catch (Exception e)

@@ -1,8 +1,7 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,11 +12,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
-import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.LocationTask;
-import teachingtutorials.tutorialplaythrough.Lesson;
-import teachingtutorials.tutorialplaythrough.PlaythroughMode;
-import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.User;
 

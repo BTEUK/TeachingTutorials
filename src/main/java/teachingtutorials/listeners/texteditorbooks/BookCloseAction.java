@@ -5,7 +5,8 @@ import org.bukkit.inventory.meta.BookMeta;
 public interface BookCloseAction
 {
     /**
-     * Performs the action on book close. You will likely want to unregister the book close listener within this.
+     * Performs the action on book close. You will likely want to unregister the book close listener and remove the book
+     * within this.
      * @param oldBookMeta The previous metadata of the book just closed.
      * @param newBookMeta The new metadata of the book just closed.
      * @param textEditorBookListener A reference to the book listener itself which calls this. Enables unregistering to be called

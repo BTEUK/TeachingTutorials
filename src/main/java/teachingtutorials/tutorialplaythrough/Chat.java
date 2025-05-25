@@ -1,4 +1,4 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.TextComponent;
@@ -11,11 +11,8 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.ChatLocationTaskEditorMenu;
-import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.LocationTask;
-import teachingtutorials.tutorialplaythrough.Lesson;
-import teachingtutorials.tutorialplaythrough.PlaythroughMode;
-import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
 import java.util.logging.Level;

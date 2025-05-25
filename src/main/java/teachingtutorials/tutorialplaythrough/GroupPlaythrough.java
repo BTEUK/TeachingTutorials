@@ -2,7 +2,7 @@ package teachingtutorials.tutorialplaythrough;
 
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialobjects.Group;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
+import teachingtutorials.tutorialobjects.Task;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -113,12 +113,12 @@ public class GroupPlaythrough
         if (this.parentStepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
         {
             plugin.getLogger().log(Level.FINE,"GroupPlaythrough.fetchAndInitialiseTasks(): Fetching tasks without answers");
-            tasks = Task.fetchTasksWithoutAnswers(plugin, plugin.getDBConnection(), this, parentStepPlaythrough.parentStagePlaythrough.getPlayer());
+            tasks = PlaythroughTask.fetchTasksWithoutAnswers(plugin, plugin.getDBConnection(), this, parentStepPlaythrough.parentStagePlaythrough.getPlayer());
             plugin.getLogger().log(Level.INFO,"Group with ID + " +this.group.getGroupID() +": "+tasks.size() +" tasks found");
         }
         else
         {
-            tasks = Task.fetchTasksForLocation(plugin, plugin.getDBConnection(), parentStepPlaythrough.parentStagePlaythrough.getLocationID(), this, parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent().player);
+            tasks = PlaythroughTask.fetchTasksForLocation(plugin, plugin.getDBConnection(), parentStepPlaythrough.parentStagePlaythrough.getLocationID(), this, parentStepPlaythrough.parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent().player);
         }
 
         this.status = StepPlaythroughStatus.SubsFetched;
@@ -167,7 +167,7 @@ public class GroupPlaythrough
 
             //Registers the first tasks. Tasks unregister themselves once complete
             currentTask.register();
-            plugin.getLogger().log(Level.FINE, "First task registered: "+currentTask.getLocationTask().type);
+            plugin.getLogger().log(Level.FINE, "First task registered: "+currentTask.getLocationTask().getType());
 
             status = StepPlaythroughStatus.ActiveStarted;
         }
@@ -233,7 +233,7 @@ public class GroupPlaythrough
 
             //Registers the task. Tasks unregister themselves once complete
             currentTask.register();
-            plugin.getLogger().log(Level.INFO,"Next task registered: "+currentTask.getLocationTask().type);
+            plugin.getLogger().log(Level.INFO,"Next task registered: "+currentTask.getLocationTask().getType());
 
             //Moves the task counter on
             taskNo++;

@@ -1,4 +1,4 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
@@ -17,11 +17,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
-import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.tutorialobjects.CommandActionType;
+import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.LocationTask;
-import teachingtutorials.tutorialplaythrough.Lesson;
-import teachingtutorials.tutorialplaythrough.PlaythroughMode;
-import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.GeometricUtils;
 import teachingtutorials.utils.User;
@@ -29,14 +27,6 @@ import teachingtutorials.utils.WorldEdit;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
-
-/**
- * Represents different types of command task actions
- */
-enum CommandActionType
-{
-    none, virtualBlocks, full
-}
 
 /**
  * Represents a type of Task where the user must run a command. Contains the relevant listeners used when the task is active.
@@ -82,7 +72,7 @@ public class Command extends PlaythroughTask implements Listener
         }
 
         //Uses the details of the command from the DB and determines what action should be taken after completion
-        this.actionType = CommandActionType.valueOf(locationTask.szDetails);
+        this.actionType = CommandActionType.valueOf(locationTask.getDetails());
 
         this.tasksInGroup = previousTasks;
 
@@ -111,7 +101,7 @@ public class Command extends PlaythroughTask implements Listener
         super(plugin, player, task, groupPlaythrough);
 
         //Uses the details of the command from the DB and determines what action should be taken after completion
-        this.actionType = CommandActionType.valueOf(task.szDetails);
+        this.actionType = CommandActionType.valueOf(task.getDetails());
 
         //Loads the tasks into a global list for use later
         this.tasksInGroup = tasks;
@@ -327,7 +317,7 @@ public class Command extends PlaythroughTask implements Listener
 
         // For now, this only works for cuboid selections, but more selection mechanics will be made available in the future)
 
-        int iOrder = super.getLocationTask().iOrder;
+        int iOrder = super.getLocationTask().getOrder();
 
         //Gets the selection task associated with this command (assumes it is the previous task in the group)
         if (iOrder == 1) //Checks if this is the first task in the group
@@ -335,14 +325,14 @@ public class Command extends PlaythroughTask implements Listener
             plugin.getLogger().log(Level.WARNING, ChatColor.RED +"There was no previous selection task before the virtual blocks command task, changing to a no action command task");
 
             //Sets the action type to none - adds no virtual blocks to the list
-            this.actionType = teachingtutorials.tutorialplaythrough.fundamentalTasks.CommandActionType.none;
+            this.actionType = CommandActionType.none;
         }
         else if (!(tasksInGroup.get(iOrder - 2) instanceof Selection selection)) //Checks whether the previous task was a selection task
         {
             plugin.getLogger().log(Level.WARNING, ChatColor.RED +"There was no previous selection task before the virtual blocks command task, changing to a no action command task");
 
             //Sets the action type to none - adds no virtual blocks to the list
-            this.actionType = teachingtutorials.tutorialplaythrough.fundamentalTasks.CommandActionType.none;
+            this.actionType = CommandActionType.none;
         }
         else
         {

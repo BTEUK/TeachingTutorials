@@ -171,7 +171,7 @@ public class LocationTaskEditorMenu extends Gui
         }
 
         //Decides which categories to open up
-        switch (locationTask.type)
+        switch (locationTask.getType())
         {
             case tpll:
                 //Tpll, nothing else
@@ -251,7 +251,7 @@ public class LocationTaskEditorMenu extends Gui
                             if (locationTask.storeNewData(plugin))
                             {
                                 plugin.getLogger().log(Level.INFO, "LocationTask stored in database");
-                                switch (locationTask.type)
+                                switch (locationTask.getType())
                                 {
                                     case selection -> user.player.sendMessage(Display.aquaText("Selection task answer successfully stored in DB"));
                                     case command -> user.player.sendMessage(Display.aquaText("Command task answer successfully stored in DB"));

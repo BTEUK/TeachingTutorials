@@ -10,7 +10,6 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialobjects.Step;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.Tpll;
 import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Hologram;

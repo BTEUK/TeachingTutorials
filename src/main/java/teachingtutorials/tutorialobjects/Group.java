@@ -1,21 +1,22 @@
 package teachingtutorials.tutorialobjects;
 
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
+import teachingtutorials.utils.DBConnection;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Represents a Tutorials Group as stored in the DB
  */
 public class Group
 {
-    /** The name of the group. This is not stored in the DB and has no use within the Tutorials system */
-    private final String szName;
-
     /** The database's ID of the group */
     private final int iGroupID;
 
-    //Used when creating a new tutorial
     /** The tasks forming this group */
     public ArrayList<Task> tasks = new ArrayList<>();
 
@@ -26,17 +27,14 @@ public class Group
     public Group(int iGroupID)
     {
         this.iGroupID = iGroupID;
-        this.szName = "";
     }
 
     /**
      * Constructs a Group object for use whilst creating a new tutorial
-     * @param szName The name of the group
      */
-    public Group(String szName)
+    public Group()
     {
         this.iGroupID = -1;
-        this.szName = szName;
     }
 
     /**
@@ -47,11 +45,104 @@ public class Group
         return this.iGroupID;
     }
 
+    //---------------------------------------------------
+    //---------------------- Utils ----------------------
+    //---------------------------------------------------
     /**
-     * @return A copy of the name of this group
+     * @return whether this group and all of its child tasks are fully filled and ready for adding
      */
-    public String getName()
+    public boolean isComplete()
     {
-        return szName;
+        //Check whether there are any task
+        if (tasks.size() == 0)
+            return false;
+
+        //Check the tasks themselves
+        boolean bAllTasksComplete = true;
+        for (Task task : tasks)
+        {
+            if (!task.isComplete())
+            {
+                bAllTasksComplete = false;
+                break;
+            }
+        }
+
+        return bAllTasksComplete;
+    }
+
+    /**
+     * Inserts this group and all of its child tasks into the database
+     * @param dbConnection A DB connection to the tutorials database
+     * @param logger A logger to output to
+     * @param iStepID The StepID of the step which these groups will belong to
+     * @return Whether the group and all of its tasks were successfully added to the database
+     */
+    public boolean addGroupToDB(DBConnection dbConnection, Logger logger, int iStepID)
+    {
+        //Catch if group info is not completely set
+        if (!isComplete())
+        {
+            logger.warning("Group information not fully set, aborting insert");
+            return false;
+        }
+
+        //Add group
+        //Notes the ID of the current group object we are within
+        int iGroupID;
+
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet;
+
+        logger.log(Level.INFO, "Adding group to database");
+
+        //Insert the new group into the Groups table
+        try
+        {
+            SQL = dbConnection.getConnection().createStatement();
+            sql = "INSERT INTO `Groups` (`StepID`) VALUES (" +iStepID+")";
+            SQL.executeUpdate(sql);
+
+            //Gets the GroupID of the group just inserted
+            sql = "Select LAST_INSERT_ID()";
+            resultSet = SQL.executeQuery(sql);
+            resultSet.next();
+            iGroupID = resultSet.getInt(1);
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "Could not insert new group into DB");
+            return false;
+        }
+
+        //Add the child tasks
+        logger.log(Level.INFO, tasks.size()+" tasks in this group");
+
+        boolean bAllTasksAdded = true;
+        for (Task newTask : tasks)
+        {
+            if (!newTask.addTaskToDB(dbConnection, logger, iGroupID))
+            {
+                bAllTasksAdded = false;
+                break;
+            }
+        }
+
+        if (!bAllTasksAdded)
+        {
+            //Reverse group addition
+            try {
+                SQL = dbConnection.getConnection().createStatement();
+                sql = "DELETE FROM Groups WHERE GroupID = "+iGroupID;
+                SQL.executeUpdate(sql);
+            }
+            catch (SQLException se)
+            {
+            }
+            return false;
+        }
+        else
+            return true;
     }
 }

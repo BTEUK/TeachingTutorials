@@ -592,7 +592,7 @@ public class Tutorial
         try
         {
             SQL = dbConnection.getConnection().createStatement();
-            sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+szTutorialName+"', '"+authorUUID +"')";
+            sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+szTutorialName.replace("'", "\\'")+"', '"+authorUUID +"')";
             SQL.executeUpdate(sql);
 
             //Gets the TutorialID of the tutorial just inserted

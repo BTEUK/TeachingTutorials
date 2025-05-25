@@ -192,7 +192,7 @@ public class Step
         try
         {
             SQL = dbConnection.getConnection().createStatement();
-            sql = "INSERT INTO `Steps` (`StepName`, `StageID`, `StepInStage`, `InstructionDisplay`) VALUES ('"+ szName+"', "+iStageID+", "+iStepInStage+",'" +instructionDisplayType +"')";
+            sql = "INSERT INTO `Steps` (`StepName`, `StageID`, `StepInStage`, `InstructionDisplay`) VALUES ('"+ szName.replace("'", "\\'")+"', "+iStageID+", "+iStepInStage+",'" +instructionDisplayType.name() +"')";
             SQL.executeUpdate(sql);
 
             //Gets the StepID of the step just inserted

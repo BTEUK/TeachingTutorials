@@ -168,7 +168,7 @@ public class Stage
         try
         {
             SQL = dbConnection.getConnection().createStatement();
-            sql = "INSERT INTO `Stages` (`StageName`, `TutorialID`, `Order`) VALUES ('"+ getName()+"', "+iTutorialID+", "+iOrder+")";
+            sql = "INSERT INTO `Stages` (`StageName`, `TutorialID`, `Order`) VALUES ('"+ getName().replace("'", "\\'")+"', "+iTutorialID+", "+iOrder+")";
             SQL.executeUpdate(sql);
 
             //Gets the StageID of the stage just inserted

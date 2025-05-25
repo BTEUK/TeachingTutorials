@@ -16,67 +16,18 @@
 -- DROP TABLE IF EXISTS `TeachingTutorials`.`Players` ;
 
 -- -----------------------------------------------------
--- Table `TeachingTutorials`.`Players`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Players` (
-  `UUID` CHAR(36) NOT NULL,
-  `CompletedCompulsory` TINYINT NOT NULL DEFAULT 0,
-  `InLesson` TINYINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (`UUID`))
-ENGINE = InnoDB;
-
--- -----------------------------------------------------
--- Table `TeachingTutorials`.`Locations`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Locations` (
-  `LocationID` INT NOT NULL AUTO_INCREMENT,
-  `Difficulty` FLOAT,
-  `Latitude` DOUBLE NOT NULL,
-  `Longitude` DOUBLE NOT NULL,
-  `TutorialID` INT NOT NULL,
-  PRIMARY KEY (`LocationID`))
-ENGINE = InnoDB;
-
--- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Tutorials`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Tutorials` (
   `TutorialID` INT NOT NULL AUTO_INCREMENT,
-  `InUse` TINYINT NOT NULL DEFAULT 0,
+  `InUse` TINYINT NOT NULL DEFAULT '0',
   `TutorialName` VARCHAR(45) NOT NULL,
-  `Compulsory` TINYINT NOT NULL DEFAULT 0,
+  `Compulsory` TINYINT NOT NULL DEFAULT '0',
   `Author` CHAR(36) NOT NULL,
   PRIMARY KEY (`TutorialID`))
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
 
--- -----------------------------------------------------
--- Table `TeachingTutorials`.`Lessons`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Lessons` (
-  `LessonID` INT NOT NULL AUTO_INCREMENT,
-  `UUID` CHAR(36) NOT NULL,
-  `TutorialID` INT NOT NULL,
-  `Finished` TINYINT NOT NULL DEFAULT 0,
-  `StageAt` INT NOT NULL DEFAULT 0,
-  `StepAt` INT NOT NULL DEFAULT 0,
-  `LocationID` INT NOT NULL,
-  PRIMARY KEY (`LessonID`),
-  CONSTRAINT `User`
-    FOREIGN KEY (`UUID`)
-    REFERENCES `TeachingTutorials`.`Players` (`UUID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `Tutorial1`
-    FOREIGN KEY (`TutorialID`)
-    REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `Location1`
-    FOREIGN KEY (`LocationID`)
-    REFERENCES `TeachingTutorials`.`Locations` (`LocationID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`CategoryPoints`
@@ -88,10 +39,22 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`CategoryPoints` (
   PRIMARY KEY (`TutorialID`, `Category`, `Relevance`),
   CONSTRAINT `Tutorial`
     FOREIGN KEY (`TutorialID`)
-    REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `TeachingTutorials`.`Events`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Events` (
+  `UUID` CHAR(36) NOT NULL,
+  `EventName` ENUM('RESTART_LESSON', 'CONTINUE_LESSON', 'ADMIN_MENU', 'START_TUTORIAL', 'START_LOCATION') NOT NULL,
+  `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Data` INT)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Stages`
@@ -100,14 +63,15 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Stages` (
   `StageID` INT NOT NULL AUTO_INCREMENT,
   `TutorialID` INT NOT NULL,
   `Order` INT NOT NULL,
-  `StageName` VARCHAR(45) NULL,
+  `StageName` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`StageID`),
+  INDEX `Tutorial2` (`TutorialID` ASC) VISIBLE,
   CONSTRAINT `Tutorial2`
     FOREIGN KEY (`TutorialID`)
-    REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Steps`
@@ -116,16 +80,17 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Steps` (
   `StepID` INT NOT NULL AUTO_INCREMENT,
   `StageID` INT NOT NULL,
   `StepInStage` INT NOT NULL,
-  `StepName` VARCHAR(45) NULL,
-  `StepInstructions` TEXT NULL,
-  `InstructionDisplay` VARCHAR(45) NULL,
+  `StepName` VARCHAR(45) NULL DEFAULT NULL,
+  `StepInstructions` TEXT NULL DEFAULT NULL,
+  `InstructionDisplay` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`StepID`),
+  INDEX `Stage` (`StageID` ASC) VISIBLE,
   CONSTRAINT `Stage`
     FOREIGN KEY (`StageID`)
-    REFERENCES `TeachingTutorials`.`Stages` (`StageID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `TeachingTutorials`.`Stages` (`StageID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Groups`
@@ -134,12 +99,96 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Groups` (
   `GroupID` INT NOT NULL AUTO_INCREMENT,
   `StepID` INT NOT NULL,
   PRIMARY KEY (`GroupID`),
+  INDEX `StepID` (`StepID` ASC) VISIBLE,
   CONSTRAINT `StepID`
     FOREIGN KEY (`StepID`)
-    REFERENCES `TeachingTutorials`.`Steps` (`StepID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `TeachingTutorials`.`Steps` (`StepID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `TeachingTutorials`.`Locations`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Locations` (
+  `LocationID` INT NOT NULL AUTO_INCREMENT,
+  `Latitude` DOUBLE NULL DEFAULT NULL,
+  `Longitude` DOUBLE NULL DEFAULT NULL,
+  `TutorialID` INT NOT NULL,
+  `InUse` TINYINT(1) DEFAULT 0,
+  `LocationName` VARCHAR(100) DEFAULT "",
+  PRIMARY KEY (`LocationID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `TeachingTutorials`.`Players`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Players` (
+  `UUID` CHAR(36) NOT NULL,
+  `CompletedCompulsory` TINYINT NOT NULL DEFAULT '0',
+  PRIMARY KEY (`UUID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `TeachingTutorials`.`Lessons`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Lessons` (
+  `LessonID` INT NOT NULL AUTO_INCREMENT,
+  `UUID` CHAR(36) NOT NULL,
+  `TutorialID` INT NOT NULL,
+  `Finished` TINYINT NOT NULL DEFAULT '0',
+  `StageAt` INT NOT NULL DEFAULT '0',
+  `StepAt` INT NOT NULL DEFAULT '0',
+  `LocationID` INT NOT NULL,
+  `HighestStepCompleted` INT DEFAULT 0,
+  `HighestStageCompleted` INT DEFAULT 0,
+  PRIMARY KEY (`LessonID`),
+  INDEX `User` (`UUID` ASC) VISIBLE,
+  INDEX `Tutorial1` (`TutorialID` ASC) VISIBLE,
+  INDEX `Location1` (`LocationID` ASC) VISIBLE,
+  CONSTRAINT `Location1`
+    FOREIGN KEY (`LocationID`)
+    REFERENCES `TeachingTutorials`.`Locations` (`LocationID`),
+  CONSTRAINT `Tutorial1`
+    FOREIGN KEY (`TutorialID`)
+    REFERENCES `TeachingTutorials`.`Tutorials` (`TutorialID`),
+  CONSTRAINT `User`
+    FOREIGN KEY (`UUID`)
+    REFERENCES `TeachingTutorials`.`Players` (`UUID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `TeachingTutorials`.`LocationSteps`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`LocationSteps` (
+  `Location` INT NOT NULL,
+  `Step` INT NOT NULL,
+  `Latitude` DOUBLE NOT NULL,
+  `Longitude` DOUBLE NOT NULL,
+  `StartYaw` FLOAT NOT NULL,
+  `StartPitch` FLOAT NOT NULL,
+  `Instructions` TEXT NULL DEFAULT NULL,
+  `InstructionsX` DOUBLE NULL DEFAULT NULL,
+  `InstructionsY` DOUBLE NULL DEFAULT NULL,
+  `InstructionsZ` DOUBLE NULL DEFAULT NULL,
+  `VideoWalkthroughLink` VARCHAR(120) NULL DEFAULT NULL,
+  PRIMARY KEY (`Location`, `Step`),
+  INDEX `Step_idx` (`Step` ASC) VISIBLE,
+  CONSTRAINT `Location`
+    FOREIGN KEY (`Location`)
+    REFERENCES `TeachingTutorials`.`Locations` (`LocationID`),
+  CONSTRAINT `Step`
+    FOREIGN KEY (`Step`)
+    REFERENCES `TeachingTutorials`.`Steps` (`StepID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Tasks`
@@ -147,16 +196,41 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Tasks` (
   `TaskID` INT NOT NULL AUTO_INCREMENT,
   `GroupID` INT NOT NULL,
-  `TaskType` VARCHAR(32) NULL,
+  `TaskType` VARCHAR(32) NULL DEFAULT NULL,
   `Order` INT NOT NULL,
-  `Details` VARCHAR(45) NULL,
+  `Details` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`TaskID`),
+  INDEX `Group` (`GroupID` ASC) VISIBLE,
   CONSTRAINT `Group`
     FOREIGN KEY (`GroupID`)
-    REFERENCES `TeachingTutorials`.`Groups` (`GroupID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `TeachingTutorials`.`Groups` (`GroupID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `TeachingTutorials`.`LocationTasks`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`LocationTasks` (
+  `LocationID` INT NOT NULL,
+  `TaskID` INT NOT NULL,
+  `Answers` MEDIUMTEXT NULL DEFAULT NULL,
+  `TpllDifficulty` FLOAT NULL DEFAULT NULL,
+  `WEDifficulty` FLOAT NULL DEFAULT NULL,
+  `ColouringDifficulty` FLOAT NULL DEFAULT NULL,
+  `DetailingDifficulty` FLOAT NULL DEFAULT NULL,
+  `TerraDifficulty` FLOAT NULL DEFAULT NULL,
+  PRIMARY KEY (`LocationID`, `TaskID`),
+  INDEX `Task` (`TaskID` ASC) VISIBLE,
+  CONSTRAINT `Location0`
+    FOREIGN KEY (`LocationID`)
+    REFERENCES `TeachingTutorials`.`Locations` (`LocationID`),
+  CONSTRAINT `Task`
+    FOREIGN KEY (`TaskID`)
+    REFERENCES `TeachingTutorials`.`Tasks` (`TaskID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
 
 -- -----------------------------------------------------
 -- Table `TeachingTutorials`.`Scores`
@@ -168,41 +242,6 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Scores` (
   PRIMARY KEY (`LessonID`),
   CONSTRAINT `LessonID`
     FOREIGN KEY (`LessonID`)
-    REFERENCES `TeachingTutorials`.`Lessons` (`LessonID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
--- -----------------------------------------------------
--- Table `TeachingTutorials`.`LocationTasks`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`LocationTasks` (
-  `LocationID` INT NOT NULL,
-  `TaskID` INT NOT NULL,
-  `Answers` MEDIUMTEXT NULL,
-  `TpllDifficulty` FLOAT NULL,
-  `WEDifficulty` FLOAT NULL,
-  `ColouringDifficulty` FLOAT NULL,
-  `DetailingDifficulty` FLOAT NULL,
-  `TerraDifficulty` FLOAT NULL,
-  CONSTRAINT `Location0`
-    FOREIGN KEY (`LocationID`)
-    REFERENCES `TeachingTutorials`.`Locations` (`LocationID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `Task`
-    FOREIGN KEY (`TaskID`)
-    REFERENCES `TeachingTutorials`.`Tasks` (`TaskID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
--- -----------------------------------------------------
--- Table `TeachingTutorials`.`Events`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Events` (
-  `UUID` CHAR(36) NOT NULL,
-  `EventName` enum('COMPULSORY','CONTINUE','ADMIN_MENU') NOT NULL,
-  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `TeachingTutorials`.`Lessons` (`LessonID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;

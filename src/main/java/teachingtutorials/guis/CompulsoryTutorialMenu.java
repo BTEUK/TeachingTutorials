@@ -1,50 +1,67 @@
 package teachingtutorials.guis;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.tutorials.Tutorial;
+import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
-import java.util.ArrayList;
-
-public class CompulsoryTutorialMenu
+/**
+ * A menu which allows an admin to select the compulsory tutorial. The menu is of a reverse whack-a-mole design
+ * - only one tutorial can be compulsory at a time and if another is selected the original will be replaced
+ */
+public class CompulsoryTutorialMenu extends Gui
 {
-    public static Inventory inventory;
-    public static String inventory_name;
-    public static int iRows;
-    public static TeachingTutorials plugin;
+    /** Stores the name of the inventory */
+    private static final Component inventoryName = TutorialGUIUtils.inventoryTitle("Select Compulsory Tutorial");
 
-    private static Tutorial[] tutorials;
+    /** A reference to the TeachingTutorials plugin instance */
+    private final TeachingTutorials plugin;
 
+    /** A reference to the user for which this menu is for */
+    private final User user;
+
+    /** Stores a list of all in use tutorials */
+    private Tutorial[] tutorials;
+
+    /** The material used as the icon of the compulsory tutorial */
     private static final Material compulsoryBlock = Material.LECTERN;
+
+    /** The material used as the icon of the tutorial currently not selected as the compulsory tutorial */
     private static final Material nonCompulsoryBlock = Material.BOOKSHELF;
 
-    public static void initialize()
+    public CompulsoryTutorialMenu(TeachingTutorials plugin, User user, Tutorial[] tutorials)
     {
-        inventory_name = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Select Compulsory Tutorial";
+        //Sets up the menu with the icons already in place
+        super(getGUI(tutorials));
+        this.plugin = plugin;
+        this.user = user;
+        this.tutorials = tutorials;
+
+        //Adds the actions to the slots of the menu
+        setActions();
     }
 
-    public static String getInventoryName()
-    {
-        return inventory_name;
-    }
-
-    public static Inventory getGUI ()
+    /**
+     * Creates an inventory design for the current status of tutorials
+     * @param tutorials A list of tutorials to include in the menu
+     * @return An inventory filled with icons, informing the user of the current state of tutorials, including which
+     * one is currently selected as compulsory
+     */
+    private static Inventory getGUI (Tutorial[] tutorials)
     {
         //Declare variables
         int i;
         int iTutorials;
         int iDiv;
         int iMod;
-
-        //Admins can only select from tutorials which have been set by creators as in use
-        tutorials = Tutorial.fetchAll(true);
+        int iRows;
+        Inventory inventory;
 
         //Works out how many rows in the inventory are needed
         iTutorials = tutorials.length;
@@ -56,86 +73,133 @@ public class CompulsoryTutorialMenu
             iDiv = iDiv + 1;
         }
 
-        //Enables an empty row and then a row for the back button
+        //Adds an empty row and then a row for the back button
         iRows = iDiv+2;
 
-        //Create inventories
+        //Creates the inventories - one to add items to and one to return to the user
         inventory = Bukkit.createInventory(null, iRows * 9);
         inventory.clear();
 
-        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventory_name);
+        Inventory toReturn = Bukkit.createInventory(null, iRows * 9, inventoryName);
 
-        //Indicates that the creator has no tutorials if they don't own any
+        //Adds an indicator icon if there are no tutorials to select as compulsory
         if (iTutorials == 0)
         {
-            Utils.createItem(inventory, Material.BARRIER, 1, 5, ChatColor.BOLD +"" +ChatColor.GREEN +"There are no in-use tutorials on the system");
+            ItemStack noTutorials = Utils.createItem(Material.BARRIER, 1,
+                    TutorialGUIUtils.optionTitle("There are no in-use tutorials on the system"));
+            inventory.setItem(5-1, noTutorials); //Sets the item in the middle
         }
 
-        //Adds back button
-        Utils.createItem(inventory, Material.SPRUCE_DOOR, 1, iRows * 9, ChatColor.BOLD +"" +ChatColor.GREEN+"Back to creator menu");
+        //Adds a back button
+        ItemStack back = Utils.createItem(Material.SPRUCE_DOOR, 1,
+                TutorialGUIUtils.backButton("Back to creator menu"));
+        inventory.setItem((iRows * 9)-1, back);
 
-        //Inv slot 1 = the first one
+        //Inv slot 0 = the top left place
         //Add the tutorials to the gui
-        for (i = 1 ; i <= tutorials.length ; i++)
+        for (i = 0 ; i < tutorials.length ; i++)
         {
-            if (tutorials[i-1].bCompulsory)
-                Utils.createItem(inventory, compulsoryBlock, 1, i,(ChatColor.GREEN +""+ChatColor.BOLD +tutorials[i-1].szTutorialName), ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
+            ItemStack tutorial;
+            if (tutorials[i].isCompulsory())
+            {
+                tutorial = Utils.createItem(compulsoryBlock, 1,
+                        TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()).decoration(TextDecoration.BOLD, true),
+                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].getUUIDOfAuthor()).getName()));
+            }
             else
-                Utils.createItem(inventory, nonCompulsoryBlock, 1, i,(ChatColor.GREEN +tutorials[i-1].szTutorialName),
-                        ChatColor.DARK_GREEN+(Bukkit.getPlayer(tutorials[i-1].uuidAuthor)).getName());
+            {
+                tutorial = Utils.createItem(nonCompulsoryBlock, 1,
+                        TutorialGUIUtils.optionTitle(tutorials[i].getTutorialName()),
+                        TutorialGUIUtils.optionLore(Bukkit.getPlayer(tutorials[i].getUUIDOfAuthor()).getName()));
+            }
+            inventory.setItem(i, tutorial);
         }
 
+        //Copies the inventory to the inventory to return
         toReturn.setContents(inventory.getContents());
 
         return toReturn;
     }
 
-    public static void clicked(Player player, int slot, ItemStack clicked, Inventory inv, TeachingTutorials plugin)
+    /**
+     * Sets the actions to the selection menu
+     */
+    private void setActions()
     {
-        //Slot 0 indexed
+        //Declare variables
+        int i;
+        int iTutorials;
+        int iDiv;
+        int iMod;
+        int iRows;
 
-        //When player clicks on one of the tutorials
-        if (clicked.getType().equals(compulsoryBlock) || clicked.getType().equals(nonCompulsoryBlock))
+        //Works out how many rows in the inventory are needed
+        iTutorials = tutorials.length;
+        iDiv = iTutorials/9;
+        iMod = iTutorials%9;
+
+        if (iMod != 0 || iDiv == 0)
         {
-            //Toggles whether this tutorial is compulsory or not - ID is used to identify the tutorial
-            tutorials[slot].toggleCompulsory();
-
-            //Refreshes the display
-            player.closeInventory();
-            player.openInventory(CompulsoryTutorialMenu.getGUI());
-            return;
+            iDiv = iDiv + 1;
         }
 
-        if (slot+1 == iRows*9)
+        //Adds an empty row and then a row for the back button
+        iRows = iDiv+2;
+
+        //Adds back button
+        setAction((iRows * 9) - 1, new guiAction() {
+            @Override
+            public void rightClick(User u) {
+                leftClick(u);
+            }
+
+            @Override
+            public void leftClick(User u) {
+                delete();
+                u.mainGui = new CreatorMenu(plugin, user);
+                u.mainGui.open(u);
+            }
+        });
+
+        //Inv slot 0 = the first one
+        //Adds the actions of each slot
+        for (i = 0 ; i < tutorials.length ; i++)
         {
-            //Finds the correct user for this player from the plugins list of users
-            boolean bUserFound = false;
-
-            ArrayList<User> users = plugin.players;
-            int iLength = users.size();
-            int i;
-            User user = new User(player);
-
-            for (i = 0 ; i < iLength ; i++)
-            {
-                if (users.get(i).player.getUniqueId().equals(player.getUniqueId()))
-                {
-                    user = users.get(i);
-                    bUserFound = true;
-                    break;
+            int iSlot = i;
+            setAction(iSlot, new guiAction() {
+                @Override
+                public void rightClick(User u) {
+                    leftClick(u);
                 }
-            }
 
-            if (!bUserFound)
-            {
-                player.sendMessage(ChatColor.RED +"An error occurred. Please contact a support staff. Error: 1");
-                player.sendMessage(ChatColor.RED +"Try relogging");
-                return;
-            }
+                @Override
+                public void leftClick(User u)
+                {
+                    //Toggles whether the tutorial is compulsory
+                    tutorials[iSlot].toggleCompulsory(plugin);
 
-            //Back button
-            player.closeInventory();
-            player.openInventory(AdminMenu.getGUI(user));
+                    //Refreshes the display
+                    refresh();
+                }
+            });
         }
+    }
+
+    /**
+     * Clears items from the GUI, re-adds the items and then opens the menu
+     */
+    @Override
+    public void refresh() {
+        //Clears the gui
+        this.clearGui();
+
+        //Sets the icons
+        this.getInventory().setContents(getGUI(tutorials).getContents());
+
+        //Sets the actions
+        this.setActions();
+
+        //Opens the gui
+        this.open(user);
     }
 }

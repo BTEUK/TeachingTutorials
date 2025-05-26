@@ -157,6 +157,57 @@ public class TutorialRecommendation
         return recommendations;
     }
 
+    /**
+     * Fetches a tutorial recommendation by ID
+     * @param dbConnection A tutorials database connection
+     * @param logger A logger to output to
+     * @param ID The ID of the recommendation to fetch the details of
+     * @return An object representing the tutorial recommendation with the provided ID, or null if no such record exists
+     */
+    public static TutorialRecommendation fetchTutorialRecommendationByID(DBConnection dbConnection, Logger logger, int ID)
+    {
+        //SQL objects
+        String sql;
+        Statement SQL = null;
+        ResultSet resultSet;
+
+        TutorialRecommendation recommendation;
+
+        try
+        {
+            SQL = dbConnection.getConnection().createStatement();
+            sql = "SELECT * FROM TutorialRecommendations WHERE ID = "+ID;
+            resultSet = SQL.executeQuery(sql);
+
+            if (resultSet.next())
+            {
+                LocalDateTime ldt;
+                Timestamp ts = resultSet.getTimestamp("DoneTime");
+                if (ts != null)
+                    ldt = ts.toLocalDateTime();
+                else
+                    ldt = null;
+
+                recommendation = new TutorialRecommendation(resultSet.getInt("ID"), UUID.fromString(resultSet.getString("RecommendedFor")),
+                        UUID.fromString(resultSet.getString("RecommendedBy")), resultSet.getInt("TutorialID"),
+                        resultSet.getInt("LocationID"), resultSet.getString("Reason"),
+                        resultSet.getBoolean("Done"), ldt);
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+        catch (SQLException e)
+        {
+            logger.log(Level.WARNING, "Error fetching tutorial recommendations with ID "+ID, e);
+            return null;
+        }
+
+        return recommendation;
+    }
+
 
     /**
      * Adds a recommendation to the database

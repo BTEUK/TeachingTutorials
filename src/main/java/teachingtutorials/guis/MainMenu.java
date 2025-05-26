@@ -8,6 +8,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.adminscreators.CreatorMenu;
 import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialobjects.Location;
+import teachingtutorials.tutorialobjects.TutorialRecommendation;
 import teachingtutorials.tutorialplaythrough.Lesson;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.Display;
@@ -205,7 +206,7 @@ public class MainMenu extends Gui
                 TutorialGUIUtils.optionTitle("Redo the Starter Tutorial"),
                 TutorialGUIUtils.optionLore("Refresh your essential knowledge"));
 
-        super.setItem(10, compulsory, new guiAction() {
+        super.setItem(9, compulsory, new guiAction() {
             @Override
             public void rightClick(User u) {
                 leftClick(u);
@@ -223,7 +224,7 @@ public class MainMenu extends Gui
                 TutorialGUIUtils.optionTitle("Tutorial Library"),
                 TutorialGUIUtils.optionLore("Browse all of our available tutorials"));
 
-        super.setItem(12, tutorialLibrary, new guiAction() {
+        super.setItem(11, tutorialLibrary, new guiAction() {
             @Override
             public void rightClick(User u) {
                 leftClick(u);
@@ -243,7 +244,7 @@ public class MainMenu extends Gui
         ItemStack currentLessons = Utils.createItem(Material.WRITABLE_BOOK, 1,
                 TutorialGUIUtils.optionTitle("Current Lessons"),
                 TutorialGUIUtils.optionLore("View your unfinished lessons"));
-        super.setItem(14, currentLessons, new guiAction() {
+        super.setItem(13, currentLessons, new guiAction() {
             @Override
             public void rightClick(User u) {
                 leftClick(u);
@@ -256,13 +257,28 @@ public class MainMenu extends Gui
         });
 
 
+        //Tutorial recommendations
+        super.setItem(15, Utils.createItem(Material.CHEST, 1, TutorialGUIUtils.optionTitle("Recommended Tutorials")),
+                new guiAction() {
+                    @Override
+                    public void rightClick(User u) {
+                        leftClick(u);
+                    }
+                    @Override
+                    public void leftClick(User u) {
+                        user.mainGui = new RecommendedTutorialsMenu(plugin, MainMenu.this, user, TutorialRecommendation.fetchTutorialRecommendationsForPlayer(plugin.getDBConnection(), plugin.getLogger(), user.player.getUniqueId()));
+                        user.mainGui.open(user);
+                    }
+                });
+
+
         //Continue learning/next tutorial
         ItemStack continueLearning = Utils.createItem(Material.END_CRYSTAL, 1,
                 TutorialGUIUtils.optionTitle("Start a new Tutorial:"),
                 TutorialGUIUtils.optionLore(nextTutorial.getTutorialName()));
 
         if (nextTutorial != null)
-            super.setItem(16 , continueLearning, new guiAction() {
+            super.setItem(17 , continueLearning, new guiAction() {
                 @Override
                 public void rightClick(User u)
                 {

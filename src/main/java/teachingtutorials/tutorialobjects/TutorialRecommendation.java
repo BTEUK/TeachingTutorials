@@ -158,26 +158,47 @@ public class TutorialRecommendation
     }
 
 
-    public static boolean addRecommendation(DBConnection dbConnection, Logger logger, UUID recommendedFor, UUID recommendedBy, int iTutorialID, int iLocationID,
+    /**
+     * Adds a recommendation to the database
+     * @param dbConnection A tutorials database connection
+     * @param logger A logger to output to
+     * @param recommendedFor The UUID of the player whom this is a recommendation for
+     * @param recommendedBy The UUID of the player who recommended this tutorial
+     * @param iTutorialID  The TutorialID of the tutorial being recommended
+     * @param iLocationID The LocationID of the location being recommended, or -1 if not specified
+     * @param szReason The reason for the recommendation
+     * @return The ID of the recommendation just added, or -1 if the addition failed.
+     */
+    public static int addRecommendation(DBConnection dbConnection, Logger logger, UUID recommendedFor, UUID recommendedBy, int iTutorialID, int iLocationID,
                                             String szReason)
     {
         //SQL objects
         String sql;
         Statement SQL = null;
+        ResultSet resultSet;
 
         try
         {
             sql = "INSERT INTO TutorialRecommendations (`RecommendedFor`, `RecommendedBy`, `TutorialID`, `LocationID`, `Reason`) VALUES ('"+recommendedFor+"', '"+recommendedBy+"', "+iTutorialID +", "+iLocationID+", '"+szReason+"')";
             SQL = dbConnection.getConnection().createStatement();
 
-            SQL.executeUpdate(sql);
+            int iCount = SQL.executeUpdate(sql);
 
-            return true;
+            if (iCount == 1)
+            {
+                //Gets the ID of the recommendation just inserted and returns
+                sql = "Select LAST_INSERT_ID()";
+                resultSet = SQL.executeQuery(sql);
+                resultSet.next();
+                return(resultSet.getInt(1));
+            }
+            else
+                return -1;
         }
         catch (SQLException e)
         {
             logger.log(Level.WARNING, "Error fetching tutorial recommendations for "+recommendedFor, e);
-            return false;
+            return -1;
         }
     }
 

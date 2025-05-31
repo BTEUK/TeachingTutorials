@@ -76,6 +76,24 @@ public class TutorialRecommendation
 
     /**
      *
+     * @return Whether this recommendation has been acted upon
+     */
+    public boolean isCompleted()
+    {
+        return bDone;
+    }
+
+    /**
+     *
+     * @return The reason for the recommendation
+     */
+    public String getReason()
+    {
+        return szReason;
+    }
+
+    /**
+     *
      * @param dbConnection A tutorials database connection
      * @param logger A logger to output to
      * @return The name of the Tutorial

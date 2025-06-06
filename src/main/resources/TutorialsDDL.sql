@@ -245,3 +245,19 @@ CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`Scores` (
     REFERENCES `TeachingTutorials`.`Lessons` (`LessonID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
+
+
+CREATE TABLE IF NOT EXISTS `TeachingTutorials`.`TutorialRecommendations` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `RecommendedFor` CHAR(36) NOT NULL,
+  `RecommendedBy` CHAR(36) NOT NULL,
+  `TutorialID` INT NOT NULL,
+  `LocationID` INT NULL,
+  `Reason` MediumText,
+  `Done` Tinyint(1) NOT NULL default 0,
+  `DoneTime` Timestamp NULL default NULL,
+PRIMARY KEY (`ID`),
+INDEX `RecommendedTutorialID` (`TutorialID` ASC) VISIBLE,
+CONSTRAINT `TutorialID`
+  FOREIGN KEY (`TutorialID`)
+  REFERENCES `test_uknet_tutorials`.`Tutorials` (`TutorialID`))

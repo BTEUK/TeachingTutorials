@@ -8,6 +8,7 @@ import teachingtutorials.listeners.PlaythroughCommandListeners;
 import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialobjects.Tutorial;
+import teachingtutorials.tutorialobjects.TutorialRecommendation;
 import teachingtutorials.utils.DBConnection;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Mode;
@@ -412,6 +413,9 @@ public class Lesson extends TutorialPlaythrough
         //Sets the lesson as complete in the database
         savePositions();
         setLessonCompleteInDB();
+
+        //Update the tutorial recommendations list
+        TutorialRecommendation.updateComplete(plugin.getDBConnection(), plugin.getLogger(), creatorOrStudent.player.getUniqueId(), tutorial.getTutorialID(), location.getLocationID());
 
         //Display a tutorial complete message to the student
         //Gets the time period we have to display the title

@@ -1,4 +1,4 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.TextComponent;
@@ -11,11 +11,8 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.ChatLocationTaskEditorMenu;
-import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.LocationTask;
-import teachingtutorials.tutorialplaythrough.Lesson;
-import teachingtutorials.tutorialplaythrough.PlaythroughMode;
-import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
 
 import java.util.logging.Level;
@@ -331,10 +328,10 @@ public class Chat extends PlaythroughTask implements Listener
         HandlerList.unregisterAll(this);
     }
 
-    //A public version is required for when spotHit is called from the difficulty listener
-    //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
+    //A public version is required for when spotHit is called from the difficulty panel
+    //This is required as it means that the tutorial can be halted until the difficulty panel completes the creation of the new LocationTask
     /**
-     * To be called from a difficulty listener when the difficulty has been specified.
+     * To be called from a difficulty panel when the difficulty has been specified.
      * <p> </p>
      * Will unregister the chat task and move forwards to the next task
      */

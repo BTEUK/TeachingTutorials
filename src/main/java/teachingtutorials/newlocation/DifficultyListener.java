@@ -86,7 +86,7 @@ public class DifficultyListener implements Listener
 
                 if (!bRegistered)
                 {
-                    event.getPlayer().sendMessage(Display.errorText("Complete the " +task.getLocationTask().type.toString() +" task first"));
+                    event.getPlayer().sendMessage(Display.errorText("Complete the " +task.getLocationTask().getType().name() +" task first"));
                     return;
                 }
 
@@ -95,7 +95,7 @@ public class DifficultyListener implements Listener
                 float fDifficulty = Float.parseFloat(command);
 
                 //Sets the difficulties of the location tasks
-                switch (task.getLocationTask().type)
+                switch (task.getLocationTask().getType())
                 {
                     case tpll:
                         task.getLocationTask().setDifficulties(fDifficulty, 0, 0, 0, 0);

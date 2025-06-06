@@ -1,8 +1,7 @@
 package teachingtutorials.tutorialobjects;
 
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.FundamentalTaskType;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.Task;
+import teachingtutorials.tutorialplaythrough.FundamentalTaskType;
 import teachingtutorials.utils.Category;
 
 import java.sql.SQLException;
@@ -35,13 +34,13 @@ public class LocationTask extends Task
      * @param iTaskID The ID of the task in the DB
      * @param iOrder The order in which the task should be completed within its parent group
      * @param szDetails The extra details associated with the task
-     * @param group A reference to the parent group of the task
      * @param iLocationID A copy of the locationID for the location with which the Location Task is associated
      * @param szAnswers The answers
+     * @param fDifficulties The difficulties in each skills category for this location task
      */
-    public LocationTask(FundamentalTaskType type, int iTaskID, int iOrder, String szDetails, Group group, int iLocationID, String szAnswers, float[] fDifficulties)
+    public LocationTask(FundamentalTaskType type, int iTaskID, int iOrder, String szDetails, int iLocationID, String szAnswers, float[] fDifficulties)
     {
-        super(type, iTaskID, iOrder, szDetails, group);
+        super(type, iTaskID, iOrder, szDetails);
         this.iLocationID = iLocationID;
         this.szAnswers = szAnswers;
         this.fDifficulties = fDifficulties;
@@ -55,7 +54,7 @@ public class LocationTask extends Task
      */
     public LocationTask(Task task, int iLocationID)
     {
-        super(task.type, task.iTaskID, task.iOrder, task.szDetails, task.getParentGroup());
+        super(task.getType(), task.iTaskID, task.getOrder(), task.getDetails());
         this.iLocationID = iLocationID;
 
         this.fDifficulties = new float[]{0f, 0f, 0f, 0f, 0f};

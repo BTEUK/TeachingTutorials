@@ -10,7 +10,6 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialobjects.Step;
-import teachingtutorials.tutorialplaythrough.fundamentalTasks.Tpll;
 import teachingtutorials.guis.locationcreatemenus.StepEditorMenu;
 import teachingtutorials.utils.Display;
 import teachingtutorials.utils.Hologram;
@@ -528,10 +527,11 @@ public class StepPlaythrough
             //Player has just finished setting the answers for this step
             if (parentStagePlaythrough.tutorialPlaythrough.getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
             {
+                //Refreshes the menu to trigger the confirm step button to update
+                menu.refresh();
+
                 //Checks whether the additional information is set - start location and instructions etc
-                if (locationStep.isOtherInformationSet(plugin.getLogger()))
-                    tryNextStep();
-                else
+                if (!locationStep.isOtherInformationSet(plugin.getLogger()))
                 {
                     player.sendMessage(Display.colouredText("You must now set the step's start location and instructions. Use the learning menu", NamedTextColor.GOLD));
 
@@ -540,8 +540,6 @@ public class StepPlaythrough
 
                     //Opens the step editor menu
                     menu.open(parentStagePlaythrough.tutorialPlaythrough.getCreatorOrStudent());
-
-                    //We wait and then perform the code in the if statement above once the location has been set, via tryNextStep()
                 }
             }
 
@@ -583,8 +581,7 @@ public class StepPlaythrough
     /**
      * Will move the player on to the next step if the current step is finished - answers AND additional information set
      * <p> </p>
-     * <p> This method has two uses: it is called directly after any additional step information is set.
-     * It is called when the answers have just finished being set.
+     * <p> This method is only ever called manually from the step editor menu during location creation
      * </p>
      */
     public void tryNextStep()
@@ -597,6 +594,8 @@ public class StepPlaythrough
         {
             if (locationStep.isOtherInformationSet(plugin.getLogger()))
             {
+                // ----- Move on to next step -----
+
                 //Remove hologram
                 if (step.getInstructionDisplayType().equals(Display.DisplayType.hologram))
                     removeInstructionsHologram();

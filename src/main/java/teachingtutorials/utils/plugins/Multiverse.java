@@ -120,6 +120,7 @@ public class Multiverse
         if (world == null) {
             return false;
         } else {
+            worldManager.removePlayersFromWorld(name);
             worldManager.deleteWorld(name);
             return true;
         }

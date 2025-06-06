@@ -162,7 +162,7 @@ public class StepEditorMenu extends Gui
                     u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
-                    //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
+                    //The menu is refreshed from TextEditorBookListener once the book close event occurs
                 }
             });
 
@@ -180,7 +180,9 @@ public class StepEditorMenu extends Gui
                 @Override
                 public void leftClick(User u) {
                     locationStep.setHologramLocationToThatOfPlayer(stepPlaythrough, u.player, stepPlaythrough.getStep().getName());
-                    stepPlaythrough.tryNextStep();
+
+                    //Refresh and reopen menu
+                    refreshAndReopen();
                 }
             });
 
@@ -231,7 +233,7 @@ public class StepEditorMenu extends Gui
                     u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
-                    //step.tryNextStep() is called via instructionsEdited() from TextEditorBookListener once the book close event occurs
+                    //The menu is refreshed from TextEditorBookListener once the book close event occurs
                 }
             });
 
@@ -274,8 +276,8 @@ public class StepEditorMenu extends Gui
         //When this is first called on initialisation it will break because the current group/task are still at -1 so it won't be able to get the current one
         //We could just return null if it has not started yet
 
-        LocationTaskEditorMenu editorMenu = stepPlaythrough.getCurrentTaskEditorMenu();
-        if (editorMenu != null)
+        LocationTaskEditorMenu taskEditorMenu = stepPlaythrough.getCurrentTaskEditorMenu();
+        if (taskEditorMenu != null)
         {
             setItem(22, Utils.createItem(Material.IRON_DOOR, 1, TutorialGUIUtils.optionTitle("Task Editor Menu"), TutorialGUIUtils.optionLore("Click to edit the current task")), new guiAction() {
                 @Override
@@ -285,7 +287,7 @@ public class StepEditorMenu extends Gui
 
                 @Override
                 public void leftClick(User u) {
-                    u.mainGui = editorMenu;
+                    u.mainGui = taskEditorMenu;
                     u.mainGui.open(u);
                 }
             });
@@ -330,6 +332,23 @@ public class StepEditorMenu extends Gui
                         }
                     });
         }
+
+        //Confirm step and move on
+        if (stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation)
+                && stepPlaythrough.isFinished() && this.locationStep.isOtherInformationSet(plugin.getLogger()))
+        {
+            super.setItem(26, Utils.createItem(Material.EMERALD, 1, TutorialGUIUtils.optionTitle("Move on to next step"), TutorialGUIUtils.optionLore("")),
+                    new guiAction() {
+                        @Override
+                        public void rightClick(User u) {
+                            leftClick(u);
+                        }
+                        @Override
+                        public void leftClick(User u) {
+                            stepPlaythrough.tryNextStep();
+                        }
+                    });
+        }
     }
 
     /**
@@ -342,8 +361,9 @@ public class StepEditorMenu extends Gui
         locationStep.setStartLocation(playersLocation);
         //Updates the playthrough's safe location
         stepPlaythrough.getParentStage().getTutorialPlaythrough().setFallListenerSafeLocation(playersLocation);
-        //Triggers the step to test whether it can finish and move to the next step
-        stepPlaythrough.tryNextStep();
+
+        //Refresh and reopen menu
+        refreshAndReopen();
     }
 
     /**
@@ -358,23 +378,29 @@ public class StepEditorMenu extends Gui
     }
 
     /**
-     * Clears items from the GUI, recreates the items and then opens the menu
+     * Clears items from the GUI, recreates the items
+     * <p></p>
+     * You may wish to use this to get the menu to check whether the confirm button can be added after you have
+     * edited some information or completed a group.
      */
     @Override
     public void refresh()
     {
         this.clearGui();
         this.addMenuOptions();
-
-        this.open(user);
     }
 
     /**
-     * Triggers the step to test whether it can move forwards with the stage
+     * Triggers refresh of the menu and opens the menu
+     * <p></p>
+     * You may wish to use this to get the menu to check whether the confirm button can be added after you have
+     * edited some information or completed a group.
      */
-    public void instructionsEdited()
+    public void refreshAndReopen()
     {
-        stepPlaythrough.tryNextStep();
+        //Refresh and reopen menu
+        refresh();
+        StepEditorMenu.this.open(user);
     }
 
 
@@ -395,19 +421,14 @@ public class StepEditorMenu extends Gui
         else
             locationStep.setVideoLink(szNewContent);
 
-        //Reopen the feature menu
-        user.mainGui = this;
-        user.mainGui.refresh();
-
         //Unregisters this listener
         textEditorBookListener.unregister();
 
         //Removes the book
         user.player.getInventory().getItemInMainHand().setAmount(0);
 
-        //Informs the menu that some instructions were edited
-        if (bWasInstructions)
-            instructionsEdited();
+        //Refresh and reopen the menu
+        refreshAndReopen();
 
         return true;
     }

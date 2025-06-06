@@ -146,12 +146,15 @@ public class TextEditorBookListener implements Listener
         //Extracts the new content from the book
         String szNewContent = "";
         List<Component> pages = event.getNewBookMeta().pages();
-        for (Component page: pages)
+        if (!pages.isEmpty())
         {
-            szNewContent = szNewContent + ((TextComponent) page).content() + " ";
+            for (Component page: pages)
+            {
+                szNewContent = szNewContent + ((TextComponent) page).content() + " ";
+            }
+            // Removes the end space, the space after the last page is added in the loop but then needs to be removed
+            szNewContent = szNewContent.substring(0, szNewContent.length() - 1);
         }
-        // Removes the end space, the space after the last page is added in the loop but then needs to be removed
-        szNewContent = szNewContent.substring(0, szNewContent.length() - 1);
 
         //Performs the predefined instructions upon book close
         boolean bSaveAnswers = bookCloseAction.runBookClose(event.getPreviousBookMeta(), event.getNewBookMeta(), this, szNewContent);

@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
 import teachingtutorials.guis.Gui;
@@ -104,7 +105,7 @@ public class User
         {
             currentMode = Mode.Doing_Tutorial;
         }
-        else if (playthrough instanceof Lesson)
+        else if (playthrough instanceof NewLocation)
         {
             currentMode = Mode.Creating_New_Location;
         }

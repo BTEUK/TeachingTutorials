@@ -1,8 +1,7 @@
-package teachingtutorials.tutorialplaythrough.fundamentalTasks;
+package teachingtutorials.tutorialplaythrough;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,12 +11,11 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.tutorialplaythrough.GroupPlaythrough;
+import teachingtutorials.guis.locationcreatemenus.LocationTaskEditorMenu;
+import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.LocationTask;
-import teachingtutorials.tutorialplaythrough.Lesson;
-import teachingtutorials.tutorialplaythrough.PlaythroughMode;
-import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
+import teachingtutorials.utils.User;
 
 import java.util.logging.Level;
 
@@ -54,6 +52,13 @@ public class Place extends PlaythroughTask implements Listener
 
         //Adds the virtual block to the list
         calculateVirtualBlocks();
+
+        this.taskEditorMenu = new LocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Place Task Difficulty Panel", NamedTextColor.AQUA),
+                this.getLocationTask(), this) {
+        };
     }
 
     /**
@@ -66,6 +71,13 @@ public class Place extends PlaythroughTask implements Listener
     Place(TeachingTutorials plugin, Player player, Task task, GroupPlaythrough groupPlaythrough)
     {
         super(plugin, player, task, groupPlaythrough);
+
+        this.taskEditorMenu = new LocationTaskEditorMenu(plugin,
+                groupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent(),
+                groupPlaythrough.getParentStep().getEditorMenu(),
+                Display.colouredText("Place Task Difficulty Panel", NamedTextColor.AQUA),
+                this.getLocationTask(), this) {
+        };
     }
 
     /**
@@ -165,10 +177,13 @@ public class Place extends PlaythroughTask implements Listener
             //Data is added to database once difficulty is provided
 
             //Prompt difficulty
-            player.sendMessage(Display.colouredText("Enter the difficulty of that place from 0 to 1 as a decimal. Use /tutorials [difficulty]", NamedTextColor.AQUA));
-            difficultyListener.register();
+            taskEditorMenu.taskFullySet();
+            taskEditorMenu.refresh();
 
-            //SpotHit is then called from inside the difficulty listener once the difficulty has been established
+            User user = parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent();
+            taskEditorMenu.open(user);
+
+            //SpotHit is then called from inside the difficulty panel once the difficulty has been established
             //This is what moves it onto the next task
 
             //Adds the virtual block to the list
@@ -248,10 +263,10 @@ public class Place extends PlaythroughTask implements Listener
         HandlerList.unregisterAll(this);
     }
 
-    //A public version is required for when spotHit is called from the difficulty listener
-    //This is required as it means that the tutorial can be halted until the difficulty listener completes the creation of the new LocationTask
+    //A public version is required for when spotHit is called from the difficulty panel
+    //This is required as it means that the tutorial can be halted until the difficulty panel completes the creation of the new LocationTask
     /**
-     * To be called from a difficulty listener when the difficulty has been specified.
+     * To be called from a difficulty panel when the difficulty has been specified.
      * <p> </p>
      * Will unregister the place task and move forwards to the next task
      */

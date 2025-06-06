@@ -17,7 +17,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.plugin.java.JavaPlugin;
+import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
@@ -30,8 +30,8 @@ import java.util.logging.Level;
  */
 public class TextEditorBookListener implements Listener
 {
-    /** A reference to the instance of the plugin */
-    private final JavaPlugin plugin;
+    /** A reference to the instance of the TeachingTutorials plugin */
+    private final TeachingTutorials plugin;
 
     /** A reference to the interface object which defines the intended behaviour on book close */
     private final BookCloseAction bookCloseAction;
@@ -47,13 +47,13 @@ public class TextEditorBookListener implements Listener
 
     /**
      * Constructs the object, gets the book ready
-     * @param plugin A reference to the instance of the plugin
+     * @param plugin A reference to the instance of the TeachingTutorials plugin
      * @param user A reference to the User
      * @param szBookTitle The intended title for the book
      * @param bookCloseAction The action to perform on book close
      */
 
-    public TextEditorBookListener(JavaPlugin plugin, User user, Gui parentGUI, String szBookTitle, BookCloseAction bookCloseAction, String... initialValue)
+    public TextEditorBookListener(TeachingTutorials plugin, User user, Gui parentGUI, String szBookTitle, BookCloseAction bookCloseAction, String... initialValue)
     {
         this.plugin = plugin;
         this.bookCloseAction = bookCloseAction;

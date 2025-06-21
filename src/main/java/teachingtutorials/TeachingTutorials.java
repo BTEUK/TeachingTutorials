@@ -1,5 +1,6 @@
 package teachingtutorials;
 
+import net.bteuk.minecraft.misc.PlayerUtils;
 import net.bteuk.teachingtutorials.services.PromotionService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -208,6 +209,8 @@ public class TeachingTutorials extends JavaPlugin
         meta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Learning Menu");
         menu.setItemMeta(meta);
 
+        PlayerUtils.protectedItems.add(menu);
+
         //Initiates the slot index where the menu should be placed
         iLearningMenuSlot = config.getInt("Learning_Menu_Slot");
 
@@ -232,7 +235,7 @@ public class TeachingTutorials extends JavaPlugin
                     else if (!currentItemInSlot.equals(menu))
                     {
                         //Attempts to move the current item to a free slot if there is one available
-                        int iEmptySlot = Utils.getEmptyHotbarSlot(p);
+                        int iEmptySlot = PlayerUtils.getAvailableHotbarSlot(p);
                         if (iEmptySlot != -1)
                             p.getInventory().setItem(iEmptySlot, currentItemInSlot);
 

@@ -1,5 +1,6 @@
 package teachingtutorials.listeners.texteditorbooks;
 
+import net.bteuk.minecraft.misc.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -20,8 +21,6 @@ import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.Gui;
 import teachingtutorials.utils.User;
-import teachingtutorials.utils.Utils;
-
 import java.util.List;
 import java.util.logging.Level;
 
@@ -109,7 +108,7 @@ public class TextEditorBookListener implements Listener
         }
 
         if (!bPlayerHasItem)
-            Utils.giveItem(user.player, this.book, szBookName);
+            PlayerUtils.giveItem(user.player, this.book, szBookName);
 
         //Registers the book close listener
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);

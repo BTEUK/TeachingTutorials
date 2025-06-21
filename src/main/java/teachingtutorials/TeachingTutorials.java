@@ -1,5 +1,7 @@
 package teachingtutorials;
 
+import lombok.Getter;
+import net.bteuk.minecraft.gui.*;
 import net.bteuk.minecraft.misc.PlayerUtils;
 import net.bteuk.teachingtutorials.services.PromotionService;
 import org.bukkit.Bukkit;
@@ -17,11 +19,11 @@ import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import teachingtutorials.commands.Blockspy;
 import teachingtutorials.commands.PlayersPlayingTutorialsCompleter;
+import teachingtutorials.guis.Event;
+import teachingtutorials.guis.MainMenu;
 import teachingtutorials.services.TutorialsPromotionService;
 import teachingtutorials.tutorialobjects.*;
 import teachingtutorials.tutorialplaythrough.FundamentalTaskType;
-import teachingtutorials.guis.*;
-import teachingtutorials.listeners.InventoryClickedOrClosed;
 import teachingtutorials.listeners.PlayerInteract;
 import teachingtutorials.listeners.JoinLeaveEvent;
 import teachingtutorials.listeners.GlobalPlayerCommandProcess;
@@ -53,6 +55,10 @@ public class TeachingTutorials extends JavaPlugin
 
     /** An item stack for the menu opener icon */
     public static ItemStack menu;
+
+    /** The gui manager */
+    @Getter
+    private GuiManager tutGuiManager;
 
     /** The slot in which the menu opener icon should appear */
     private int iLearningMenuSlot;
@@ -246,6 +252,11 @@ public class TeachingTutorials extends JavaPlugin
         }, 0L, config.getLong("Menu_Icon_Refresh_Period"));
 
 
+        //-----------------------------------------------
+        //--------- Initialises the Gui Manager ---------
+        //-----------------------------------------------
+        tutGuiManager = new GuiManager();
+
         //---------------------------------------
         //------------ Adds Commands ------------
         //---------------------------------------
@@ -422,7 +433,7 @@ public class TeachingTutorials extends JavaPlugin
 
         //Handles menus
         new PlayerInteract(this);
-        new InventoryClickedOrClosed(this);
+        new GuiListener(tutGuiManager).register(this);
 
         //Handles tpll, ll and /tutorials
         new GlobalPlayerCommandProcess(this);

@@ -9,7 +9,7 @@ import teachingtutorials.TeachingTutorials;
 import teachingtutorials.newlocation.NewLocation;
 import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialplaythrough.TutorialPlaythrough;
-import teachingtutorials.guis.Gui;
+import net.bteuk.minecraft.gui.*;
 import teachingtutorials.tutorialplaythrough.Lesson;
 
 import java.sql.ResultSet;

@@ -19,7 +19,7 @@ import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.guis.Gui;
+import net.bteuk.minecraft.gui.Gui;
 import teachingtutorials.utils.User;
 import java.util.List;
 import java.util.logging.Level;
@@ -193,7 +193,7 @@ public class TextEditorBookListener implements Listener
                 Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                     @Override
                     public void run() {
-                        parentGUI.open(user);
+                        parentGUI.open(user.player);
                     }
                 }, 1);
             }

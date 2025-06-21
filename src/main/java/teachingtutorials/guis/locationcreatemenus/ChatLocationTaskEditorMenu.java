@@ -1,9 +1,11 @@
 package teachingtutorials.guis.locationcreatemenus;
 
+import net.bteuk.minecraft.gui.GuiAction;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.TutorialGUIUtils;
@@ -235,13 +237,9 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                 Utils.createItem(Material.LEVER, 1,
                         TutorialGUIUtils.optionTitle("You are in "+mode +" mode"),
                         TutorialGUIUtils.optionLore("Click to switch to "+modeNotIn + " mode")),
-                new guiAction() {
+                new GuiAction() {
                     @Override
-                    public void rightClick(User u) {
-                        leftClick(u);
-                    }
-                    @Override
-                    public void leftClick(User u) {
+                    public void click(InventoryClickEvent event) {
                         //Switches the mode
                         mode = modeNotIn;
                         //Refreshes the menu
@@ -283,13 +281,9 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
             super.setItem(6,
                     Utils.createItem(Material.BOOK, 1,
                             TutorialGUIUtils.optionTitle("Page forwards")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             iCurrentPage = iCurrentPage + 1;
                             refresh();
                         }
@@ -302,13 +296,9 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
             super.setItem(2,
                     Utils.createItem(Material.BOOK, 1,
                             TutorialGUIUtils.optionTitle("Page back")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             iCurrentPage = iCurrentPage - 1;
                             refresh();
                         }
@@ -342,17 +332,13 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                     Utils.createItem(Material.BOOK, 1,
                             TutorialGUIUtils.optionTitle(szText),
                             TutorialGUIUtils.optionLore("Click to edit")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             //Give player the book and register the book close listener
                             answerBook.startEdit("Answer "+ (finalI+1));
 
-                            u.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the answer for this option", NamedTextColor.GREEN));
+                            user.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the answer for this option", NamedTextColor.GREEN));
                         }
                     });
 
@@ -368,17 +354,13 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                         Utils.createItem(Material.KNOWLEDGE_BOOK, 1,
                                 TutorialGUIUtils.optionTitle(szScore),
                                 TutorialGUIUtils.optionLore("Click to edit")),
-                        new guiAction() {
+                        new GuiAction() {
                             @Override
-                            public void rightClick(User u) {
-                                leftClick(u);
-                            }
-                            @Override
-                            public void leftClick(User u) {
+                            public void click(InventoryClickEvent event) {
                                 //Give player the book and register the book close listener
                                 scoreBook.startEdit("Score "+ (finalI+1));
 
-                                u.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the score for this option", NamedTextColor.GREEN));
+                                user.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the score for this option", NamedTextColor.GREEN));
                             }
                         });
 
@@ -388,13 +370,9 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                         Utils.createItem(Material.BARRIER, 1,
                                 TutorialGUIUtils.optionTitle("Delete Option"),
                                 TutorialGUIUtils.optionLore("Click to delete option")),
-                        new guiAction() {
+                        new GuiAction() {
                             @Override
-                            public void rightClick(User u) {
-                                leftClick(u);
-                            }
-                            @Override
-                            public void leftClick(User u) {
+                            public void click(InventoryClickEvent event) {
                                 deleteDiscreteItem(finalI);
                             }
                         });
@@ -410,13 +388,9 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                     Utils.createItem(Material.WRITABLE_BOOK, 1,
                             TutorialGUIUtils.optionTitle("New Option"),
                             TutorialGUIUtils.optionLore("Click to add")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             //Adds a new option
                             addDiscreteItem((iNumOptions+1) +"");
 
@@ -444,17 +418,13 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                 Utils.createItem(Material.KNOWLEDGE_BOOK, 1,
                         TutorialGUIUtils.optionTitle("Minimum"),
                         TutorialGUIUtils.optionLore(szMin)),
-                new guiAction() {
+                new GuiAction() {
                     @Override
-                    public void rightClick(User u) {
-                        leftClick(u);
-                    }
-                    @Override
-                    public void leftClick(User u) {
+                    public void click(InventoryClickEvent event) {
                         //Give player the book and register the book close listener
                         numericalMin.startEdit("Minimum");
 
-                        u.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the minimum acceptable value for this option", NamedTextColor.GREEN));
+                        user.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the minimum acceptable value for this option", NamedTextColor.GREEN));
                     }
                 });
 
@@ -462,17 +432,13 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                 Utils.createItem(Material.KNOWLEDGE_BOOK, 1,
                         TutorialGUIUtils.optionTitle("Target"),
                         TutorialGUIUtils.optionLore(szTarget)),
-                new guiAction() {
+                new GuiAction() {
                     @Override
-                    public void rightClick(User u) {
-                        leftClick(u);
-                    }
-                    @Override
-                    public void leftClick(User u) {
+                    public void click(InventoryClickEvent event) {
                         //Give player the book and register the book close listener
                         numericalPerfect.startEdit("Target");
 
-                        u.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the target value for this option", NamedTextColor.GREEN));
+                        user.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the target value for this option", NamedTextColor.GREEN));
                     }
                 });
 
@@ -480,17 +446,13 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                 Utils.createItem(Material.KNOWLEDGE_BOOK, 1,
                         TutorialGUIUtils.optionTitle("Maximum"),
                         TutorialGUIUtils.optionLore(szMax)),
-                new guiAction() {
+                new GuiAction() {
                     @Override
-                    public void rightClick(User u) {
-                        leftClick(u);
-                    }
-                    @Override
-                    public void leftClick(User u) {
+                    public void click(InventoryClickEvent event) {
                         //Give player the book and register the book close listener
                         numericalMax.startEdit("Maximum");
 
-                        u.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the maximum acceptable value for this option", NamedTextColor.GREEN));
+                        user.player.sendMessage(Display.colouredText("Use the book in your inventory to edit the maximum acceptable value for this option", NamedTextColor.GREEN));
                     }
                 });
 
@@ -584,7 +546,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
     }
 
     /**
-     * Refreshes the menu
+     * Clears items from the GUI, recreates the items and then opens the menu
      */
     @Override
     public void refresh()
@@ -596,7 +558,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         addChatItems();
 
         //Opens the menu
-        this.open(user);
+        this.open(user.player);
     }
 }
 
@@ -684,7 +646,7 @@ class AnswerBookClose implements BookCloseAction
         //Refresh and reopen the menu
         chatEditMenu.saveAndCheck();
         chatEditMenu.refresh();
-        chatEditMenu.open(user);
+        chatEditMenu.open(user.player);
     }
 }
 
@@ -774,7 +736,7 @@ class NumericalBookClose implements BookCloseAction
         //Refresh and reopen the menu
         chatEditMenu.saveAndCheck();
         chatEditMenu.refresh();
-        chatEditMenu.open(user);
+        chatEditMenu.open(user.player);
     }
 }
 

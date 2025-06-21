@@ -2,9 +2,10 @@ package teachingtutorials.guis.adminscreators;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.guis.Gui;
+import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.MainMenu;
 import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.newtutorial.TutorialCreationSession;
@@ -35,7 +36,7 @@ public class CreatorMenu extends Gui
      */
     public CreatorMenu(TeachingTutorials plugin, User user)
     {
-        super(iNumRows, inventoryName);
+        super(plugin.getTutGuiManager(), iNumRows, inventoryName);
         this.plugin = plugin;
         this.user = user;
 
@@ -69,16 +70,12 @@ public class CreatorMenu extends Gui
         //Adds a compulsory tutorial selection menu for admins
         if (user.player.hasPermission("TeachingTutorials.Admin"))
         {
-            setItem(12 - 1, setCompulsory, new guiAction() {
+            setItem(12 - 1, setCompulsory, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-                @Override
-                public void leftClick(User u) {
+                public void click(InventoryClickEvent e) {
                     delete();
-                    u.mainGui = new CompulsoryTutorialMenu(plugin, u, Tutorial.fetchAll(true, false, null, plugin.getDBConnection(), plugin.getLogger()));
-                    u.mainGui.open(u);
+                    user.mainGui = new CompulsoryTutorialMenu(plugin, user, Tutorial.fetchAll(true, false, null, plugin.getDBConnection(), plugin.getLogger()));
+                    user.mainGui.open(user.player);
                 }
             });
 
@@ -90,27 +87,19 @@ public class CreatorMenu extends Gui
             iSlotMyTutorials = 12 - 1;
 
         //Adds the MyTutorials item
-        setItem(iSlotMyTutorials, myTutorials, new guiAction() {
+        setItem(iSlotMyTutorials, myTutorials, new GuiAction() {
             @Override
-            public void rightClick(User u) {
-                leftClick(u);
-            }
-            @Override
-            public void leftClick(User u) {
+            public void click(InventoryClickEvent e) {
                 delete();
-                u.mainGui = new CreatorTutorialsMenu(plugin, u, Tutorial.fetchAll(false, false, u.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger()));
-                u.mainGui.open(u);
+                user.mainGui = new CreatorTutorialsMenu(plugin, user, Tutorial.fetchAll(false, false, user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger()));
+                user.mainGui.open(user.player);
             }
         });
 
         //Adds the 'Create Tutorial' item
-        setItem(16 - 1, createTutorial, new guiAction() {
+        setItem(16 - 1, createTutorial, new GuiAction() {
             @Override
-            public void rightClick(User u) {
-                leftClick(u);
-            }
-            @Override
-            public void leftClick(User u) {
+            public void click(InventoryClickEvent e) {
                 //Launches a new tutorial creation session
                 TutorialCreationSession session = new TutorialCreationSession(plugin, user);
                 session.startSession();
@@ -122,16 +111,12 @@ public class CreatorMenu extends Gui
         //Adds the back item
         setItem(27 - 1, Utils.createItem(Material.SPRUCE_DOOR, 1,
                         TutorialGUIUtils.backButton("Back to main menu")),
-                new guiAction() {
+                new GuiAction() {
             @Override
-            public void rightClick(User u) {
-                leftClick(u);
-            }
-            @Override
-            public void leftClick(User u) {
+            public void click(InventoryClickEvent e) {
                 delete();
-                u.mainGui = new MainMenu(plugin, u);
-                u.mainGui.open(u);
+                user.mainGui = new MainMenu(plugin, user);
+                user.mainGui.open(user.player);
             }
         });
     }
@@ -139,12 +124,11 @@ public class CreatorMenu extends Gui
     /**
      * Clears items from the GUI, re-adds the items and then opens the menu
      */
-    @Override
     public void refresh()
     {
-        this.clearGui();
+        this.clear();
         this.addMenuOptions();
 
-        this.open(user);
+        this.open(user.player);
     }
 }

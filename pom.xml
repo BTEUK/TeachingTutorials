@@ -180,7 +180,7 @@
         <dependency>
             <groupId>com.github.BTEUK</groupId>
             <artifactId>BTEUKLib</artifactId>
-            <version>05ba96ce7a</version>
+            <version>8c7a1437b3</version>
         </dependency>
         <dependency>
             <groupId>com.onarandombox.multiversecore</groupId>
@@ -231,6 +231,12 @@
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
             <version>7.0.13</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

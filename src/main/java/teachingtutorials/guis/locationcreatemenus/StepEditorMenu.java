@@ -4,10 +4,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.guis.Gui;
+import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
 import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
@@ -54,7 +55,7 @@ public class StepEditorMenu extends Gui
      */
     public StepEditorMenu(TeachingTutorials plugin, User user, StepPlaythrough stepPlaythrough, LocationStep locationStep)
     {
-        super(iInvSize, getName(stepPlaythrough.getStep().getName()));
+        super(plugin.getTutGuiManager(), iInvSize, getName(stepPlaythrough.getStep().getName()));
         this.plugin = plugin;
         this.user = user;
         this.stepPlaythrough = stepPlaythrough;
@@ -135,31 +136,21 @@ public class StepEditorMenu extends Gui
         if (bIsHologramNeeded)
         {
             //Set start location coordinates to current location
-            setItem(10, setStartLocation, new guiAction() {
+            setItem(10, setStartLocation, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
-                    setStartLocation(u.player.getLocation());
+                public void click(InventoryClickEvent event) {
+                    setStartLocation(user.player.getLocation());
                 }
             });
 
             //Set instructions
-            setItem(12, instructions, new guiAction() {
+            setItem(12, instructions, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
+                public void click(InventoryClickEvent event) {
                     //Sets up the book listener and registers it
                     instructionsBookListener.startEdit("Instructions editor book");
 
-                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
+                    user.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
                     //The menu is refreshed from TextEditorBookListener once the book close event occurs
@@ -171,12 +162,7 @@ public class StepEditorMenu extends Gui
                     TutorialGUIUtils.optionTitle("Set the instructions hologram location"),
                     TutorialGUIUtils.optionLore("Set the instructions hologram to your current position"));
 
-            setItem(14, hologramLocation, new guiAction() {
-                @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
+            setItem(14, hologramLocation, new GuiAction() {
                 @Override
                 public void leftClick(User u) {
                     locationStep.setHologramLocationToThatOfPlayer(stepPlaythrough, u.player, stepPlaythrough.getStep().getName());
@@ -187,18 +173,13 @@ public class StepEditorMenu extends Gui
             });
 
             //Set video link
-            setItem(16, videoLink, new guiAction() {
+            setItem(16, videoLink, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
+                public void click(InventoryClickEvent event) {
                     //Sets up the book listener and registers it
                     videoLinkBookListener.startEdit("Video link editor book");
 
-                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
+                    user.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
@@ -206,31 +187,21 @@ public class StepEditorMenu extends Gui
         else
         {
             //Set start location
-            setItem(11, setStartLocation, new guiAction() {
+            setItem(11, setStartLocation, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
-                    setStartLocation(u.player.getLocation());
+                public void click(InventoryClickEvent event) {
+                    setStartLocation(user.player.getLocation());
                 }
             });
 
             //Set instructions
-            setItem(13, instructions, new guiAction() {
+            setItem(13, instructions, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
+                public void click(InventoryClickEvent event) {
                     //Sets up the book listener and registers it
                     instructionsBookListener.startEdit("Instructions editor book");
 
-                    u.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
+                    user.player.sendMessage(Display.colouredText("Use the instructions editor book to set the instructions", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
 
                     //The menu is refreshed from TextEditorBookListener once the book close event occurs
@@ -238,33 +209,23 @@ public class StepEditorMenu extends Gui
             });
 
             //Set video link
-            setItem(15, videoLink, new guiAction() {
+            setItem(15, videoLink, new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
+                public void click(InventoryClickEvent event) {
                     //Sets up the book listener and registers it
                     videoLinkBookListener.startEdit("Video link editor book");
 
-                    u.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
+                    user.player.sendMessage(Display.colouredText("Use the video link editor book to set the video link", NamedTextColor.GREEN));
                     //The listener unregisters itself once the book is closed. We parse the location step by reference so it can edit the link itself
                 }
             });
         }
 
         //Teleport to start
-        setItem(0, teleportToStart, new guiAction() {
+        setItem(0, teleportToStart, new GuiAction() {
             @Override
-            public void rightClick(User u) {
-                leftClick(u);
-            }
-
-            @Override
-            public void leftClick(User u) {
-                locationStep.teleportPlayerToStartOfStep(u.player, stepPlaythrough.getParentStage().getTutorialPlaythrough().getLocation().getWorld(), plugin);
+            public void click(InventoryClickEvent event) {
+                locationStep.teleportPlayerToStartOfStep(user.player, stepPlaythrough.getParentStage().getTutorialPlaythrough().getLocation().getWorld(), plugin);
             }
         });
 
@@ -279,16 +240,11 @@ public class StepEditorMenu extends Gui
         LocationTaskEditorMenu taskEditorMenu = stepPlaythrough.getCurrentTaskEditorMenu();
         if (taskEditorMenu != null)
         {
-            setItem(22, Utils.createItem(Material.IRON_DOOR, 1, TutorialGUIUtils.optionTitle("Task Editor Menu"), TutorialGUIUtils.optionLore("Click to edit the current task")), new guiAction() {
+            setItem(22, Utils.createItem(Material.IRON_DOOR, 1, TutorialGUIUtils.optionTitle("Task Editor Menu"), TutorialGUIUtils.optionLore("Click to edit the current task")), new GuiAction() {
                 @Override
-                public void rightClick(User u) {
-                    leftClick(u);
-                }
-
-                @Override
-                public void leftClick(User u) {
-                    u.mainGui = taskEditorMenu;
-                    u.mainGui.open(u);
+                public void click(InventoryClickEvent event) {
+                    user.mainGui = taskEditorMenu;
+                    user.mainGui.open(user.player);
                 }
             });
         }
@@ -297,18 +253,14 @@ public class StepEditorMenu extends Gui
         if (stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
         {
             super.setItem(18, Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.optionTitle("Back to Navigator"), TutorialGUIUtils.optionLore("Return to lesson mode")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             //If in edit mode, switch mode
                             if (StepEditorMenu.this.stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
                                 stepPlaythrough.getParentStage().getTutorialPlaythrough().setCurrentPlaythroughMode(PlaythroughMode.PlayingLesson);
 
-                            u.player.closeInventory();
+                            user.player.closeInventory();
                             stepPlaythrough.getParentStage().getTutorialPlaythrough().openNavigationMenu();
                         }
                     });
@@ -316,18 +268,14 @@ public class StepEditorMenu extends Gui
         else if (stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.CreatingLocation))
         {
             super.setItem(18, Utils.createItem(Material.SPRUCE_DOOR, 1, TutorialGUIUtils.optionTitle("Back to Navigator"), TutorialGUIUtils.optionLore("")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             //If in edit mode, switch mode
                             if (StepEditorMenu.this.stepPlaythrough.getParentStage().getTutorialPlaythrough().getCurrentPlaythroughMode().equals(PlaythroughMode.EditingLocation))
                                 stepPlaythrough.getParentStage().getTutorialPlaythrough().setCurrentPlaythroughMode(PlaythroughMode.PlayingLesson);
 
-                            u.player.closeInventory();
+                            user.player.closeInventory();
                             stepPlaythrough.getParentStage().getTutorialPlaythrough().openNavigationMenu();
                         }
                     });
@@ -338,13 +286,9 @@ public class StepEditorMenu extends Gui
                 && stepPlaythrough.isFinished() && this.locationStep.isOtherInformationSet(plugin.getLogger()))
         {
             super.setItem(26, Utils.createItem(Material.EMERALD, 1, TutorialGUIUtils.optionTitle("Move on to next step"), TutorialGUIUtils.optionLore("")),
-                    new guiAction() {
+                    new GuiAction() {
                         @Override
-                        public void rightClick(User u) {
-                            leftClick(u);
-                        }
-                        @Override
-                        public void leftClick(User u) {
+                        public void click(InventoryClickEvent event) {
                             stepPlaythrough.tryNextStep();
                         }
                     });
@@ -383,10 +327,9 @@ public class StepEditorMenu extends Gui
      * You may wish to use this to get the menu to check whether the confirm button can be added after you have
      * edited some information or completed a group.
      */
-    @Override
     public void refresh()
     {
-        this.clearGui();
+        this.clear();
         this.addMenuOptions();
     }
 
@@ -400,7 +343,7 @@ public class StepEditorMenu extends Gui
     {
         //Refresh and reopen menu
         refresh();
-        StepEditorMenu.this.open(user);
+        StepEditorMenu.this.open(user.player);
     }
 
 

@@ -6,7 +6,7 @@
 
     <groupId>me.bteuk</groupId>
     <artifactId>TeachingTutorials</artifactId>
-    <version>1.13</version>
+    <version>1.13.1</version>
     <packaging>jar</packaging>
 
     <name>TeachingTutorials</name>
@@ -176,6 +176,11 @@
             <groupId>com.github.BTEUK</groupId>
             <artifactId>TeachingTutorialsAPI</artifactId>
             <version>970d3dc3f7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.BTEUK</groupId>
+            <artifactId>BTEUKLib</artifactId>
+            <version>05ba96ce7a</version>
         </dependency>
         <dependency>
             <groupId>com.onarandombox.multiversecore</groupId>

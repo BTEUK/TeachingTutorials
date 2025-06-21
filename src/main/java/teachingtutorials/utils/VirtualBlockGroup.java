@@ -34,8 +34,8 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
 
     /**
      * If true, marks that the group is not to be displayed and is ready to be removed from the list of active virtual block
-     * groups once the safety mechanism is ready. The group is only remianing in the master list so that the safety reset
-     * mechanism of virtual blocks maintains it's proper order.
+     * groups once the safety mechanism is ready. The group is only remaining in the master list so that the safety reset
+     * mechanism of virtual blocks maintains its proper order.
      */
     private boolean bStale = false;
 

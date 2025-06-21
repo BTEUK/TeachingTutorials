@@ -164,8 +164,8 @@ public class StepEditorMenu extends Gui
 
             setItem(14, hologramLocation, new GuiAction() {
                 @Override
-                public void leftClick(User u) {
-                    locationStep.setHologramLocationToThatOfPlayer(stepPlaythrough, u.player, stepPlaythrough.getStep().getName());
+                public void click(InventoryClickEvent event) {
+                    locationStep.setHologramLocationToThatOfPlayer(stepPlaythrough, user.player, stepPlaythrough.getStep().getName(), plugin.getDBConnection(), plugin.getLogger());
 
                     //Refresh and reopen menu
                     refreshAndReopen();
@@ -302,7 +302,7 @@ public class StepEditorMenu extends Gui
     private void setStartLocation(Location playersLocation)
     {
         //Updates the start location of the step
-        locationStep.setStartLocation(playersLocation);
+        locationStep.setStartLocation(playersLocation, plugin.getDBConnection(), plugin.getLogger());
         //Updates the playthrough's safe location
         stepPlaythrough.getParentStage().getTutorialPlaythrough().setFallListenerSafeLocation(playersLocation);
 
@@ -360,7 +360,7 @@ public class StepEditorMenu extends Gui
     {
         //Edits the step instructions or video link
         if (bWasInstructions)
-            locationStep.setInstruction(this.getStepPlaythrough(), szNewContent, locationStep.getStep().getInstructionDisplayType(), user.player, locationStep.getStep().getName());
+            locationStep.setInstruction(this.getStepPlaythrough(), szNewContent, locationStep.getStep().getInstructionDisplayType(), user.player, locationStep.getStep().getName(), plugin.getDBConnection(), plugin.getLogger());
         else
             locationStep.setVideoLink(szNewContent);
 

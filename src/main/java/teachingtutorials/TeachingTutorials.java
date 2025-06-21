@@ -44,9 +44,6 @@ import java.util.logging.Level;
  */
 public class TeachingTutorials extends JavaPlugin
 {
-    /** A reference to the main instance of the plugin */
-    private static TeachingTutorials instance;
-
     /** A reference to the config of the main instance plugin */
     private static FileConfiguration config;
 
@@ -135,9 +132,6 @@ public class TeachingTutorials extends JavaPlugin
             this.setEnabled(false);
             return;
         }
-
-        //Set the static instance of the plugin to this
-        TeachingTutorials.instance = this;
 
         //Set the static instance of the config to the config of this instance
         TeachingTutorials.config = this.getConfig();
@@ -260,8 +254,8 @@ public class TeachingTutorials extends JavaPlugin
         //---------------------------------------
         //------------ Adds Commands ------------
         //---------------------------------------
-        getCommand("blockspy").setTabCompleter(new PlayersPlayingTutorialsCompleter());
-        getCommand("blockspy").setExecutor(new Blockspy());
+        getCommand("blockspy").setTabCompleter(new PlayersPlayingTutorialsCompleter(this));
+        getCommand("blockspy").setExecutor(new Blockspy(this));
 
         //---------------------------------------
         //------------ Enable Services ----------
@@ -287,7 +281,7 @@ public class TeachingTutorials extends JavaPlugin
             public void run()
             {
                 //Deal with external events in the DB
-                ArrayList<Event> events = Event.getLatestEvents(dbConnection, instance.getLogger());
+                ArrayList<Event> events = Event.getLatestEvents(dbConnection, getLogger());
                 int iNumEvents = events.size();
                 Event event;
                 User user;
@@ -299,7 +293,7 @@ public class TeachingTutorials extends JavaPlugin
                     event = events.get(i);
 
                     //Gets the user from the list of the plugin's users based on the player
-                    user = User.identifyUser(instance, event.getPlayer());
+                    user = User.identifyUser(TeachingTutorials.this, event.getPlayer());
                     if (user != null)
                     {
                         MainMenu.performEvent(event.getEventType(), user, TeachingTutorials.this, event.getData());
@@ -309,7 +303,7 @@ public class TeachingTutorials extends JavaPlugin
                         So we want to keep the event around if that happens so on the next run through the user who might
                         Now be on the server will be taken to a tutorial or whatever
                          */
-                        event.remove();
+                        event.remove(dbConnection, getLogger());
                     }
                     //else
                         //Do nothing, they may still be in server transport
@@ -375,7 +369,7 @@ public class TeachingTutorials extends JavaPlugin
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
         {
             //Run the resetting
-            Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), new Runnable() {
+            Bukkit.getScheduler().runTask(TeachingTutorials.this, new Runnable() {
                 @Override
                 public void run()
                 {
@@ -400,7 +394,7 @@ public class TeachingTutorials extends JavaPlugin
                         }
 
                         //Get the list of virtual blocks
-                        VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.getInstance().getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
+                        VirtualBlockGroup[] virtualBlockGroups = TeachingTutorials.this.getVirtualBlockGroups().toArray(VirtualBlockGroup[]::new);
 
                         //Declares the temporary list object
                         VirtualBlockGroup<Location, BlockData> virtualBlockGroup;
@@ -413,7 +407,7 @@ public class TeachingTutorials extends JavaPlugin
                             virtualBlockGroup = virtualBlockGroups[j];
 
                             //Call for the world blocks to be reset
-                            virtualBlockGroup.resetWorld();
+                            virtualBlockGroup.resetWorld(TeachingTutorials.this);
                             //Todo: These don't get done in sync. All world setting needs to be waited on with events.
                             //In order to solve this temporarily, make sure the virtual block refresh period occurs more frequently
                             // than the world reset
@@ -744,7 +738,7 @@ public class TeachingTutorials extends JavaPlugin
         //Insert the new tutorial into the tutorials table
         try
         {
-            SQL = TeachingTutorials.getInstance().getConnection().createStatement();
+            SQL = this.getDBConnection().getConnection().createStatement();
             sql = "INSERT INTO `Tutorials` (`TutorialName`, `Author`) VALUES ('"+tutorial.getTutorialName()+"', '"+tutorial.getUUIDOfAuthor() +"')";
             SQL.executeUpdate(sql);
 
@@ -893,14 +887,7 @@ public class TeachingTutorials extends JavaPlugin
     public void onDisable()
     {
         // Plugin shutdown logic
-    }
-
-    /**
-     * @return A reference to the main instance of the TeachingTutorials plugin
-     */
-    public static TeachingTutorials getInstance()
-    {
-        return instance;
+        dbConnection.disconnect();
     }
 
     /**
@@ -910,15 +897,7 @@ public class TeachingTutorials extends JavaPlugin
     {
         return dbConnection;
     }
-
-    /**
-     * @return A reference to the main SQL connection object of the TeachingTutorials plugin
-     */
-    public Connection getConnection()
-    {
-        return (dbConnection.getConnection());
-    }
-
+    
     /**
      * @return The promotion service that is enabled.
      */

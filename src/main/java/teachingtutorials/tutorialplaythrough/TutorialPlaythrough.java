@@ -95,7 +95,7 @@ public abstract class TutorialPlaythrough
         this.stagePlaythroughs = StagePlaythrough.fetchStagesByTutorialIDForPlaythrough(this.getCreatorOrStudent().player, plugin, this);
 
         //Sets up the nav menu
-        navigationMenu = new TutorialNavigationMenu(this);
+        navigationMenu = new TutorialNavigationMenu(this, plugin);
     }
 
     /**

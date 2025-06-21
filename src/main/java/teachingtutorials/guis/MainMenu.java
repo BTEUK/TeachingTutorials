@@ -29,10 +29,10 @@ public class MainMenu extends Gui
     private static final int iNumRows = 27;
 
     /** Gets the config */
-    private final FileConfiguration config = TeachingTutorials.getInstance().getConfig();
+    private final FileConfiguration config;
 
     /** Gets the compulsory tutorial setting */
-    private final boolean bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial.Enabled");
+    private final boolean bCompulsoryTutorialEnabled;
 
     /** The Tutorial of the compulsory tutorial. Null if no compulsory tutorial is set */
     private Tutorial compulsoryTutorial;
@@ -49,7 +49,6 @@ public class MainMenu extends Gui
     /** The next tutorial which a player would play if clicking continue learning */
     private Tutorial nextTutorial;
 
-
     /**
      *
      * @param plugin A reference to the instance of the TeachingTutorials plugin
@@ -59,6 +58,8 @@ public class MainMenu extends Gui
     {
         super(plugin.getTutGuiManager(), iNumRows, inventoryName);
         this.plugin = plugin;
+        this.config = plugin.getConfig();
+        this.bCompulsoryTutorialEnabled = config.getBoolean("Compulsory_Tutorial.Enabled");
         this.user = user;
 
         fetchInformation();

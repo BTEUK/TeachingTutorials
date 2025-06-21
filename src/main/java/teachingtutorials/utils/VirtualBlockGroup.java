@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * An extension of a concurrent hashmap for lists of virtual block
@@ -168,7 +169,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
      * USE WITH EXTREME CAUTION!
      * <p> </p>
      */
-    public void addBlocksToWorld()
+    public void addBlocksToWorld(Logger logger)
     {
         //Store a reference to the world locally
         World worldToSet = tutorialPlaythrough.getLocation().getWorld();
@@ -181,7 +182,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
         //Get the blocks in the world
         for (int i = 0 ; i < iLocations ; i++)
         {
-            TeachingTutorials.getInstance().getLogger().log(Level.FINE, ChatColor.AQUA +"Setting a " +virtualBlockData[i].getMaterial() +" block to the actual world");
+            logger.log(Level.FINE, ChatColor.AQUA +"Setting a " +virtualBlockData[i].getMaterial() +" block to the actual world");
             worldToSet.setBlockData(locations[i], virtualBlockData[i]);
         }
     }
@@ -191,7 +192,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
      * <P> </P>
      * When using this method with lots of virtual block groups it is important to call the resets from later virtual block groups first. As in FILO.
      */
-    public void resetWorld()
+    public void resetWorld(TeachingTutorials plugin)
     {
         //Store a reference to the world locally
         World worldToSet = tutorialPlaythrough.getLocation().getWorld();
@@ -203,7 +204,7 @@ public class VirtualBlockGroup<K, V> extends ConcurrentHashMap<K,V>
 
         Bukkit.getLogger().log(Level.FINE, ChatColor.AQUA +"Resetting the blocks to the world for "+getOwner());
 
-        Bukkit.getScheduler().runTask(TeachingTutorials.getInstance(), () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
             //Set the blocks in the world
             for (int i = 0 ; i < iLocations ; i++)
             {

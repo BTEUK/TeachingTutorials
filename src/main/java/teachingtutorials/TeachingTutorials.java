@@ -930,7 +930,8 @@ public class TeachingTutorials extends JavaPlugin
             this.saveResource("TutorialsDDL.sql", false);
 
             //Creates a file object and sets it to the path of the Tutorials DB creation DDL
-            File file = new File("/home/container/plugins/TeachingTutorials/TutorialsDDL.sql");
+            String path = getDataFolder().getAbsolutePath() + "/TutorialsDDL.sql";
+            File file = new File(path);
 
             fileReader = new FileReader(file);
             bufferedReader = new BufferedReader(fileReader);

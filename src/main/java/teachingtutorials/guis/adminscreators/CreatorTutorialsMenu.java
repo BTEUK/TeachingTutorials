@@ -1,17 +1,12 @@
-package teachingtutorials.guis;
+package teachingtutorials.guis.adminscreators;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.newlocation.NewLocation;
+import teachingtutorials.guis.Gui;
+import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.tutorialobjects.Tutorial;
-import teachingtutorials.utils.Display;
-import teachingtutorials.utils.Mode;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 

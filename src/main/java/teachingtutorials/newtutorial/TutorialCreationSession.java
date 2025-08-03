@@ -1,7 +1,7 @@
 package teachingtutorials.newtutorial;
 
 import teachingtutorials.TeachingTutorials;
-import teachingtutorials.guis.CreatorTutorialsMenu;
+import teachingtutorials.guis.adminscreators.CreatorTutorialsMenu;
 import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.Display;

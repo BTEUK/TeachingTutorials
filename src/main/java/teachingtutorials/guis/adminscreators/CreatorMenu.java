@@ -1,9 +1,12 @@
-package teachingtutorials.guis;
+package teachingtutorials.guis.adminscreators;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.Gui;
+import teachingtutorials.guis.MainMenu;
+import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.newtutorial.TutorialCreationSession;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.User;

@@ -1,8 +1,10 @@
-package teachingtutorials.guis;
+package teachingtutorials.guis.adminscreators;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
+import teachingtutorials.guis.Gui;
+import teachingtutorials.guis.TutorialGUIUtils;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.User;

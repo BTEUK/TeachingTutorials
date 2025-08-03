@@ -9,8 +9,7 @@ import teachingtutorials.TeachingTutorials;
 import net.bteuk.minecraft.gui.Gui;
 import teachingtutorials.guis.LessonContinueConfirmer;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.LessonObject;
 import teachingtutorials.tutorialobjects.Location;
 import teachingtutorials.tutorialplaythrough.Lesson;
@@ -46,7 +45,7 @@ public class LocationManageMenu extends Gui
 
         this.lessons = LessonObject.getUnfinishedLessonsOfPlayer(user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger());
 
-        this.nameEditor = new TextEditorBookListener(plugin, user, this, "Edit Location Name", new BookCloseAction() {
+        this.nameEditor = new TextEditorBookListener(plugin, user.player, this, "Edit Location Name", new BookCloseAction() {
             @Override
             public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
                 //Unregister the listener
@@ -63,6 +62,11 @@ public class LocationManageMenu extends Gui
                     location.updateName(plugin.getDBConnection(), plugin.getLogger(), szNewContent);
                     return true;
                 }
+            }
+
+            @Override
+            public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
             }
 
             @Override

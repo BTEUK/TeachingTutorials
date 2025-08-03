@@ -199,7 +199,6 @@ public class Tpll extends PlaythroughTask implements Listener
 
                     //Prompt difficulty
                     taskEditorMenu.taskFullySet();
-                    taskEditorMenu.refresh();
 
                     User user = parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent();
                     taskEditorMenu.open(user.player);

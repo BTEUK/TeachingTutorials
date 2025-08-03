@@ -3,13 +3,13 @@ package teachingtutorials.guis.locationcreatemenus;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Category;
@@ -76,7 +76,7 @@ public class LocationTaskEditorMenu extends Gui
         for (int i = 0 ; i < 5 ; i ++)
         {
             int finalI = i;
-            difficultyListeners[i] = new TextEditorBookListener(plugin, user, this, "Difficulty in " + Category.values()[i], new BookCloseAction()
+            difficultyListeners[i] = new TextEditorBookListener(plugin, user.player, this, "Difficulty in " + Category.values()[i], new BookCloseAction()
             {
                 /**
                  * Performs the action on book close. You will likely want to unregister the book close listener within this.
@@ -124,6 +124,11 @@ public class LocationTaskEditorMenu extends Gui
                         bVerificationPassed = false;
                     }
                     return bVerificationPassed;
+                }
+
+                @Override
+                public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                    return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
                 }
 
                 /**
@@ -263,14 +268,29 @@ public class LocationTaskEditorMenu extends Gui
         }
     }
 
+    protected void addAdditionalOptions() {
+    }
+
     /**
      * Clears items from the GUI, recreates the items. If you call this you will need to open the menu yourself
      * with this.open(User) after calling this and adding any additional items.
      */
-    public void refresh()
+    private void refresh()
     {
         this.clear();
         this.addBaseOptions();
+        addAdditionalOptions();
+    }
+
+    /**
+     * Refreshes the menu and reopens it
+     * @param player The player to open the menu for
+     */
+    @Override
+    public void open(Player player)
+    {
+        refresh();
+        super.open(player);
     }
 
     /**

@@ -199,10 +199,7 @@ public class Command extends PlaythroughTask implements Listener
 
             //Prompt difficulty
             taskEditorMenu.taskFullySet();
-            taskEditorMenu.refresh();
-
-            User user = parentGroupPlaythrough.getParentStep().getParentStage().getTutorialPlaythrough().getCreatorOrStudent();
-            taskEditorMenu.open(user.player);
+            taskEditorMenu.open(player);
 
             //SpotHit is then called from inside the difficulty panel once the difficulty has been established
             //This is what moves it onto the next task

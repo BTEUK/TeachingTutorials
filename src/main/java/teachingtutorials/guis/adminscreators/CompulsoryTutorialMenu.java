@@ -172,14 +172,14 @@ public class CompulsoryTutorialMenu extends Gui
                     tutorials[iSlot].toggleCompulsory(plugin);
 
                     //Refreshes the display
-                    refresh();
+                    open(user.player);
                 }
             });
         }
     }
 
     /**
-     * Clears items from the GUI, re-adds the items and then opens the menu
+     * Clears items from the GUI, re-adds the items, then reopens the menu
      */
     public void refresh() {
         //Clears the gui
@@ -191,7 +191,7 @@ public class CompulsoryTutorialMenu extends Gui
         //Sets the actions
         this.setActions();
 
-        //Opens the gui
-        super.open(user.player);
+        //Open the menu
+        this.open(user.player);
     }
 }

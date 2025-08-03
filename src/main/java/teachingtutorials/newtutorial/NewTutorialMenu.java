@@ -9,8 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.Stage;
 import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.Category;
@@ -58,7 +57,7 @@ public class NewTutorialMenu extends Gui
         relevanceBooks = new TextEditorBookListener[5];
         for (int i = 0 ; i < 5 ; i++)
         {
-            relevanceBooks[i] = new TextEditorBookListener(tutorialCreationSession.plugin, creator, this, "Relevance of " + Category.values()[i],
+            relevanceBooks[i] = new TextEditorBookListener(tutorialCreationSession.plugin, creator.player, this, "Relevance of " + Category.values()[i],
                     new BookCloseAction() {
                         @Override
                         public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
@@ -90,6 +89,11 @@ public class NewTutorialMenu extends Gui
                         }
 
                         @Override
+                        public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                            return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+                        }
+
+                        @Override
                         public void runPostClose() {
                             //Refresh the menu to update the lore on the book
                             refresh();
@@ -100,7 +104,7 @@ public class NewTutorialMenu extends Gui
                     }, "0");
         }
 
-        nameEditor = new TextEditorBookListener(tutorialCreationSession.plugin, creator, this, "Tutorial Name",
+        nameEditor = new TextEditorBookListener(tutorialCreationSession.plugin, creator.player, this, "Tutorial Name",
                 new BookCloseAction() {
                     @Override
                     public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
@@ -121,6 +125,11 @@ public class NewTutorialMenu extends Gui
                             tutorial.setTutorialName(szNewContent);
                             return true;
                         }
+                    }
+
+                    @Override
+                    public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                        return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
                     }
 
                     @Override

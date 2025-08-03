@@ -3,6 +3,7 @@ package teachingtutorials.guis;
 import net.bteuk.minecraft.gui.*;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.tutorialplaythrough.PlaythroughMode;
@@ -138,5 +139,16 @@ public class TutorialNavigationMenu extends Gui
         this.clear();
 
         this.addItems();
+    }
+
+    /**
+     * Refreshes and opens the menu
+     * @param player The player to open the menu for
+     */
+    @Override
+    public void open(Player player)
+    {
+        refresh();
+        super.open(player);
     }
 }

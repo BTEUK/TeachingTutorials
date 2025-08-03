@@ -8,8 +8,7 @@ import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.Task;
 import teachingtutorials.tutorialobjects.CommandActionType;
 import teachingtutorials.tutorialplaythrough.FundamentalTaskType;
@@ -53,7 +52,7 @@ public class TaskMenu extends Gui
         TeachingTutorials plugin = groupMenu.stepMenu.stageMenu.tutorialMenu.tutorialCreationSession.plugin;
 
         perfectTpllAccuracy = new TextEditorBookListener(plugin,
-                creator, this, "Perfect Tpll Distance", new BookCloseAction() {
+                creator.player, this, "Perfect Tpll Distance", new BookCloseAction() {
             @Override
             public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
                 //Unregister the book
@@ -87,6 +86,11 @@ public class TaskMenu extends Gui
             }
 
             @Override
+            public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+            }
+
+            @Override
             public void runPostClose() {
                 //Refresh the menu to update the lore of the items in the menu
                 refresh();
@@ -96,7 +100,7 @@ public class TaskMenu extends Gui
 
 
         acceptableTpllAccuracy = new TextEditorBookListener(plugin,
-                creator, this, "Acceptable Tpll Distance", new BookCloseAction() {
+                creator.player, this, "Acceptable Tpll Distance", new BookCloseAction() {
             @Override
             public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
                 //Unregister the book
@@ -126,6 +130,11 @@ public class TaskMenu extends Gui
                     creator.player.sendMessage(Display.errorText("The acceptable distance must be a number"));
                     return false;
                 }
+            }
+
+            @Override
+            public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
             }
 
             @Override

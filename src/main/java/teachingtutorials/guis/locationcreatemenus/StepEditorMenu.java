@@ -4,14 +4,14 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.LocationStep;
 import teachingtutorials.tutorialplaythrough.PlaythroughMode;
 import teachingtutorials.tutorialplaythrough.StepPlaythrough;
@@ -62,7 +62,7 @@ public class StepEditorMenu extends Gui
         this.locationStep = locationStep;
 
         //Sets up the books
-        this.videoLinkBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
+        this.videoLinkBookListener = new TextEditorBookListener(plugin, user.player, this, locationStep.getStep().getName(), new BookCloseAction()
         {
             @Override
             public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
@@ -71,17 +71,27 @@ public class StepEditorMenu extends Gui
             }
 
             @Override
+            public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+            }
+
+            @Override
             public void runPostClose()
             {
             }
         }, locationStep.getVideoWalkthroughLink());
 
-        this.instructionsBookListener = new TextEditorBookListener(plugin, user, this, locationStep.getStep().getName(), new BookCloseAction()
+        this.instructionsBookListener = new TextEditorBookListener(plugin, user.player, this, locationStep.getStep().getName(), new BookCloseAction()
         {
             @Override
             public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
             {
                 return bookClosed(oldBookMeta, newBookMeta, textEditorBookListener, szNewContent, true);
+            }
+
+            @Override
+            public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
             }
 
             @Override
@@ -374,5 +384,12 @@ public class StepEditorMenu extends Gui
         refreshAndReopen();
 
         return true;
+    }
+
+    @Override
+    public void open(Player player)
+    {
+        refresh();
+        super.open(player);
     }
 }

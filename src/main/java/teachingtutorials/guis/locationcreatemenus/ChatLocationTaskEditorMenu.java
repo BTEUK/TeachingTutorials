@@ -9,8 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.meta.BookMeta;
 import teachingtutorials.TeachingTutorials;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.LocationTask;
 import teachingtutorials.tutorialplaythrough.PlaythroughTask;
 import teachingtutorials.utils.Display;
@@ -68,13 +67,13 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         for (int i = 0 ; i < answers.length ; i++)
         {
             // Create the answer book
-            TextEditorBookListener answerBook = new TextEditorBookListener(plugin, user, this, ("Answer "+(i+1)),
+            TextEditorBookListener answerBook = new TextEditorBookListener(plugin, user.player, this, ("Answer "+(i+1)),
                     new AnswerBookClose(user, this, false, false),
                     answers[i]);
             answerBooks.add(answerBook);
 
             // Create the score book
-            TextEditorBookListener scoreBook = new TextEditorBookListener(plugin, user, this, ("Score "+(i+1)), new BookCloseAction()
+            TextEditorBookListener scoreBook = new TextEditorBookListener(plugin, user.player, this, ("Score "+(i+1)), new BookCloseAction()
             {
                 @Override
                 public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
@@ -84,10 +83,15 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                 }
 
                 @Override
+                public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                    return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+                }
+
+                @Override
                 public void runPostClose()
                 {
                     ChatLocationTaskEditorMenu.this.saveAndCheck();
-                    ChatLocationTaskEditorMenu.this.refresh();
+                    ChatLocationTaskEditorMenu.this.open(user.player);
                 }
             }, ""+fScores[i]);
             scoreBooks.add(scoreBook);
@@ -97,7 +101,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         iCurrentPage = 1;
 
         //Add chat specific items
-        addChatItems();
+        addAdditionalOptions();
     }
 
     /**
@@ -122,15 +126,15 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         defaultTheDiscreteBooks();
 
         //Numerical setup
-        numericalMin = new TextEditorBookListener(plugin, user, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), bounds[0]);
-        numericalPerfect = new TextEditorBookListener(plugin, user, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), bounds[1]);
-        numericalMax = new TextEditorBookListener(plugin, user, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), bounds[2]);
+        numericalMin = new TextEditorBookListener(plugin, user.player, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), bounds[0]);
+        numericalPerfect = new TextEditorBookListener(plugin, user.player, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), bounds[1]);
+        numericalMax = new TextEditorBookListener(plugin, user.player, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), bounds[2]);
 
         // Set the current page to 1
         iCurrentPage = 1;
 
         //Add chat specific items
-        addChatItems();
+        addAdditionalOptions();
     }
 
     /**
@@ -161,26 +165,26 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         iCurrentPage = 1;
 
         //Add chat specific items
-        addChatItems();
+        addAdditionalOptions();
     }
 
     private void defaultTheNumericalBooks()
     {
-        numericalMin = new TextEditorBookListener(plugin, user, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), "5");
-        numericalPerfect = new TextEditorBookListener(plugin, user, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), "10");
-        numericalMax = new TextEditorBookListener(plugin, user, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), "15");
+        numericalMin = new TextEditorBookListener(plugin, user.player, this, "Minimum", new NumericalBookClose(user, this, Numerical.Min), "5");
+        numericalPerfect = new TextEditorBookListener(plugin, user.player, this, "Perfect", new NumericalBookClose(user, this, Numerical.Target), "10");
+        numericalMax = new TextEditorBookListener(plugin, user.player, this, "Maximum", new NumericalBookClose(user, this, Numerical.Max), "15");
     }
 
     private void defaultTheDiscreteBooks()
     {
         // Create the first discrete item
-        TextEditorBookListener firstItem = new TextEditorBookListener(plugin, user, this, "Answer 1",
+        TextEditorBookListener firstItem = new TextEditorBookListener(plugin, user.player, this, "Answer 1",
                 new AnswerBookClose(user, this, false, false),
                 "One of your options must have a performance of 1, this option has been preset to have a performance of 1. Use it as your \"perfect\" answer. \n\nReplace all of this text with your answer - ctrl A, delete");
         answerBooks.add(firstItem);
 
         // Create the score book
-        TextEditorBookListener firstItemScore = new TextEditorBookListener(plugin, user, this, "Score 1", new BookCloseAction()
+        TextEditorBookListener firstItemScore = new TextEditorBookListener(plugin, user.player, this, "Score 1", new BookCloseAction()
         {
             @Override
             public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent)
@@ -190,10 +194,15 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
             }
 
             @Override
+            public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+            }
+
+            @Override
             public void runPostClose()
             {
                 ChatLocationTaskEditorMenu.this.saveAndCheck();
-                ChatLocationTaskEditorMenu.this.refresh();
+                ChatLocationTaskEditorMenu.this.open(user.player);
             }
         }, "1.0");
         scoreBooks.add(firstItemScore);
@@ -220,7 +229,8 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
     /**
      * Adds the appropriate chat items to the menu
      */
-    private void addChatItems()
+    @Override
+    protected void addAdditionalOptions()
     {
         //Top row will always be the one to switch between discrete and numerical
         //You are in X mode, click to switch to !X mode
@@ -244,7 +254,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                         mode = modeNotIn;
                         //Refreshes the menu
                         saveAndCheck();
-                        refresh();
+                        open(user.player);
                     }
                 });
 
@@ -285,7 +295,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                         @Override
                         public void click(InventoryClickEvent event) {
                             iCurrentPage = iCurrentPage + 1;
-                            refresh();
+                            open(user.player);
                         }
                     });
         }
@@ -300,7 +310,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                         @Override
                         public void click(InventoryClickEvent event) {
                             iCurrentPage = iCurrentPage - 1;
-                            refresh();
+                            open(user.player);
                         }
                     });
         }
@@ -467,7 +477,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
     private void addDiscreteItem(String szNumber)
     {
         //Create answer book
-        TextEditorBookListener newItem = new TextEditorBookListener(plugin, user, this, "Answer " +szNumber,
+        TextEditorBookListener newItem = new TextEditorBookListener(plugin, user.player, this, "Answer " +szNumber,
                new AnswerBookClose(user, this, false, false),
                 "");
 
@@ -475,14 +485,14 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         answerBooks.add(newItem);
 
         //Create score book
-        TextEditorBookListener firstItem = new TextEditorBookListener(plugin, user, this, "Score "+ szNumber,
+        TextEditorBookListener firstItem = new TextEditorBookListener(plugin, user.player, this, "Score "+ szNumber,
                 new AnswerBookClose(user, this, true, true),
                 "1");
 
         //Add book to list
         scoreBooks.add(firstItem);
 
-        refresh();
+        open(user.player);
     }
 
     /**
@@ -496,7 +506,7 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
         //Delete score book from list
         scoreBooks.remove(iIndex);
 
-        refresh();
+        open(user.player);
     }
 
     /**
@@ -543,22 +553,6 @@ public class ChatLocationTaskEditorMenu extends LocationTaskEditorMenu
                 String szAnswerNum = "Numerical:"+fMinimum+","+fTarget+","+fMaximum;
                 super.locationTask.setAnswers(szAnswerNum);
         }
-    }
-
-    /**
-     * Clears items from the GUI, recreates the items and then opens the menu
-     */
-    @Override
-    public void refresh()
-    {
-        //Clears the menu and re-adds the base menu
-        super.refresh();
-
-        //Add the chat specific items
-        addChatItems();
-
-        //Opens the menu
-        this.open(user.player);
     }
 }
 
@@ -641,11 +635,15 @@ class AnswerBookClose implements BookCloseAction
     }
 
     @Override
+    public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+        return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+    }
+
+    @Override
     public void runPostClose()
     {
         //Refresh and reopen the menu
         chatEditMenu.saveAndCheck();
-        chatEditMenu.refresh();
         chatEditMenu.open(user.player);
     }
 }
@@ -731,11 +729,14 @@ class NumericalBookClose implements BookCloseAction
         return true;
     }
 
+    public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+        return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
+    }
+
     public void runPostClose()
     {
         //Refresh and reopen the menu
         chatEditMenu.saveAndCheck();
-        chatEditMenu.refresh();
         chatEditMenu.open(user.player);
     }
 }

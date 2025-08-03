@@ -8,8 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import net.bteuk.minecraft.gui.*;
 import teachingtutorials.guis.TutorialGUIUtils;
-import teachingtutorials.listeners.texteditorbooks.BookCloseAction;
-import teachingtutorials.listeners.texteditorbooks.TextEditorBookListener;
+import net.bteuk.minecraft.texteditorbooks.*;
 import teachingtutorials.tutorialobjects.Group;
 import teachingtutorials.tutorialobjects.Step;
 import teachingtutorials.utils.Display;
@@ -56,7 +55,7 @@ public class StepMenu extends Gui
 
         TutorialCreationSession tutorialCreationSession = stageMenu.tutorialMenu.tutorialCreationSession;
 
-        nameEditor = new TextEditorBookListener(tutorialCreationSession.plugin, creator, this, "Step Name",
+        nameEditor = new TextEditorBookListener(tutorialCreationSession.plugin, creator.player, this, "Step Name",
                 new BookCloseAction() {
                     @Override
                     public boolean runBookClose(BookMeta oldBookMeta, BookMeta newBookMeta, TextEditorBookListener textEditorBookListener, String szNewContent) {
@@ -77,6 +76,11 @@ public class StepMenu extends Gui
                             step.setName(szNewContent);
                             return true;
                         }
+                    }
+
+                    @Override
+                    public boolean runBookSign(BookMeta bookMeta, BookMeta bookMeta1, TextEditorBookListener textEditorBookListener, String s) {
+                        return runBookClose(bookMeta, bookMeta1, textEditorBookListener, s);
                     }
 
                     @Override

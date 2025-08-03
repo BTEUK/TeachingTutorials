@@ -2,6 +2,7 @@ package teachingtutorials.guis.adminscreators;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import teachingtutorials.TeachingTutorials;
@@ -119,16 +120,5 @@ public class CreatorMenu extends Gui
                 user.mainGui.open(user.player);
             }
         });
-    }
-
-    /**
-     * Clears items from the GUI, re-adds the items and then opens the menu
-     */
-    public void refresh()
-    {
-        this.clear();
-        this.addMenuOptions();
-
-        this.open(user.player);
     }
 }

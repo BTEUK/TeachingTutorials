@@ -112,9 +112,9 @@ public class MainMenu extends Gui
             else
                 compulsoryNotFinished(compulsoryLesson);
         }
-        else
+        else {
             //User has not completed compulsory tutorial or doesn't need to
-            compulsoryFinished();
+            compulsoryFinished(); }
 
 
         //Admin and creator menu
@@ -242,17 +242,18 @@ public class MainMenu extends Gui
 
 
         //Continue learning/next tutorial
-        ItemStack continueLearning = Utils.createItem(Material.END_CRYSTAL, 1,
-                TutorialGUIUtils.optionTitle("Start a new Tutorial:"),
-                TutorialGUIUtils.optionLore(nextTutorial.getTutorialName()));
 
-        if (nextTutorial != null)
-            super.setItem(17 , continueLearning, new GuiAction() {
+        if (nextTutorial != null) {
+            ItemStack continueLearning = Utils.createItem(Material.END_CRYSTAL, 1,
+                    TutorialGUIUtils.optionTitle("Start a new Tutorial:"),
+                    TutorialGUIUtils.optionLore(nextTutorial.getTutorialName()));
+
+                super.setItem(17 , continueLearning, new GuiAction() {
                 @Override
                 public void click(InventoryClickEvent event) {
                     startTutorial(nextTutorial, null);
                 }
-            });
+            }); }
     }
 
 

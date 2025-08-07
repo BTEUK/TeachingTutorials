@@ -14,6 +14,8 @@ import teachingtutorials.tutorialobjects.Tutorial;
 import teachingtutorials.utils.User;
 import teachingtutorials.utils.Utils;
 
+import java.util.UUID;
+
 /**
  * A menu accessible to admins and tutorial creators in order to manage the tutorials on the system
  */
@@ -91,8 +93,14 @@ public class CreatorMenu extends Gui
         setItem(iSlotMyTutorials, myTutorials, new GuiAction() {
             @Override
             public void click(InventoryClickEvent e) {
+                UUID uuid;
                 delete();
-                user.mainGui = new CreatorTutorialsMenu(plugin, user, Tutorial.fetchAll(false, false, user.player.getUniqueId(), plugin.getDBConnection(), plugin.getLogger()));
+                if (user.player.hasPermission("TeachingTutorials.Admin")) {
+                    uuid = null; // Allows for fetching of all Tutorials (should be used in a better way)
+                } else {
+                    uuid = user.player.getUniqueId();
+                }
+                user.mainGui = new CreatorTutorialsMenu(plugin, user, Tutorial.fetchAll(false, false, uuid, plugin.getDBConnection(), plugin.getLogger()));
                 user.mainGui.open(user.player);
             }
         });
